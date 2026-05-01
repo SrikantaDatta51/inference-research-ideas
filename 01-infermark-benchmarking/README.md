@@ -10,6 +10,8 @@
 
 Large Language Model inference has moved from research prototypes to production infrastructure, yet no comprehensive benchmark exists that evaluates the full stack — from KV-cache management to multi-cloud network topology — under realistic enterprise conditions. We present **InferMark**, a 14-axis benchmarking framework that evaluates attention mechanisms, KV-cache strategies, MoE routing, speculative decoding, quantization methods, multi-modal pipelines, long-context serving, adapter management, constrained generation, network topology, inference-time compute scaling, production overhead, end-to-end latency profiling, and routing path analysis across N cloud providers and M GPU SKUs. Our key findings include: (1) up to 3.2× throughput variance for identical models across clouds, (2) production overhead adds 18-61% latency that current benchmarks ignore, (3) MoE expert routing becomes non-deterministic under network jitter, and (4) routing path selection introduces up to 23ms variance in TTFT depending on ingress topology.
 
+<img width="1451" height="848" alt="InferMark" src="https://github.com/user-attachments/assets/718ea411-bb11-41ae-83c8-01258fe36591" />
+
 ---
 
 ## The 14 Benchmarking Axes
