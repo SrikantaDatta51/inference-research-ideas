@@ -10,6 +10,8 @@
 
 Regulated industries (healthcare, legal, finance) demand near-lossless inference accuracy, creating tension with the 3-6× cost savings from aggressive quantization. We present a systematic evaluation of **TurboQuant (PolarQuant + QJL)** across four attention architectures (MHA, GQA, MLA, Linear/SSM) on six industry-specific benchmarks, proving that the QJL residual error checking stage provides sufficient accuracy guarantees to pass regulatory thresholds. We map the specific architectural components most resilient to extreme quantization and provide a **Quantization Certification Framework** that outputs a per-model, per-industry "accuracy passport."
 
+<img width="1451" height="683" alt="AcuracyPreservQuantization" src="https://github.com/user-attachments/assets/023241a7-2cf9-49bf-b8f9-2470074c40d4" />
+
 ---
 
 ## The Problem: Quantization vs. Regulatory Accuracy
