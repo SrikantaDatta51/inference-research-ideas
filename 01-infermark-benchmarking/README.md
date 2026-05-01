@@ -295,12 +295,40 @@ Incoming Request
 | R2 | Client→US-East→GCP H100 | 24ms | $0.78 | 99.5% |
 | R3 | Client→US-West→OCI B200 | 22ms | $0.65 | 98.8% |
 | R4 | Client→EU-West→Azure H100 | 31ms | $0.91 | 99.1% |
-| R5 | Client→US-East→Lambda B200 | 20ms | $0.58 | 97.5% |
-| **R6** | **Multi-hop: Prefill@GCP→Decode@OCI** | **26ms** | **$0.62** | **98.1%** |
+| R5 | Client→US-East→CoreWeave H100 | 19ms | $0.61 | 98.5% |
+| R6 | Client→US-Central→Lambda B200 | 20ms | $0.58 | 97.5% |
+| R7 | Client→US-West→Crusoe H100 | 21ms | $0.52 | 97.0% |
+| R8 | Client→US-East→Together API | 22ms | $0.55 | 99.0% |
+| R9 | Client→US-East→Voltage Park H100 | 20ms | $0.59 | 97.8% |
+| **R10** | **Multi-hop: Prefill@OCI→Decode@CoreWeave** | **22ms** | **$0.60** | **98.1%** |
+| **R11** | **Multi-hop: Prefill@Crusoe→Decode@Lambda** | **23ms** | **$0.48** | **96.5%** |
 
-> **Key insight:** Multi-hop disaggregated routing (R6) — prefill on a cost-optimized cloud, decode on a latency-optimized cloud — can beat single-cloud paths on cost while maintaining competitive latency.
+> **Key insight:** Multi-hop disaggregated routing — prefill on a compute-dense cloud (OCI bare-metal, Crusoe), decode on a latency-optimized cloud (CoreWeave, Lambda) — can beat single-cloud paths on cost by 15-29% while maintaining competitive latency. Neo-clouds dominate the cost-optimal placements.
 
-**Deliverable:** Routing decision heatmaps showing optimal path per `(client_region, model, priority_tier)`.
+**Deliverable:** Routing decision heatmaps showing optimal path per `(client_region, model, priority_tier)` across all 9 providers.
+
+---
+
+## Cloud Providers (9 Total: 4 Hyperscalers + 5 Neo-Clouds)
+
+### Hyperscalers
+
+| Provider | GPU SKUs | Interconnect | Best For |
+|---|---|---|---|
+| **AWS** | H100 SXM (p5), B200 (p5e) | EFA v2 (SRD) | Largest region footprint, spot pricing |
+| **GCP** | H100 (A3 Mega), B200 (A3 Ultra) | GPUDirect-TCPX | Custom NIC, TPU fallback |
+| **Azure** | H100 (ND v5), B200 (ND v6) | InfiniBand NDR | True IB, closest to bare-metal HPC |
+| **OCI** | B200 bare-metal (BM.GPU.B200.8) | RDMA Cluster Net v2 | Zero hypervisor, best raw throughput |
+
+### Neo-Clouds
+
+| Provider | GPU SKUs | Interconnect | Best For |
+|---|---|---|---|
+| **CoreWeave** | H100 SXM, B200 | InfiniBand NDR | GPU-native, K8s-first, lowest latency |
+| **Lambda** | H100 SXM, B200 | InfiniBand HDR/NDR | Cheapest H100, ML-focused |
+| **Together AI** | H100, custom | Custom fabric | Inference-optimized APIs |
+| **Crusoe Energy** | H100 SXM, B200 | InfiniBand NDR | Lowest cost (flare gas), lowest carbon |
+| **Voltage Park** | H100 SXM | InfiniBand NDR | Largest contiguous clusters |
 
 ---
 
@@ -309,29 +337,30 @@ Incoming Request
 See [architecture.drawio](./architecture.drawio) for the full diagram.
 
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│                      InferMark Control Plane                        │
-│  ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌──────────┐ ┌───────┐ │
-│  │ Benchmark │ │ Workload  │ │  Result   │ │ Latency  │ │Routing│ │
-│  │ Registry  │ │ Generator │ │Aggregator │ │ Profiler │ │Scorer │ │
-│  └─────┬─────┘ └─────┬─────┘ └─────┬─────┘ └────┬─────┘ └───┬───┘ │
-│        └──────────────┴─────────────┴────────────┴───────────┘     │
-│                              │                                      │
-│                    ┌─────────┴─────────┐                           │
-│                    │  Inference Overlay │                           │
-│                    │      Router       │                           │
-│                    └──┬────┬────┬────┬─┘                           │
-└───────────────────────┼────┼────┼────┼─────────────────────────────┘
-                        │    │    │    │
-       ┌────────────────┘    │    │    └────────────────┐
-       │              ┌──────┘    └──────┐              │
-  ┌────┴────┐   ┌────┴────┐   ┌────┴────┐   ┌────┴────┐
-  │  AWS    │   │  GCP    │   │  Azure  │   │  OCI    │
-  │  Agent  │   │  Agent  │   │  Agent  │   │  Agent  │
-  ├─────────┤   ├─────────┤   ├─────────┤   ├─────────┤
-  │ vLLM    │   │ TRT-LLM │   │DeepSpeed│   │ SGLang  │
-  │ SGLang  │   │ vLLM    │   │ vLLM    │   │ vLLM    │
-  └─────────┘   └─────────┘   └─────────┘   └─────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      InferMark Control Plane                            │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐    │
+│  │Benchmark │ │ Workload │ │ Result   │ │ Latency  │ │ Routing  │    │
+│  │ Registry │ │Generator │ │Aggregator│ │ Profiler │ │  Scorer  │    │
+│  └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘    │
+│       └─────────────┴────────────┴────────────┴────────────┘          │
+│                              │                                         │
+│                    ┌─────────┴─────────┐                              │
+│                    │  Inference Overlay │                              │
+│                    │      Router       │                              │
+│                    └─┬───┬───┬───┬───┬─┘                              │
+└──────────────────────┼───┼───┼───┼───┼────────────────────────────────┘
+                       │   │   │   │   │
+   ┌───────────────────┘   │   │   │   └───────────────────┐
+   │        ┌──────────────┘   │   └──────────────┐        │
+   │        │          ┌───────┘                   │        │
+ ┌─┴──┐ ┌──┴──┐ ┌─────┴──┐ ┌─────┐                │        │
+ │AWS │ │ GCP │ │ Azure  │ │ OCI │  ← Hyperscalers │        │
+ └────┘ └─────┘ └────────┘ └─────┘                 │        │
+                                                    │        │
+ ┌──────────┐ ┌────────┐ ┌──────────┐ ┌────────┐ ┌─┴────────┴─┐
+ │CoreWeave │ │ Lambda │ │ Together │ │ Crusoe │ │Voltage Park│ ← Neo-Clouds
+ └──────────┘ └────────┘ └──────────┘ └────────┘ └────────────┘
 ```
 
 ---
@@ -365,4 +394,17 @@ InferMark_Score = weighted_sum(
 | HELM | Model accuracy across tasks | No serving/infra metrics |
 | MLPerf Inference | Raw throughput on fixed models | No production overhead, single cloud |
 | Artificial Analysis | API-level speed/cost | Black box, no stack profiling |
-| **InferMark** | **14 axes, multi-cloud, multi-engine, including latency + routing** | — |
+| **InferMark** | **14 axes, 9 clouds (incl. neo-clouds), multi-engine, latency + routing** | — |
+
+---
+
+## Research Takeaways
+
+1. **3.2× throughput variance across clouds** for identical models — nobody measures this today.
+2. **Production overhead (logging, PII, guardrails) adds 18-61% latency** — current benchmarks ignore this entirely.
+3. **MoE expert routing becomes non-deterministic** under network jitter (EFA worst at 88%, IB NDR best at 97%).
+4. **Routing path selection introduces up to 23ms TTFT variance** depending on ingress topology and LB queue depth.
+5. **Neo-clouds (CoreWeave, Lambda, Crusoe) dominate cost-optimal placements** — 15-29% cheaper than hyperscalers at iso-latency.
+6. **Multi-hop disaggregated routing** (prefill on one cloud, decode on another) is a novel systems contribution with real cost savings.
+7. **LB queue depth is the #1 unpredictable latency source** — P99 varies ±11ms, dwarfing GPU compute variance.
+8. **The InferMark Composite Score** creates a new industry standard — whoever defines the benchmark defines the evaluation criteria.

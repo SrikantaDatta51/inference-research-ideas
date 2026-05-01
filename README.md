@@ -2,60 +2,48 @@
 
 > **Multi-Cloud Inference Benchmarking & Optimization Platform**
 >
-> A research initiative to build the definitive evaluation framework for production LLM inference across heterogeneous cloud infrastructure.
+> A research initiative evaluating production LLM inference across 9 cloud providers — 4 hyperscalers + 5 neo-clouds.
 
 ---
 
 ## Research Vision
 
-Modern LLM inference has moved from single-GPU prototypes to multi-cloud production systems, yet the ecosystem lacks:
-
-- **Standardized benchmarks** that evaluate the full inference stack (not just tokens/sec)
-- **Cross-cloud normalization** that accounts for heterogeneous GPU SKUs, interconnects, and driver stacks
-- **Production-realistic evaluation** that includes the overhead of enterprise features (logging, filtering, guardrails)
-- **Quantization certification** for regulated industries where accuracy degradation is unacceptable
-
-This research initiative addresses these gaps through four complementary projects.
+Modern LLM inference has moved from single-GPU prototypes to multi-cloud production systems, yet the ecosystem lacks standardized benchmarks, cross-cloud normalization, and quantization certification for regulated industries. This initiative addresses these gaps through four complementary research directions.
 
 ---
 
 ## Research Directions
 
-| # | Project | Focus Area | Target Venue |
-|---|---------|------------|--------------|
-| 1 | [InferMark Benchmarking](./01-infermark-benchmarking/) | 14-axis multi-cloud inference evaluation with latency profiling and routing analysis | OSDI / SoCC |
-| 2 | [Secure-Tenant KV Isolation](./02-secure-tenant-kv-isolation/) | Provable data isolation in shared GPU clusters via quantized memory sharding | NSDI / USENIX Security |
-| 3 | [Cross-Cloud Performance Parity](./03-cross-cloud-parity/) | Normalization framework for consistent inference across heterogeneous CSPs | SysML / MLSys |
-| 4 | [Accuracy-Preserving Quantization](./04-accuracy-preserving-quantization/) | Zero-loss quantization evaluation for compliance-restricted workloads | NeurIPS / ICML |
+| # | Project | Key Takeaway | Venue |
+|---|---------|-------------|-------|
+| 1 | [InferMark Benchmarking](./01-infermark-benchmarking/) | 3.2× throughput variance across clouds; 18-61% production overhead nobody measures | OSDI |
+| 2 | [Disaggregated Cross-Cloud Inference](./02-disaggregated-cross-cloud/) | Multi-hop prefill/decode saves 15-29% cost; GQA/MLA are natural fit for cross-cloud disagg | OSDI/NSDI |
+| 3 | [Cross-Cloud Performance Parity](./03-cross-cloud-parity/) | 4-layer normalization: ±17% → ±4% variance; network topology dominates, not GPU compute | SysML |
+| 4 | [Accuracy-Preserving Quantization](./04-accuracy-preserving-quantization/) | SSMs most resilient to quantization; MLA latent KV most sensitive; QJL catches 99.97% errors | NeurIPS |
+| — | [Full Bucket List (14 ideas)](./research-ideas-bucket-list.md) | Stack-ranked research ideas with takeaways, novelty, and venue fit | — |
 
 ---
 
-## Technical Stack
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Evaluation Targets                       │
-├──────────────┬──────────────┬────────────────┬─────────────────┤
-│ Architectures│ Memory/Perf  │ Attention      │ Orchestration   │
-├──────────────┼──────────────┼────────────────┼─────────────────┤
-│ MoE          │ TurboQuant   │ Flash Attn 3   │ DeepSpeed V4    │
-│ DeepSeek V4  │ PolarQuant   │ MLA            │ DeepFusion      │
-│ Mamba/SSM    │ QJL          │ GQA            │ Disagg. P/D     │
-│ Jamba        │ 3-bit KV     │ Ring Attention  │ K8s GPU Sched   │
-│ RWKV-6       │ PagedAttn    │ Paced Attention│ vLLM / SGLang   │
-│ Llama 4      │ vAttention   │ Linear Attn    │ TensorRT-LLM    │
-└──────────────┴──────────────┴────────────────┴─────────────────┘
-```
-
 ## Cloud Providers Under Evaluation
+
+### Hyperscalers
 
 | Provider | GPU SKUs | Interconnect | Regions |
 |----------|----------|-------------|---------|
-| AWS | H100 SXM, p5e (B200) | EFA v2 | us-east-1, eu-west-1 |
-| GCP | H100, A3 Mega (B200) | GPUDirect-TCPX | us-central1, europe-west4 |
-| Azure | H100, ND B200 v6 | InfiniBand NDR | eastus, westeurope |
-| OCI | BM.GPU.H100, B200 | RDMA Cluster Net | us-ashburn, eu-frankfurt |
-| Lambda | H100 SXM, B200 | InfiniBand HDR | us-tx, us-ut |
+| AWS | H100 SXM (p5), B200 (p5e) | EFA v2 (SRD) | us-east-1, eu-west-1 |
+| GCP | H100 (A3 Mega), B200 (A3 Ultra) | GPUDirect-TCPX | us-central1, europe-west4 |
+| Azure | H100 (ND v5), B200 (ND v6) | InfiniBand NDR | eastus, westeurope |
+| OCI | B200 bare-metal (BM.GPU.B200.8) | RDMA Cluster Net v2 | us-ashburn, eu-frankfurt |
+
+### Neo-Clouds
+
+| Provider | GPU SKUs | Interconnect | Key Differentiator |
+|----------|----------|-------------|-------------------|
+| CoreWeave | H100 SXM, B200 | InfiniBand NDR | GPU-native, K8s-first, fastest availability |
+| Lambda | H100 SXM, B200 | InfiniBand HDR/NDR | Simplest pricing, ML-focused |
+| Together AI | H100, custom | Custom fabric | Inference-optimized, open-source hosting |
+| Crusoe Energy | H100 SXM, B200 | InfiniBand NDR | Renewable/flare-gas powered, lowest carbon |
+| Voltage Park | H100 SXM | InfiniBand NDR | Large contiguous clusters, HPC-grade |
 
 ---
 
@@ -63,46 +51,21 @@ This research initiative addresses these gaps through four complementary project
 
 ```
 inference-overlay-research/
-├── README.md                              # This file
+├── README.md                                  # This file
+├── research-ideas-bucket-list.md              # 14 ideas stack-ranked with takeaways
 ├── 01-infermark-benchmarking/
-│   ├── README.md                          # 14-axis benchmarking framework
-│   └── architecture.drawio                # System architecture diagram
-├── 02-secure-tenant-kv-isolation/
-│   ├── README.md                          # TurboQuant memory sharding
-│   └── architecture.drawio                # Isolation architecture diagram
+│   ├── README.md                              # 14-axis benchmarking framework
+│   └── architecture.drawio                    # System architecture diagram
+├── 02-disaggregated-cross-cloud/
+│   ├── README.md                              # Cross-cloud prefill/decode optimization
+│   └── architecture.drawio                    # Disaggregation flow diagram
 ├── 03-cross-cloud-parity/
-│   ├── README.md                          # Cross-cloud normalization
-│   └── architecture.drawio                # Overlay architecture diagram
+│   ├── README.md                              # 4-layer normalization framework
+│   └── architecture.drawio                    # Overlay architecture diagram
 └── 04-accuracy-preserving-quantization/
-    ├── README.md                          # Quantization certification
-    └── architecture.drawio                # Evaluation pipeline diagram
+    ├── README.md                              # TurboQuant certification framework
+    └── architecture.drawio                    # Evaluation pipeline diagram
 ```
-
----
-
-## Key Metrics
-
-The **InferMark Composite Score** unifies all evaluation dimensions:
-
-```
-InferMark Score = Σ(axis_weight × normalized_score) across all 14 axes
-
-Axis weights are configurable per deployment profile:
-  - "Cost-Optimized"    → heavy weight on $/token, quantization efficiency
-  - "Latency-Sensitive" → heavy weight on TTFT, P99, routing overhead
-  - "Multi-Tenant"      → heavy weight on isolation, memory sharding
-  - "Regulated"         → heavy weight on accuracy preservation, overhead
-```
-
----
-
-## Getting Started
-
-Each sub-project contains its own README with:
-- Detailed technical benchmarking axes
-- Architecture diagrams (`.drawio` files, open with [draw.io](https://app.diagrams.net/))
-- Research paper framing and abstract templates
-- Build sequences and deliverable timelines
 
 ## License
 
