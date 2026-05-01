@@ -10,6 +10,8 @@
 
 Every cloud provider claims best-in-class GPU inference performance, yet identical models exhibit up to 3.2× throughput variance across AWS, GCP, Azure, OCI, and Lambda due to differences in networking topology, driver stacks, NUMA configuration, and interconnect bandwidth. We present the **Inference Overlay**, a normalization framework that uses Flash Attention kernel adaptation, DeepFusion pipeline optimization, and topology-aware MoE routing to guarantee consistent Time-to-First-Token (TTFT) and Tokens-Per-Second (TPS) regardless of underlying Cloud Service Provider. Our framework abstracts cloud heterogeneity into a unified inference API while maintaining ≤5% performance variance across providers.
 
+<img width="1451" height="693" alt="InferenceNormalization" src="https://github.com/user-attachments/assets/3c454fee-6e0a-4bfb-a990-eff524967c68" />
+
 ---
 
 ## The Problem: Cloud Heterogeneity in GPU Inference
