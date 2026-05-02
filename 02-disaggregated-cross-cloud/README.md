@@ -10,6 +10,9 @@
 
 Disaggregated inference architectures (Splitwise, DistServe) separate prefill and decode phases onto different GPU nodes to optimize resource utilization. We extend this paradigm **across cloud boundaries**, investigating whether prefill on a compute-dense provider (OCI bare-metal B200, CoreWeave H100) and decode on a latency-optimized provider (Lambda, Together) can outperform single-cloud deployment. Our evaluation across 9 cloud providers — including hyperscalers (AWS, GCP, Azure, OCI) and neo-clouds (CoreWeave, Lambda, Together, Crusoe) — demonstrates **15-22% cost reduction at iso-latency** for multi-hop disaggregated routing, with KV-cache transfer overhead as the critical bottleneck (3-15ms depending on transport protocol and inter-cloud bandwidth).
 
+<img width="1451" height="853" alt="DiasggInference" src="https://github.com/user-attachments/assets/6e937dae-d8da-45b3-be8c-8509524d485e" />
+
+
 ---
 
 ## The Problem: Single-Cloud Disaggregation Leaves Money on the Table
