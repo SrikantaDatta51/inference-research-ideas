@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-05-01" agent="SecureTenant" version="24.0.0" type="device">
+  <diagram id="secure-tenant-arch" name="Secure-Tenant Isolation Architecture">
+    <mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Secure-Tenant: Quantized KV-Cache Isolation Architecture" style="text;html=1;fontSize=20;fontStyle=1;align=center;verticalAlign=middle;fillColor=none;fontColor=#1a1a2e;" vertex="1" parent="1">
+          <mxGeometry x="300" y="15" width="1000" height="35" as="geometry"/>
+        </mxCell>
+        <!-- GPU Node -->
+        <mxCell id="gpu-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#333;arcSize=5;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="70" width="1440" height="520" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpu-label" value="H100 SXM 80GB — Shared GPU Node" style="text;html=1;fontSize=16;fontStyle=1;align=left;fillColor=none;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="100" y="78" width="400" height="25" as="geometry"/>
+        </mxCell>
+        <!-- Model Weights (shared) -->
+        <mxCell id="weights" value="Shared Model Weights (FP8/INT4)&#xa;Llama 3.1 70B — 35GB&#xa;Read-Only, All Tenants Share" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#34495e;fontColor=#ffffff;fontSize=11;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="115" width="1400" height="50" as="geometry"/>
+        </mxCell>
+        <!-- Tenant Shards -->
+        <!-- Tenant A -->
+        <mxCell id="ta-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e74c3c;strokeColor=#c0392b;arcSize=8;opacity=90;" vertex="1" parent="1">
+          <mxGeometry x="100" y="185" width="220" height="280" as="geometry"/>
+        </mxCell>
+        <mxCell id="ta-label" value="Tenant A Shard" style="text;html=1;fontSize=12;fontStyle=1;align=center;fillColor=none;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="140" y="190" width="140" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="ta-rot" value="Rotation R_a&#xa;(d=128, orthogonal)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ff6b6b;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="115" y="215" width="190" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="ta-kv" value="KV-Cache (3-bit TurboQuant)&#xa;PolarQuant Rotated&#xa;2.8GB / 128K context" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c0392b;fontColor=#ffffff;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="115" y="260" width="190" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="ta-qjl" value="QJL Residual Checksums&#xa;Integrity: blake3 per block&#xa;Error bound: ε &lt; 0.01" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e74c3c;fontColor=#ffffff;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="115" y="320" width="190" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="ta-meta" value="Shard Metadata&#xa;tenant_id | timestamps&#xa;eviction_policy: H2O&#xa;snapshot_ready: true" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e74c3c;fontColor=#ffffff;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="115" y="380" width="190" height="60" as="geometry"/>
+        </mxCell>
+        <!-- Tenant B -->
+        <mxCell id="tb-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2980b9;strokeColor=#2471a3;arcSize=8;opacity=90;" vertex="1" parent="1">
+          <mxGeometry x="340" y="185" width="220" height="280" as="geometry"/>
+        </mxCell>
+        <mxCell id="tb-label" value="Tenant B Shard" style="text;html=1;fontSize=12;fontStyle=1;align=center;fillColor=none;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="380" y="190" width="140" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="tb-rot" value="Rotation R_b&#xa;(d=128, orthogonal)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#5dade2;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="355" y="215" width="190" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="tb-kv" value="KV-Cache (3-bit TurboQuant)&#xa;PolarQuant Rotated&#xa;2.8GB / 128K context" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2471a3;fontColor=#ffffff;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="355" y="260" width="190" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="tb-qjl" value="QJL Residual Checksums&#xa;Integrity: blake3 per block&#xa;Error bound: ε &lt; 0.01" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2980b9;fontColor=#ffffff;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="355" y="320" width="190" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="tb-meta" value="Shard Metadata&#xa;tenant_id | timestamps&#xa;eviction_policy: LRU&#xa;snapshot_ready: true" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2980b9;fontColor=#ffffff;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="355" y="380" width="190" height="60" as="geometry"/>
+        </mxCell>
+        <!-- Tenant C -->
+        <mxCell id="tc-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#27ae60;strokeColor=#229954;arcSize=8;opacity=90;" vertex="1" parent="1">
+          <mxGeometry x="580" y="185" width="220" height="280" as="geometry"/>
+        </mxCell>
+        <mxCell id="tc-label" value="Tenant C Shard" style="text;html=1;fontSize=12;fontStyle=1;align=center;fillColor=none;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="620" y="190" width="140" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="tc-rot" value="Rotation R_c&#xa;(d=128, orthogonal)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#58d68d;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="595" y="215" width="190" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="tc-kv" value="KV-Cache (3-bit TurboQuant)&#xa;PolarQuant Rotated&#xa;2.8GB / 128K context" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#229954;fontColor=#ffffff;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="595" y="260" width="190" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="tc-qjl" value="QJL Residual Checksums&#xa;Integrity: blake3 per block&#xa;Error bound: ε &lt; 0.01" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#27ae60;fontColor=#ffffff;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="595" y="320" width="190" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="tc-meta" value="Shard Metadata&#xa;tenant_id | timestamps&#xa;eviction_policy: StreamingLLM&#xa;snapshot_ready: false" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#27ae60;fontColor=#ffffff;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="595" y="380" width="190" height="60" as="geometry"/>
+        </mxCell>
+        <!-- Tenant D-F (compact) -->
+        <mxCell id="td" value="Tenant D Shard&#xa;R_d rotated&#xa;3-bit KV: 2.8GB" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#8e44ad;fontColor=#ffffff;fontSize=10;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="820" y="185" width="190" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="te" value="Tenant E Shard&#xa;R_e rotated&#xa;3-bit KV: 2.8GB" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d35400;fontColor=#ffffff;fontSize=10;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="820" y="280" width="190" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="tf" value="Tenant F Shard&#xa;R_f rotated&#xa;3-bit KV: 2.8GB" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1abc9c;fontColor=#ffffff;fontSize=10;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="820" y="375" width="190" height="80" as="geometry"/>
+        </mxCell>
+        <!-- Free Memory -->
+        <mxCell id="free" value="Free VRAM: 21.5GB&#xa;(Burst capacity / longer contexts)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2c3e50;fontColor=#95a5a6;fontSize=10;strokeColor=#34495e;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="480" width="910" height="40" as="geometry"/>
+        </mxCell>
+        <!-- Security Components -->
+        <mxCell id="sec-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f39c12;strokeColor=#e67e22;arcSize=8;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="185" width="460" height="380" as="geometry"/>
+        </mxCell>
+        <mxCell id="sec-label" value="Security &amp; Isolation Engine" style="text;html=1;fontSize=13;fontStyle=1;align=center;fillColor=none;fontColor=#1a1a2e;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="190" width="260" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="sec1" value="Rotation Matrix Vault&#xa;Per-tenant R_t stored encrypted&#xa;HSM-backed key management&#xa;Rotated per session" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e67e22;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="220" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="sec2" value="QJL Integrity Monitor&#xa;Real-time hash verification&#xa;Tamper detection &lt; 1μs&#xa;False negative: &lt; 10^-15" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e67e22;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1280" y="220" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="sec3" value="Crypto Zeroing Engine&#xa;cudaMemsetAsync on dealloc&#xa;NIST 800-88 compliant&#xa;Verified via ECC check" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e67e22;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="305" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="sec4" value="Batch Isolation Scheduler&#xa;Never co-batch cross-tenant&#xa;FA3 block boundaries = &#xa;tenant boundaries" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e67e22;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1280" y="305" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="sec5" value="Snapshot Engine&#xa;Shard → NVMe → Object Store&#xa;Encrypted at rest (AES-256)&#xa;45ms checkpoint latency" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e67e22;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="390" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="sec6" value="Side-Channel Monitor&#xa;L2 cache timing analysis&#xa;DRAM access pattern audit&#xa;Alert on anomaly detection" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e67e22;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1280" y="390" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="sec7" value="Attention Variant Adapter&#xa;MHA: per-head rotation | GQA: per-group | MLA: latent-space | SSM: state rotation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d35400;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="475" width="420" height="40" as="geometry"/>
+        </mxCell>
+        <!-- Bottom: Comparison -->
+        <mxCell id="compare-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecf0f1;strokeColor=#bdc3c7;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="620" width="1440" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="compare-label" value="Isolation Comparison" style="text;html=1;fontSize=12;fontStyle=1;align=left;fillColor=none;fontColor=#333;" vertex="1" parent="1">
+          <mxGeometry x="100" y="625" width="200" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="c1" value="MIG Partitioning&#xa;Max 7 slices&#xa;Coarse isolation&#xa;40% VRAM waste" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bdc3c7;fontColor=#333;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="100" y="650" width="200" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2" value="CUDA MPS&#xa;Shared context&#xa;No memory isolation&#xa;Side-channel vulnerable" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bdc3c7;fontColor=#333;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="320" y="650" width="200" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3" value="Confidential Computing&#xa;TEE overhead: 15-30%&#xa;Limited GPU support&#xa;Strong but expensive" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bdc3c7;fontColor=#333;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="540" y="650" width="200" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="c4" value="Secure-Tenant (Ours)&#xa;6-8 tenants per GPU&#xa;Cryptographic isolation&#xa;+1.6ms overhead only" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#27ae60;fontColor=#ffffff;fontSize=9;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="760" y="650" width="200" height="50" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

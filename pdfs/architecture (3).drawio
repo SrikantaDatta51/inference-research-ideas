@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-05-01" agent="AccuracyQuant" version="24.0.0" type="device">
+  <diagram id="accuracy-quant-arch" name="Quantization Certification Pipeline">
+    <mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Accuracy-Preserving Quantization: Certification Pipeline" style="text;html=1;fontSize=20;fontStyle=1;align=center;fillColor=none;fontColor=#1a1a2e;" vertex="1" parent="1">
+          <mxGeometry x="300" y="15" width="1000" height="35" as="geometry"/>
+        </mxCell>
+        <!-- Input Models -->
+        <mxCell id="input-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2c3e50;strokeColor=#1a252f;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="70" width="1440" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="input-title" value="Input: Model Architectures Under Evaluation" style="text;html=1;fontSize=13;fontStyle=1;align=left;fillColor=none;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="100" y="75" width="400" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="m1" value="MHA&#xa;Llama 2 70B&#xa;Full KV per head" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e74c3c;fontColor=#ffffff;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="100" width="190" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="m2" value="GQA&#xa;Llama 3.1 70B&#xa;Grouped KV heads" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3498db;fontColor=#ffffff;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="310" y="100" width="190" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="m3" value="MLA + MoE&#xa;DeepSeek V3 685B&#xa;Latent KV compression" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#9b59b6;fontColor=#ffffff;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="520" y="100" width="190" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="m4" value="SSM&#xa;Mamba-2 7B&#xa;Recurrent state" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#27ae60;fontColor=#ffffff;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="730" y="100" width="190" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="m5" value="Hybrid&#xa;Jamba 52B&#xa;Attention + Mamba" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f39c12;fontColor=#ffffff;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="940" y="100" width="190" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="m6" value="MoE&#xa;Mixtral 8×22B&#xa;Expert parallelism" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1abc9c;fontColor=#ffffff;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="100" width="190" height="55" as="geometry"/>
+        </mxCell>
+        <!-- TurboQuant Pipeline -->
+        <mxCell id="tq-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="195" width="1440" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="tq-title" value="TurboQuant Pipeline (PolarQuant + Quantize + QJL Verify)" style="text;html=1;fontSize=13;fontStyle=1;align=left;fillColor=none;fontColor=#1a1a2e;" vertex="1" parent="1">
+          <mxGeometry x="100" y="200" width="500" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="tq1" value="Step 1: PolarQuant&#xa;Random Rotation R∈O(d)&#xa;Decorrelate outliers&#xa;Per-tensor or per-channel" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2980b9;fontColor=#ffffff;fontSize=10;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="230" width="280" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="tq2" value="Step 2: Quantize&#xa;Uniform b-bit (b=2,3,4)&#xa;Near-zero clipping error&#xa;Optimal after rotation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a5276;fontColor=#ffffff;fontSize=10;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="420" y="230" width="280" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="tq3" value="Step 3: QJL Verify&#xa;JL random projection check&#xa;ε-bounded error guarantee&#xa;Fallback if ε &gt; threshold" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#154360;fontColor=#ffffff;fontSize=10;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="740" y="230" width="280" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="tq4" value="Comparison Methods&#xa;GPTQ | AWQ | QuIP#&#xa;SqueezeLLM | HQQ&#xa;FP8 | INT4 baselines" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#7f8c8d;fontColor=#ffffff;fontSize=10;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="230" width="280" height="70" as="geometry"/>
+        </mxCell>
+        <!-- Arrows between TQ stages -->
+        <mxCell id="tqa1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#2980b9;strokeWidth=2;" edge="1" source="tq1" target="tq2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="tqa2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#1a5276;strokeWidth=2;" edge="1" source="tq2" target="tq3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <!-- Sensitivity Analysis -->
+        <mxCell id="sa-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="350" width="700" height="170" as="geometry"/>
+        </mxCell>
+        <mxCell id="sa-title" value="Layer-by-Layer Sensitivity Analysis" style="text;html=1;fontSize=13;fontStyle=1;align=left;fillColor=none;fontColor=#1a1a2e;" vertex="1" parent="1">
+          <mxGeometry x="100" y="355" width="300" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="sa1" value="Q/K/V Projections&#xa;Sensitivity: MEDIUM&#xa;MLA latent KV: HIGH" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f39c12;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="385" width="150" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="sa2" value="FFN / MoE Experts&#xa;Sensitivity: MEDIUM&#xa;Gate: LOW" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e67e22;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="270" y="385" width="150" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="sa3" value="SSM State (A,B,C)&#xa;Sensitivity: LOW&#xa;Most resilient" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#27ae60;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="440" y="385" width="150" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="sa4" value="MoE Router&#xa;Sensitivity: VERY LOW&#xa;Always safe at 3-bit" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2ecc71;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="610" y="385" width="150" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="sa-result" value="Output: Per-layer sensitivity map → Mixed-precision recommendation&#xa;Example: MLA latent KV at INT4, everything else at 3-bit = 4.8× compression, +0.03 PPL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d4ac0d;fontColor=#1a1a2e;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="455" width="660" height="45" as="geometry"/>
+        </mxCell>
+        <!-- Benchmark Suites -->
+        <mxCell id="bench-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="810" y="350" width="710" height="170" as="geometry"/>
+        </mxCell>
+        <mxCell id="bench-title" value="Industry Benchmark Suites" style="text;html=1;fontSize=13;fontStyle=1;align=left;fillColor=none;fontColor=#2d6a4f;" vertex="1" parent="1">
+          <mxGeometry x="830" y="355" width="250" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="b1" value="Med-QA&#xa;Medical reasoning&#xa;Threshold: 90.0%&#xa;Result: 93.8% ✅" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#27ae60;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="830" y="385" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="b2" value="LegalBench&#xa;Legal reasoning&#xa;Threshold: 85.0%&#xa;Result: 88.9% ✅" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#27ae60;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="990" y="385" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="b3" value="FinanceBench&#xa;Financial analysis&#xa;Threshold: 87.0%&#xa;Result: 91.2% ✅" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#27ae60;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="385" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="b4" value="PubMedQA&#xa;88.0% → 92.1% ✅" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#27ae60;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="830" y="455" width="140" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="b5" value="CaseHOLD&#xa;82.0% → 86.5% ✅" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#27ae60;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="990" y="455" width="140" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="b6" value="MMLU-Pro&#xa;80.0% → 84.2% ✅" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#27ae60;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="455" width="140" height="35" as="geometry"/>
+        </mxCell>
+        <!-- Certification Output -->
+        <mxCell id="cert-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="550" width="1440" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="cert-title" value="Output: Accuracy Passport (Quantization Certification)" style="text;html=1;fontSize=14;fontStyle=1;align=left;fillColor=none;fontColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="100" y="555" width="500" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="c1a" value="Accuracy Passport&#xa;JSON Certificate&#xa;Per model × quant × benchmark&#xa;With confidence intervals" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b85450;fontColor=#ffffff;fontSize=10;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="585" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2a" value="Mixed-Precision Map&#xa;Per-layer precision rec.&#xa;MLA latent: INT4&#xa;MoE router: INT3" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b85450;fontColor=#ffffff;fontSize=10;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="350" y="585" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3a" value="QJL Error Report&#xa;Fallback trigger rate&#xa;Error distribution&#xa;Worst-case bounds" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b85450;fontColor=#ffffff;fontSize=10;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="600" y="585" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="c4a" value="Cost Savings Report&#xa;5.3× memory reduction&#xa;3.8× cost reduction&#xa;0.3% accuracy delta" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#27ae60;fontColor=#ffffff;fontSize=10;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="850" y="585" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="c5a" value="Cross-Cloud Validation&#xa;AWS: PPL 5.18 ✅&#xa;GCP: PPL 5.17 ✅&#xa;Azure: PPL 5.19 ✅&#xa;OCI: PPL 5.15 ✅" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3498db;fontColor=#ffffff;fontSize=10;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="585" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <!-- Arrows -->
+        <mxCell id="a1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#2c3e50;strokeWidth=2;" edge="1" source="input-bg" target="tq-bg" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#6c8ebf;strokeWidth=2;" edge="1" source="tq-bg" target="sa-bg" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#6c8ebf;strokeWidth=2;" edge="1" source="tq-bg" target="bench-bg" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#d6b656;strokeWidth=2;" edge="1" source="sa-bg" target="cert-bg" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#82b366;strokeWidth=2;" edge="1" source="bench-bg" target="cert-bg" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
