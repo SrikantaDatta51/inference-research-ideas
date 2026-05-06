@@ -27,10 +27,10 @@ img{max-width:100%;height:auto;margin:10px 0}
 a{color:#2C5F8A}
 .author{color:#1B3A5C;font-size:13pt;font-weight:bold;margin-bottom:2px}
 .author-line{color:#555;font-size:10pt;margin-bottom:15px}
-@page{size:letter;margin:0.3in}
+@page{size:letter;margin:0.15in}
 </style>"""
 
-AUTHOR_BLOCK = '<div class="author">Srikanta Datta</div>\n<div class="author-line">Distinguished Engineer, AI Compute Platform</div>\n<hr style="border:1px solid #2C5F8A;margin-bottom:15px">\n\n'
+AUTHOR_BLOCK = '<div class="author">Srikanta Datta</div>\n<hr style="border:1px solid #2C5F8A;margin-bottom:10px">\n\n'
 
 ASSET_TO_JPG = {
     "718ea411-bb11-41ae-83c8-01258fe36591": os.path.join(PDF_DIR, "InferMark.jpg"),
