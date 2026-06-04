@@ -1,83 +1,13 @@
-% ===== Disaggregated Inference =====
-@inproceedings{patel2024splitwise,
-  title={Splitwise: Efficient Generative {LLM} Inference Using Phase Splitting},
-  author={Patel, Pratyush and Choukse, Esha and Zhang, Chaojie and Shah, Aashaka and Goiri, \'{I}\~{n}igo and Maleki, Saeed and Bianchini, Ricardo},
-  booktitle={Proc. ACM/IEEE Int. Symp. on Computer Architecture (ISCA)},
-  pages={118--132},
-  year={2024}
-}
+% ====================================================================
+% References sorted by year (2025 first, then 2024, then 2023)
+% Within each year, sorted by topic relevance to paper
+% ====================================================================
 
-@inproceedings{zhong2024distserve,
-  title={{DistServe}: Disaggregating Prefill and Decoding for Goodput-optimized Large Language Model Serving},
-  author={Zhong, Yinmin and Liu, Shengyu and Chen, Junda and Hu, Jianbo and Zhu, Yibo and Liu, Xuanzhe and Jin, Xin and Zhang, Hao},
-  booktitle={Proc. USENIX Symp. on Operating Systems Design and Implementation (OSDI)},
-  year={2024}
-}
-
-% ===== CPU Inference Engines =====
-@misc{gerganov2024llamacpp,
-  title={llama.cpp: Inference of {LLaMA} model in pure {C/C++}},
-  author={Gerganov, Georgi},
-  howpublished={\url{https://github.com/ggerganov/llama.cpp}},
-  year={2024}
-}
-
-@inproceedings{song2024powerinfer,
-  title={{PowerInfer}: Fast Large Language Model Serving with a Consumer-grade {GPU}},
-  author={Song, Yixin and Mi, Zeyu and Xie, Haotong and Chen, Haibo},
-  booktitle={Proc. Machine Learning and Systems (MLSys)},
-  year={2024}
-}
-
-@inproceedings{sheng2023flexgen,
-  title={{FlexGen}: High-Throughput Generative Inference of Large Language Models with a Single {GPU}},
-  author={Sheng, Ying and Zheng, Lianmin and Yuan, Binhang and Li, Zhuohan and Ryabinin, Max and Chen, Beidi and Liang, Percy and R\'{e}, Christopher and Stoica, Ion and Zhang, Ce},
-  booktitle={Proc. Int. Conf. on Machine Learning (ICML)},
-  year={2023}
-}
-
-% ===== Speculative Decoding =====
-@inproceedings{li2024eagle,
-  title={{EAGLE}: Speculative Sampling Requires Rethinking Feature Uncertainty},
-  author={Li, Yuhui and Wei, Fangyun and Zhang, Chao and Zhang, Hongyang},
-  booktitle={Proc. Int. Conf. on Machine Learning (ICML)},
-  year={2024}
-}
-
-@inproceedings{li2024eagle2,
-  title={{EAGLE-2}: Faster Inference of Language Models with Dynamic Draft Trees},
-  author={Li, Yuhui and Wei, Fangyun and Zhang, Chao and Zhang, Hongyang},
-  booktitle={Proc. Conf. on Empirical Methods in Natural Language Processing (EMNLP)},
-  year={2024}
-}
-
-@inproceedings{cai2024medusa,
-  title={{Medusa}: Simple {LLM} Inference Acceleration Framework with Multiple Decoding Heads},
-  author={Cai, Tianle and Li, Yuhong and Geng, Zhengyang and Peng, Hongwu and Lee, Jason D. and Chen, Deming and Dao, Tri},
-  booktitle={Proc. Int. Conf. on Machine Learning (ICML)},
-  year={2024}
-}
-
-% ===== Serving Systems =====
-@inproceedings{zheng2024sglang,
-  title={{SGLang}: Efficient Execution of Structured Language Model Programs},
-  author={Zheng, Lianmin and Yin, Liangsheng and Xie, Zhiqiang and Huang, Jeff and Sun, Chuyue and Yu, Cody Hao and Cao, Shi and Kober, Christos and Leng, Yineng and Zhu, Huon and others},
-  booktitle={Proc. Conf. on Neural Information Processing Systems (NeurIPS)},
-  year={2024}
-}
-
-@inproceedings{kwon2023vllm,
-  title={Efficient Memory Management for Large Language Model Serving with {PagedAttention}},
-  author={Kwon, Woosuk and Li, Zhuohan and Zhuang, Siyuan and Sheng, Ying and Zheng, Lianmin and Yu, Cody Hao and Gonzalez, Joseph E. and Zhang, Hao and Stoica, Ion},
-  booktitle={Proc. ACM Symp. on Operating Systems Principles (SOSP)},
-  year={2023}
-}
-
-% ===== KV-Cache and Memory =====
+% ===== 2025 =====
 @inproceedings{qin2024mooncake,
   title={{Mooncake}: A {KVCache}-centric Disaggregated Architecture for {LLM} Serving},
   author={Qin, Ruoyu and others},
-  booktitle={Proc. Int. Conf. on Architectural Support for Programming Languages and Operating Systems (ASPLOS)},
+  booktitle={Proc. ASPLOS},
   year={2025}
 }
 
@@ -88,66 +18,91 @@
   year={2025}
 }
 
-% ===== CXL Memory =====
-@inproceedings{maruf2023cxl,
-  title={{TPP}: Transparent Page Placement for {CXL}-Based Tiered-Memory Systems},
-  author={Maruf, Hasan Al and Wang, Hao and Dhakal, Abhishek and Shen, Jing and Jog, Nishil and Kannan, Sudarsun and Chowdhury, Mosharaf},
-  booktitle={Proc. Int. Conf. on Architectural Support for Programming Languages and Operating Systems (ASPLOS)},
-  year={2023}
+% ===== 2024: Disaggregated Inference =====
+@inproceedings{patel2024splitwise,
+  title={Splitwise: Efficient Generative {LLM} Inference Using Phase Splitting},
+  author={Patel, Pratyush and Choukse, Esha and Zhang, Chaojie and Shah, Aashaka and Goiri, \'{I}\~{n}igo and Maleki, Saeed and Bianchini, Ricardo},
+  booktitle={Proc. ACM/IEEE ISCA},
+  pages={118--132},
+  year={2024}
 }
 
+@inproceedings{zhong2024distserve,
+  title={{DistServe}: Disaggregating Prefill and Decoding for Goodput-optimized {LLM} Serving},
+  author={Zhong, Yinmin and Liu, Shengyu and Chen, Junda and Hu, Jianbo and Zhu, Yibo and Liu, Xuanzhe and Jin, Xin and Zhang, Hao},
+  booktitle={Proc. USENIX OSDI},
+  year={2024}
+}
+
+% ===== 2024: Speculative Decoding =====
+@inproceedings{li2024eagle,
+  title={{EAGLE}: Speculative Sampling Requires Rethinking Feature Uncertainty},
+  author={Li, Yuhui and Wei, Fangyun and Zhang, Chao and Zhang, Hongyang},
+  booktitle={Proc. ICML},
+  year={2024}
+}
+
+@inproceedings{li2024eagle2,
+  title={{EAGLE-2}: Faster Inference of Language Models with Dynamic Draft Trees},
+  author={Li, Yuhui and Wei, Fangyun and Zhang, Chao and Zhang, Hongyang},
+  booktitle={Proc. EMNLP},
+  year={2024}
+}
+
+@inproceedings{cai2024medusa,
+  title={{Medusa}: Simple {LLM} Inference Acceleration Framework with Multiple Decoding Heads},
+  author={Cai, Tianle and Li, Yuhong and Geng, Zhengyang and Peng, Hongwu and Lee, Jason D. and Chen, Deming and Dao, Tri},
+  booktitle={Proc. ICML},
+  year={2024}
+}
+
+% ===== 2024: Serving Systems =====
+@inproceedings{zheng2024sglang,
+  title={{SGLang}: Efficient Execution of Structured Language Model Programs},
+  author={Zheng, Lianmin and Yin, Liangsheng and Xie, Zhiqiang and others},
+  booktitle={Proc. NeurIPS},
+  year={2024}
+}
+
+% ===== 2024: CPU Inference =====
+@misc{gerganov2024llamacpp,
+  title={llama.cpp: Inference of {LLaMA} model in pure {C/C++}},
+  author={Gerganov, Georgi},
+  howpublished={\url{https://github.com/ggerganov/llama.cpp}},
+  year={2024}
+}
+
+@inproceedings{song2024powerinfer,
+  title={{PowerInfer}: Fast Large Language Model Serving with a Consumer-grade {GPU}},
+  author={Song, Yixin and Mi, Zeyu and Xie, Haotong and Chen, Haibo},
+  booktitle={Proc. MLSys},
+  year={2024}
+}
+
+@article{dong2024dovetail,
+  title={{Dovetail}: A {CPU/GPU} Heterogeneous Speculative Decoding for {LLM} Inference},
+  author={Dong, Libo and others},
+  journal={arXiv preprint arXiv:2407.01470},
+  year={2024}
+}
+
+% ===== 2024: CXL and Memory =====
 @article{sun2024cxl,
   title={Demystifying {CXL} Memory with Genuine {CXL}-Ready Systems and Devices},
   author={Sun, Yan and others},
-  journal={Proc. IEEE/ACM Int. Symp. on Microarchitecture (MICRO)},
+  journal={Proc. IEEE/ACM MICRO},
   year={2024}
 }
 
-% ===== Quantization =====
-@inproceedings{frantar2023gptq,
-  title={{GPTQ}: Accurate Post-Training Quantization for Generative Pre-trained Transformers},
-  author={Frantar, Elias and Ashkboos, Saleh and Hoefler, Torsten and Alistarh, Dan},
-  booktitle={Proc. Int. Conf. on Learning Representations (ICLR)},
-  year={2023}
-}
-
+% ===== 2024: Quantization =====
 @inproceedings{lin2024awq,
-  title={{AWQ}: Activation-aware Weight Quantization for On-Device {LLM} Compression and Acceleration},
+  title={{AWQ}: Activation-aware Weight Quantization for On-Device {LLM} Compression},
   author={Lin, Ji and Tang, Jiaming and Tang, Haotian and Yang, Shang and Chen, Wei-Ming and Wang, Wei-Chen and Xiao, Guangxuan and Dang, Xingyu and Gan, Chuang and Han, Song},
-  booktitle={Proc. Machine Learning and Systems (MLSys)},
+  booktitle={Proc. MLSys},
   year={2024}
 }
 
-% ===== Hardware Benchmarks =====
-@misc{amd2024mi300x,
-  title={{AMD Instinct MI300X}: The World's Most Advanced Accelerator for Generative {AI}},
-  author={{Advanced Micro Devices}},
-  howpublished={\url{https://www.amd.com/en/products/accelerators/instinct/mi300/mi300x.html}},
-  year={2024}
-}
-
-@misc{intel2024gaudi3,
-  title={{Intel Gaudi 3 AI} Accelerator},
-  author={{Intel Corporation}},
-  howpublished={\url{https://habana.ai/products/gaudi3/}},
-  year={2024}
-}
-
-@misc{nvidia2024b200,
-  title={{NVIDIA B200 Tensor Core GPU} Architecture},
-  author={{NVIDIA Corporation}},
-  howpublished={\url{https://www.nvidia.com/en-us/data-center/b200/}},
-  year={2024}
-}
-
-% ===== Attention and Architecture =====
-@inproceedings{dao2023flashattention2,
-  title={{FlashAttention-2}: Faster Attention with Better Parallelism and Work Partitioning},
-  author={Dao, Tri},
-  booktitle={Proc. Int. Conf. on Learning Representations (ICLR)},
-  year={2024}
-}
-
+% ===== 2024: Model Architecture =====
 @article{deepseek2024v3,
   title={{DeepSeek-V3} Technical Report},
   author={{DeepSeek-AI}},
@@ -162,15 +117,36 @@
   year={2024}
 }
 
-% ===== Dovetail (CPU/GPU Heterogeneous) =====
-@article{dong2024dovetail,
-  title={{Dovetail}: A {CPU/GPU} Heterogeneous Speculative Decoding for {LLM} Inference},
-  author={Dong, Libo and others},
-  journal={arXiv preprint arXiv:2407.01470},
+@inproceedings{dao2023flashattention2,
+  title={{FlashAttention-2}: Faster Attention with Better Parallelism and Work Partitioning},
+  author={Dao, Tri},
+  booktitle={Proc. ICLR},
   year={2024}
 }
 
-% ===== Industry and Cost Analysis =====
+% ===== 2024: Hardware =====
+@misc{nvidia2024b200,
+  title={{NVIDIA B200 Tensor Core GPU} Architecture},
+  author={{NVIDIA Corporation}},
+  howpublished={\url{https://www.nvidia.com/en-us/data-center/b200/}},
+  year={2024}
+}
+
+@misc{amd2024mi300x,
+  title={{AMD Instinct MI300X} Accelerator for Generative {AI}},
+  author={{Advanced Micro Devices}},
+  howpublished={\url{https://www.amd.com/en/products/accelerators/instinct/mi300/mi300x.html}},
+  year={2024}
+}
+
+@misc{intel2024gaudi3,
+  title={{Intel Gaudi 3 AI} Accelerator},
+  author={{Intel Corporation}},
+  howpublished={\url{https://habana.ai/products/gaudi3/}},
+  year={2024}
+}
+
+% ===== 2024: Industry Analysis =====
 @article{patel2024training,
   title={Characterizing the Disentangled Training and Inference in Large Language Models},
   author={Patel, Pratyush and Bianchini, Ricardo},
@@ -186,4 +162,33 @@
   author={{Anyscale}},
   howpublished={\url{https://www.anyscale.com/blog/inference-cost-llms}},
   year={2024}
+}
+
+% ===== 2023 =====
+@inproceedings{kwon2023vllm,
+  title={Efficient Memory Management for {LLM} Serving with {PagedAttention}},
+  author={Kwon, Woosuk and Li, Zhuohan and Zhuang, Siyuan and Sheng, Ying and Zheng, Lianmin and Yu, Cody Hao and Gonzalez, Joseph E. and Zhang, Hao and Stoica, Ion},
+  booktitle={Proc. ACM SOSP},
+  year={2023}
+}
+
+@inproceedings{sheng2023flexgen,
+  title={{FlexGen}: High-Throughput Generative Inference of {LLMs} with a Single {GPU}},
+  author={Sheng, Ying and Zheng, Lianmin and Yuan, Binhang and Li, Zhuohan and Ryabinin, Max and Chen, Beidi and Liang, Percy and R\'{e}, Christopher and Stoica, Ion and Zhang, Ce},
+  booktitle={Proc. ICML},
+  year={2023}
+}
+
+@inproceedings{maruf2023cxl,
+  title={{TPP}: Transparent Page Placement for {CXL}-Based Tiered-Memory},
+  author={Maruf, Hasan Al and Wang, Hao and Dhakal, Abhishek and Shen, Jing and Jog, Nishil and Kannan, Sudarsun and Chowdhury, Mosharaf},
+  booktitle={Proc. ASPLOS},
+  year={2023}
+}
+
+@inproceedings{frantar2023gptq,
+  title={{GPTQ}: Accurate Post-Training Quantization for Generative Pre-trained Transformers},
+  author={Frantar, Elias and Ashkboos, Saleh and Hoefler, Torsten and Alistarh, Dan},
+  booktitle={Proc. ICLR},
+  year={2023}
 }

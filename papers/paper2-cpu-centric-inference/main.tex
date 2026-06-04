@@ -114,21 +114,21 @@ Gaudi~3 & 61\% & 7.8\% & 11.4\% \\
 \begin{table}[!htbp]
 \caption{Cost-Normalized Memory Bandwidth (June 2026 Pricing)}
 \label{tab:costbw}
-\centering\footnotesize
-\begin{tabular}{@{}llcccc@{}}
+\centering\scriptsize
+\begin{tabular}{@{}llrcrc@{}}
 \toprule
 \textbf{Vendor} & \textbf{Platform} & \textbf{BW} & \textbf{\$/hr} & \textbf{BW/\$} & \textbf{Cap.} \\
 \midrule
-\multicolumn{6}{c}{\textit{GPU/Accelerator Stacks (Prefill + Decode)}} \\
+\multicolumn{6}{c}{\textit{GPU/Accelerator (Prefill + Decode)}} \\
 \midrule
-NVIDIA & 8$\times$H100 SXM & 26.8\,TB/s & \$49.28 & 544 & 640\,GB \\
-NVIDIA & 8$\times$H200 SXM & 35.2\,TB/s & \$50.48 & 697 & 1.1\,TB \\
-AMD & 8$\times$MI300X & 42.4\,TB/s & \$12.00 & 3533 & 1.5\,TB \\
-Intel & 8$\times$Gaudi~3 & 29.6\,TB/s & \$24.00 & 1233 & 1.0\,TB \\
+NVIDIA & 8$\times$H100 & 26.8\,TB/s & \$49 & 544 & 640\,GB \\
+NVIDIA & 8$\times$H200 & 35.2\,TB/s & \$50 & 697 & 1.1\,TB \\
+AMD & 8$\times$MI300X & 42.4\,TB/s & \$12 & 3533 & 1.5\,TB \\
+Intel & 8$\times$Gaudi~3 & 29.6\,TB/s & \$24 & 1233 & 1.0\,TB \\
 \midrule
 \multicolumn{6}{c}{\textit{CPU Stacks (Decode Only)}} \\
 \midrule
-Intel & 2$\times$Granite Rapids & 410\,GB/s & \$4.20 & 98 & 2\,TB \\
+Intel & 2$\times$Granite Rp. & 410\,GB/s & \$4.20 & 98 & 2\,TB \\
 AMD & 2$\times$EPYC 9754 & 460\,GB/s & \$3.80 & 121 & 3\,TB \\
 ARM & Graviton4 metal & 307\,GB/s & \$2.42 & 127 & 768\,GB \\
 \bottomrule
@@ -146,7 +146,7 @@ A key contribution of this work is demonstrating that disaggregated inference is
 \begin{table}[!htbp]
 \caption{Complete Vendor Stack Comparison for Disaggregated Inference}
 \label{tab:vendorstack}
-\centering\footnotesize
+\centering\scriptsize
 \begin{tabular}{@{}lcccc@{}}
 \toprule
 & \textbf{NVIDIA} & \textbf{AMD} & \textbf{Intel} & \textbf{ARM} \\
@@ -256,6 +256,7 @@ CXL (Compute Express Link) 3.1 enables memory pooling across nodes with near-DRA
 
 \begin{figure}[!htbp]
 \centering
+\resizebox{\linewidth}{!}{
 \begin{tikzpicture}[
     blk/.style={rectangle,draw,rounded corners=2pt,minimum height=0.6cm,font=\tiny\sffamily,line width=0.4pt},
     arr/.style={-{Stealth[length=1.5mm]},line width=0.4pt},
@@ -277,7 +278,8 @@ CXL (Compute Express Link) 3.1 enables memory pooling across nodes with near-DRA
 
 \node[font=\tiny\sffamily,gray] at (3.75,-0.7) {Total Addressable: 2--16\,TB KV-Cache Pool};
 \end{tikzpicture}
-\caption{CXL 3.1 memory pooling for disaggregated KV-cache. Multiple CPU decode nodes and GPU prefill nodes share a unified memory pool via CXL switch fabric. Any node can access any KV-cache page with $<$300\,ns additional latency vs. local DRAM.}
+}
+\caption{CXL~3.1 memory pooling for disaggregated KV-cache. CPU decode and GPU prefill nodes share a unified pool via CXL switch fabric with $<$300\,ns added latency.}
 \label{fig:cxl}
 \end{figure}
 
@@ -299,7 +301,8 @@ We implement a seven-tier memory and storage hierarchy (Figure~\ref{fig:hierarch
 \begin{table}[!htbp]
 \caption{Seven-Tier Memory/Storage Hierarchy for LLM Inference}
 \label{tab:7tier}
-\centering\footnotesize
+\centering\scriptsize
+\resizebox{\linewidth}{!}{
 \begin{tabular}{@{}clcccl@{}}
 \toprule
 \textbf{Tier} & \textbf{Medium} & \textbf{Latency} & \textbf{BW} & \textbf{Cap.} & \textbf{Contents} \\
@@ -313,6 +316,7 @@ T5 & NVMe-oF & 50\,$\mu$s & 8\,GB/s & 1\,PB & Remote store \\
 T6 & Object Store & 50\,ms & 5\,GB/s & $\infty$ & Archive \\
 \bottomrule
 \end{tabular}
+}
 \end{table}
 
 \textbf{Tier 0--1 (On-Chip SRAM)}: Hot neurons and active MoE experts pinned in L3 cache (105--120\,MB on Granite Rapids). Expert prediction pre-loads next-token experts into L3 during current-token decode. L3 hit rate for top-2 experts: 78\% (DeepSeek-V3), eliminating DDR5 access for majority of MoE routing.
@@ -478,20 +482,22 @@ Speculative decoding uses a small ``draft'' model to predict multiple tokens ahe
 \begin{table}[!htbp]
 \caption{Speculative Decoding Speedup by Platform}
 \label{tab:spec}
-\centering\footnotesize
+\centering\scriptsize
+\resizebox{\linewidth}{!}{
 \begin{tabular}{@{}lcccc@{}}
 \toprule
 \textbf{Platform} & \textbf{Draft} & \textbf{Accept} & \textbf{Speedup} & \textbf{Eff. tok/s} \\
 \midrule
 H100 + EAGLE-2 & 0.8B & 3.2 tok & 2.1$\times$ & 259 \\
-Granite Rapids + EAGLE-2 & 0.8B & 2.8 tok & 2.8$\times$ & 107 \\
+Granite Rp. + EAGLE-2 & 0.8B & 2.8 tok & 2.8$\times$ & 107 \\
 EPYC 9754 + EAGLE-2 & 0.8B & 3.0 tok & 2.8$\times$ & 118 \\
 Graviton4 + EAGLE-2 & 0.8B & 2.8 tok & 2.8$\times$ & 79.8 \\
 \midrule
-Granite Rapids + Medusa & 2-head & 2.4 tok & 2.1$\times$ & 80.2 \\
+Granite Rp. + Medusa & 2-head & 2.4 tok & 2.1$\times$ & 80.2 \\
 EPYC + Lookahead & N/A & 2.1 tok & 1.9$\times$ & 80.0 \\
 \bottomrule
 \end{tabular}
+}
 \end{table}
 
 \textbf{Key finding}: CPUs achieve \emph{higher relative speedup} (2.8$\times$ vs. 2.1$\times$) from speculative decoding than GPUs. This is because the draft model runs ``for free'' on idle CPU cores, while on GPUs it competes for shared compute resources. EAGLE-2 outperforms Medusa and Lookahead on CPUs due to better acceptance rates.
@@ -538,11 +544,13 @@ Graviton4 + EAGLE-2 & 79.8 & \$2.10 & \$7.31 \\
 Not all requests benefit from CPU decode. We define a routing classifier:
 
 \begin{equation}
-\text{Route}(r) = \begin{cases}
-\text{CPU-only} & \text{if } |p| < 512 \wedge |o| < 256 \wedge m \leq 13B \\
-\text{GPU} \to \text{CPU} & \text{if } |p| \geq 512 \vee m > 13B \\
-\text{GPU-only} & \text{if SLA} < 5\text{ms TPOT} \\
+\resizebox{0.88\linewidth}{!}{$
+\text{Route}(r)\!=\!\begin{cases}
+\text{CPU} & |p|\!<\!512 \wedge |o|\!<\!256 \wedge m\!\leq\!13\text{B} \\
+\text{GPU}{\to}\text{CPU} & |p|\!\geq\!512 \vee m\!>\!13\text{B} \\
+\text{GPU} & \text{SLA}\!<\!5\text{ms TPOT}
 \end{cases}
+$}
 \end{equation}
 
 \noindent where $|p|$ is prompt length, $|o|$ is output budget, and $m$ is model size.
@@ -826,18 +834,20 @@ GCP & c4-highmem & Emerald Rp. & 96 & 1.5\,TB & 360 & \$4.20 & 25.5 & Decode \\
 \begin{table}[!htbp]
 \caption{KV-Cache Transfer Mechanisms (Llama-70B, 128K, GQA)}
 \label{tab:transfer}
-\centering\footnotesize
-\begin{tabular}{@{}lcccc@{}}
+\centering\scriptsize
+\resizebox{\linewidth}{!}{
+\begin{tabular}{@{}lrccc@{}}
 \toprule
-\textbf{Mechanism} & \textbf{BW} & \textbf{Latency} & \textbf{Size} & \textbf{Viable} \\
+\textbf{Mechanism} & \textbf{BW} & \textbf{Lat.} & \textbf{Size} & \textbf{Viable} \\
 \midrule
-NVLink 6 (intra-node) & 1800\,GB/s & 0.7\,ms & 1.3\,GB & Baseline \\
-CXL 3.1 (same-rack) & 128\,GB/s & 10\,ms & 1.3\,GB & Optimal \\
-IB NDR (intra-cloud) & 400\,Gb/s & 26\,ms & 1.3\,GB & Yes \\
-TCP+INT3 (cross-cloud) & 25\,Gb/s & 78\,ms & 0.24\,GB & Yes \\
-Delta INT3 (agentic) & 100\,Gb/s & 1.2\,ms & 0.015\,GB & Optimal \\
+NVLink 6 (intra) & 1800\,GB/s & 0.7\,ms & 1.3\,GB & Baseline \\
+CXL 3.1 (rack) & 128\,GB/s & 10\,ms & 1.3\,GB & Optimal \\
+IB NDR (cloud) & 400\,Gb/s & 26\,ms & 1.3\,GB & Yes \\
+TCP+INT3 (cross) & 25\,Gb/s & 78\,ms & 0.24\,GB & Yes \\
+Delta INT3 & 100\,Gb/s & 1.2\,ms & 15\,MB & Optimal \\
 \bottomrule
 \end{tabular}
+}
 \end{table}
 
 INT3 quantization reduces transfer 5.3$\times$ (0.24\,GB, +0.02 PPL). Delta KV for agentic workloads achieves 87$\times$ reduction (1.2\,ms per step), making cross-cloud disaggregation invisible.
@@ -854,17 +864,17 @@ Successful GPU$\to$CPU disaggregation requires high-bandwidth, low-latency netwo
 \begin{table}[!htbp]
 \caption{Cloud Provider Network Capabilities for Disaggregation}
 \label{tab:network}
-\centering\footnotesize
-\begin{tabular}{@{}llccc@{}}
+\centering\scriptsize
+\begin{tabular}{@{}llrcc@{}}
 \toprule
-\textbf{Provider} & \textbf{Network} & \textbf{BW} & \textbf{Latency} & \textbf{RDMA} \\
+\textbf{Provider} & \textbf{Network} & \textbf{BW} & \textbf{Lat.} & \textbf{RDMA} \\
 \midrule
 AWS & EFA v2 & 3200\,Gb/s & 3\,$\mu$s & SRD \\
 GCP & TCPX & 1600\,Gb/s & 5\,$\mu$s & gRPC \\
 Azure & IB NDR & 3200\,Gb/s & 1.5\,$\mu$s & RDMA \\
-OCI & RDMA Cluster & 1600\,Gb/s & 2\,$\mu$s & RoCEv2 \\
+OCI & RDMA Clust. & 1600\,Gb/s & 2\,$\mu$s & RoCEv2 \\
 CoreWeave & IB NDR & 3200\,Gb/s & 1.5\,$\mu$s & RDMA \\
-Crusoe & MemoryAlloy & 3200\,Gb/s & 1\,$\mu$s & Custom \\
+Crusoe & MemAlloy & 3200\,Gb/s & 1\,$\mu$s & Custom \\
 Lambda & IB HDR & 800\,Gb/s & 2\,$\mu$s & RDMA \\
 \bottomrule
 \end{tabular}
