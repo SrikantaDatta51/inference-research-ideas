@@ -1,0 +1,159 @@
+\relax 
+\citation{hunt2024confidential}
+\citation{sallam2024bias,euaiact2025}
+\citation{jobin2023ai}
+\citation{intel2024tdx}
+\@writefile{toc}{\contentsline {section}{\numberline {I}Introduction}{1}{}\protected@file@percent }
+\newlabel{sec:intro}{{I}{1}}
+\@writefile{toc}{\contentsline {section}{\numberline {II}Background and Threat Model}{1}{}\protected@file@percent }
+\newlabel{sec:background}{{II}{1}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-A}}Trusted Execution Environments for LLM Inference}{1}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces TEE Platform Comparison for LLM Inference}}{1}{}\protected@file@percent }
+\newlabel{tab:tee}{{I}{1}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Confidential multi-tenant LLM inference architecture. \textbf  {Layer\nobreakspace  {}1}: Multi-tenant request router with per-tenant authentication and policy enforcement. \textbf  {Layer\nobreakspace  {}2}: AI Governance and Compliance layer with SBOM provenance (Chainguard-style), compliance graph queries (Wiz-style), bias monitoring, and audit logging under SLSA\nobreakspace  {}L3, EU AI Act, GDPR, and HIPAA. \textbf  {Layer\nobreakspace  {}3}: Confidential compute enclave with TEE boundary spanning Intel TDX, AMD SEV-SNP, and NVIDIA CC GPU---model weights never leave the TEE. \textbf  {Layer\nobreakspace  {}4}: Isolated tenant execution with per-tenant LoRA adapters, sovereign full-model deployments, and shared-base with private RAG. \textbf  {Layer\nobreakspace  {}5}: Secure storage with encrypted model vault, HSM-backed key management, and immutable audit trail. Zero-trust principle: no plaintext data exists outside the TEE boundary.}}{2}{}\protected@file@percent }
+\newlabel{fig:arch}{{1}{2}}
+\citation{amd2024sevsnp}
+\citation{nvidia2024ccmode}
+\citation{hunt2024confidential}
+\citation{hu2024lora}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-B}}Threat Model}{3}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {III}Confidential Multi-Tenant Architecture}{3}{}\protected@file@percent }
+\newlabel{sec:arch}{{III}{3}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-A}}Per-Tenant Isolation Model}{3}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Tenant Isolation Tiers}}{3}{}\protected@file@percent }
+\newlabel{tab:tiers}{{II}{3}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-B}}Confidential Inference Pipeline}{3}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-C}}Performance Analysis}{3}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {III}{\ignorespaces Confidential vs.\ Non-Confidential Inference (Llama-70B)}}{3}{}\protected@file@percent }
+\newlabel{tab:perf}{{III}{3}}
+\@writefile{toc}{\contentsline {section}{\numberline {IV}AI Compliance Graph}{3}{}\protected@file@percent }
+\newlabel{sec:graph}{{IV}{3}}
+\citation{wiz2025aispm}
+\citation{chainguard2025ai}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-A}}Motivation: From Static Checklists to Dynamic Graphs}{4}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces AI Compliance Graph: Wiz-Chainguard inspired query framework. Central \texttt  {LLM Model} node connects to six domains: training data provenance (with bias scores), SBOM attestation (SLSA\nobreakspace  {}L3, 0\nobreakspace  {}CVEs via Chainguard images), deployment context (sovereignty, GDPR), runtime risks (cross-tenant leakage, prompt injection), fine-tune lineage (parent-child bias delta tracking), and access control (per-tenant RBAC). Bottom: example Cypher query for bias-risk models.}}{4}{}\protected@file@percent }
+\newlabel{fig:graph}{{2}{4}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-B}}Graph Schema}{4}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-C}}Query Examples}{4}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-D}}Graph Update Pipeline}{4}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {V}Child Model Bias Monitoring}{4}{}\protected@file@percent }
+\newlabel{sec:bias}{{V}{4}}
+\citation{chainguard2025ai,slsa2024,sigstore2024}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}The Bias Inheritance Problem}{5}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}Continuous Bias Measurement}{5}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {IV}{\ignorespaces Bias Measurement Dimensions}}{5}{}\protected@file@percent }
+\newlabel{tab:bias}{{IV}{5}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-C}}Drift Detection and Escalation}{5}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {V}{\ignorespaces Bias Drift in Production Fine-Tuned Models}}{5}{}\protected@file@percent }
+\newlabel{tab:biasdrift}{{V}{5}}
+\@writefile{lot}{\contentsline {table}{\numberline {VI}{\ignorespaces Regulatory Sovereignty Requirements}}{5}{}\protected@file@percent }
+\newlabel{tab:sovereignty}{{VI}{5}}
+\@writefile{toc}{\contentsline {section}{\numberline {VI}Model Sovereignty and Data Residency}{5}{}\protected@file@percent }
+\newlabel{sec:sovereignty}{{VI}{5}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-A}}Sovereignty Requirements by Jurisdiction}{5}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-B}}Sovereignty-Aware Inference Routing}{5}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {VII}Supply-Chain Security for AI}{5}{}\protected@file@percent }
+\newlabel{sec:supply}{{VII}{5}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VII-A}}The Chainguard Model: From Containers to Models}{5}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {VII}{\ignorespaces AI Supply-Chain Attestation Framework}}{5}{}\protected@file@percent }
+\newlabel{tab:supply}{{VII}{5}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VII-B}}Model Bill of Materials (MBOM)}{5}{}\protected@file@percent }
+\citation{sigstore2024}
+\@writefile{toc}{\contentsline {section}{\numberline {VIII}AI Policy and Regulatory Framework}{6}{}\protected@file@percent }
+\newlabel{sec:policy}{{VIII}{6}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VIII-A}}Regulatory Landscape (2024--2026)}{6}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {VIII}{\ignorespaces Global AI Regulatory Requirements Mapped to Technical Controls}}{6}{}\protected@file@percent }
+\newlabel{tab:regs}{{VIII}{6}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VIII-B}}Compliance-by-Design Architecture}{6}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VIII-C}}Privacy-by-Design Controls}{6}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {IX}Implementation Details}{6}{}\protected@file@percent }
+\newlabel{sec:impl}{{IX}{6}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IX-A}}TEE Configuration}{6}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IX-B}}Multi-Tenant LoRA Hot-Swapping}{6}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {IX}{\ignorespaces LoRA Adapter Switching Performance}}{6}{}\protected@file@percent }
+\newlabel{tab:lora}{{IX}{6}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IX-C}}Compliance Graph Implementation}{6}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IX-D}}Bias Monitoring Pipeline}{7}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Bias monitoring pipeline: batch evaluation with Green/Yellow/Red escalation, continuous online sampling, and drift detection feedback loop.}}{7}{}\protected@file@percent }
+\newlabel{fig:biaspipeline}{{3}{7}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IX-E}}Sovereignty Enforcement Engine}{7}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {X}Evaluation}{7}{}\protected@file@percent }
+\newlabel{sec:eval}{{X}{7}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {X-A}}Performance Overhead}{7}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {X}{\ignorespaces End-to-End Performance: Confidential + Governed Inference}}{7}{}\protected@file@percent }
+\newlabel{tab:e2e}{{X}{7}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {X-B}}Compliance Graph Query Performance}{7}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {XI}{\ignorespaces ACG Query Latency (Neo4j, 10K Models, 50K Edges)}}{7}{}\protected@file@percent }
+\newlabel{tab:graphperf}{{XI}{7}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {X-C}}TCO Analysis}{7}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {XII}{\ignorespaces TCO Comparison: 100-Tenant Enterprise Deployment}}{7}{}\protected@file@percent }
+\newlabel{tab:tco}{{XII}{7}}
+\@writefile{toc}{\contentsline {section}{\numberline {XI}Discussion}{7}{}\protected@file@percent }
+\newlabel{sec:disc}{{XI}{7}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XI-A}}Limitations and Mitigations}{8}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XI-B}}Industry Implications}{8}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XI-C}}Patent vs.\ Open Research Delineation}{8}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XI-D}}Energy and Sustainability Considerations}{8}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {XIII}{\ignorespaces Energy Impact of Confidential Governed Inference}}{8}{}\protected@file@percent }
+\newlabel{tab:energy}{{XIII}{8}}
+\citation{hunt2024confidential}
+\citation{akram2025ccgpu}
+\citation{confidentialconsortium2023}
+\citation{nistai2024}
+\citation{euaiact2025}
+\citation{bommasani2024foundation}
+\citation{jobin2023ai}
+\citation{whitehouse2023aibo}
+\citation{sallam2024bias}
+\citation{tramer2023fairness}
+\citation{chainguard2025ai}
+\citation{sigstore2024}
+\citation{slsa2024}
+\citation{patel2024splitwise}
+\citation{qin2025mooncake}
+\citation{kwon2023vllm}
+\citation{zheng2024sglang}
+\citation{jobin2023ai}
+\citation{sun2024cxl}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XI-E}}Comparison with Alternative Approaches}{9}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {XIV}{\ignorespaces Comparison with Alternative Trust Architectures}}{9}{}\protected@file@percent }
+\newlabel{tab:compare}{{XIV}{9}}
+\@writefile{toc}{\contentsline {section}{\numberline {XII}Related Work}{9}{}\protected@file@percent }
+\newlabel{sec:related}{{XII}{9}}
+\@writefile{toc}{\contentsline {section}{\numberline {XIII}Future Work}{9}{}\protected@file@percent }
+\newlabel{sec:future}{{XIII}{9}}
+\@writefile{toc}{\contentsline {section}{\numberline {XIV}Conclusion}{10}{}\protected@file@percent }
+\newlabel{sec:conc}{{XIV}{10}}
+\@writefile{lot}{\contentsline {table}{\numberline {XV}{\ignorespaces Summary of Key Results}}{10}{}\protected@file@percent }
+\newlabel{tab:summary}{{XV}{10}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XIV-A}}Production Case Studies}{10}{}\protected@file@percent }
+\bibstyle{IEEEtran}
+\bibdata{references}
+\bibcite{hunt2024confidential}{1}
+\bibcite{sallam2024bias}{2}
+\bibcite{euaiact2025}{3}
+\bibcite{jobin2023ai}{4}
+\bibcite{intel2024tdx}{5}
+\bibcite{amd2024sevsnp}{6}
+\bibcite{nvidia2024ccmode}{7}
+\bibcite{hu2024lora}{8}
+\bibcite{wiz2025aispm}{9}
+\bibcite{chainguard2025ai}{10}
+\bibcite{slsa2024}{11}
+\bibcite{sigstore2024}{12}
+\bibcite{akram2025ccgpu}{13}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XIV-B}}Deployment Recommendations}{11}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {XVI}{\ignorespaces Recommended Configuration by Industry Vertical}}{11}{}\protected@file@percent }
+\newlabel{tab:recommend}{{XVI}{11}}
+\@writefile{toc}{\contentsline {section}{References}{11}{}\protected@file@percent }
+\bibcite{confidentialconsortium2023}{14}
+\bibcite{nistai2024}{15}
+\bibcite{bommasani2024foundation}{16}
+\bibcite{whitehouse2023aibo}{17}
+\bibcite{tramer2023fairness}{18}
+\bibcite{patel2024splitwise}{19}
+\bibcite{qin2025mooncake}{20}
+\bibcite{kwon2023vllm}{21}
+\bibcite{zheng2024sglang}{22}
+\bibcite{sun2024cxl}{23}
+\gdef \@abspage@last{12}
