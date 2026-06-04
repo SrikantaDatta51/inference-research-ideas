@@ -62,10 +62,6 @@ Y.~Sheng, L.~Zheng, B.~Yuan, Z.~Li, M.~Ryabinin, B.~Chen, P.~Liang, C.~R\'{e},
   I.~Stoica, and C.~Zhang, ``{FlexGen}: High-throughput generative inference of
   {LLMs} with a single {GPU},'' in \emph{Proc. ICML}, 2023.
 
-\bibitem{dong2024dovetail}
-L.~Dong \emph{et~al.}, ``{Dovetail}: A {CPU/GPU} heterogeneous speculative
-  decoding for {LLM} inference,'' \emph{arXiv preprint arXiv:2407.01470}, 2024.
-
 \bibitem{kwon2023vllm}
 W.~Kwon, Z.~Li, S.~Zhuang, Y.~Sheng, L.~Zheng, C.~H. Yu, J.~E. Gonzalez,
   H.~Zhang, and I.~Stoica, ``Efficient memory management for {LLM} serving with
@@ -92,11 +88,6 @@ Y.~Sun \emph{et~al.}, ``Demystifying {CXL} memory with genuine {CXL}-ready
 Y.~Li, F.~Wei, C.~Zhang, and H.~Zhang, ``{EAGLE-2}: Faster inference of
   language models with dynamic draft trees,'' in \emph{Proc. EMNLP}, 2024.
 
-\bibitem{cai2024medusa}
-T.~Cai, Y.~Li, Z.~Geng, H.~Peng, J.~D. Lee, D.~Chen, and T.~Dao, ``{Medusa}:
-  Simple {LLM} inference acceleration framework with multiple decoding heads,''
-  in \emph{Proc. ICML}, 2024.
-
 \bibitem{frantar2023gptq}
 E.~Frantar, S.~Ashkboos, T.~Hoefler, and D.~Alistarh, ``{GPTQ}: Accurate
   post-training quantization for generative pre-trained transformers,'' in
@@ -110,10 +101,5 @@ J.~Lin, J.~Tang, H.~Tang, S.~Yang, W.-M. Chen, W.-C. Wang, G.~Xiao, X.~Dang,
 \bibitem{deepseek2024v3}
 {DeepSeek-AI}, ``{DeepSeek-V3} technical report,'' \emph{arXiv preprint
   arXiv:2412.19437}, 2024.
-
-\bibitem{liu2024mla}
-A.~Liu \emph{et~al.}, ``{DeepSeek-V2}: A strong, economical, and efficient
-  mixture-of-experts language model,'' \emph{arXiv preprint arXiv:2405.04434},
-  2024.
 
 \end{thebibliography}

@@ -1,0 +1,228 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyperFirstAtBeginDocument{\AtBeginDocument}
+\HyperFirstAtBeginDocument{\ifx\hyper@anchor\@undefined
+\global\let\oldcontentsline\contentsline
+\gdef\contentsline#1#2#3#4{\oldcontentsline{#1}{#2}{#3}}
+\global\let\oldnewlabel\newlabel
+\gdef\newlabel#1#2{\newlabelxx{#1}#2}
+\gdef\newlabelxx#1#2#3#4#5#6{\oldnewlabel{#1}{{#2}{#3}}}
+\AtEndDocument{\ifx\hyper@anchor\@undefined
+\let\contentsline\oldcontentsline
+\let\newlabel\oldnewlabel
+\fi}
+\fi}
+\global\let\hyper@last\relax 
+\gdef\HyperFirstAtBeginDocument#1{#1}
+\providecommand*\HyPL@Entry[1]{}
+\citation{mlcommons2026mlperfv6}
+\citation{liang2023helm}
+\citation{inan2023llamaguard}
+\citation{kirchner2024watermarking}
+\citation{amd2025mi350}
+\citation{intel2025gaudi3}
+\citation{nvidia2025blackwell}
+\HyPL@Entry{0<</S/D>>}
+\@writefile{toc}{\contentsline {section}{\numberline {I}Introduction}{1}{section.1}\protected@file@percent }
+\citation{nvidia2025blackwell}
+\citation{iea2025datacenter}
+\citation{nvidia2025blackwell}
+\citation{nvidia2026verarubin}
+\citation{liu2024deepseekv3}
+\citation{wang2024survey_agents}
+\citation{kwon2023vllm}
+\citation{zheng2024sglang}
+\citation{nvidia2024tensorrtllm}
+\citation{patel2024splitwise}
+\citation{zhong2024distserve}
+\citation{mlcommons2026mlperfv6}
+\citation{liang2023helm}
+\citation{kwon2023vllm}
+\citation{zhang2024h2o}
+\citation{xiao2024streamingllm}
+\citation{cxl2025memorydisagg}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {I-A}}Contributions}{2}{subsection.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {II}Background and Related Work}{2}{section.2}\protected@file@percent }
+\newlabel{sec:bg}{{II}{2}{Background and Related Work}{section.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-A}}The Five-Layer AI Infrastructure Stack}{2}{subsection.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-B}}Inference Serving Frameworks}{2}{subsection.2.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Heterogeneous Accelerator Landscape (June 2026)}}{2}{table.1}\protected@file@percent }
+\newlabel{tab:accel}{{I}{2}{Heterogeneous Accelerator Landscape (June 2026)}{table.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-C}}Disaggregated Inference}{2}{subsection.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-D}}Existing Benchmarks and Their Limitations}{2}{subsection.2.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Benchmark Landscape: What Is Measured vs.\ Missed}}{2}{table.2}\protected@file@percent }
+\newlabel{tab:gaps}{{II}{2}{Benchmark Landscape: What Is Measured vs.\ Missed}{table.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {III}The InferMark 14-Axis Framework}{2}{section.3}\protected@file@percent }
+\newlabel{sec:axes}{{III}{2}{The InferMark 14-Axis Framework}{section.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-A}}Tier 1: Compute Kernel Axes}{2}{subsection.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-A}1}Axis 1: KV-Cache Management and Memory Economics}{2}{subsubsection.3.1.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces InferMark system architecture. \textbf  {Left}: The 14-axis benchmark taxonomy organized in four tiers -- T1: Compute Kernel (KV-cache management, disaggregated prefill/decode, attention mechanisms including FA3/MLA/RadixAttn/GQA/Ring, MoE routing with expert caching, speculative decoding including EAGLE-2/Medusa/Hydra, quantization); T2: Model Architecture (multi-modal vision/video/audio/world models, long-context 128K--10M, multi-LoRA, constrained generation); T3: Infrastructure (NVLink\nobreakspace  {}6/CXL\nobreakspace  {}3.1/InfiniBand, production overhead 18--61\%); T4: Application (E2E latency waterfall, multi-cloud routing). \textbf  {Right}: Execution layer with control plane, three-tier APM observability (hardware counters through quality signals), 6 inference engines, overlay router, 11 cloud providers across Hyperscalers/Neo-Clouds/Token Factories, and 4 accelerator families.}}{3}{figure.1}\protected@file@percent }
+\newlabel{fig:arch}{{1}{3}{InferMark system architecture. \textbf {Left}: The 14-axis benchmark taxonomy organized in four tiers -- T1: Compute Kernel (KV-cache management, disaggregated prefill/decode, attention mechanisms including FA3/MLA/RadixAttn/GQA/Ring, MoE routing with expert caching, speculative decoding including EAGLE-2/Medusa/Hydra, quantization); T2: Model Architecture (multi-modal vision/video/audio/world models, long-context 128K--10M, multi-LoRA, constrained generation); T3: Infrastructure (NVLink~6/CXL~3.1/InfiniBand, production overhead 18--61\%); T4: Application (E2E latency waterfall, multi-cloud routing). \textbf {Right}: Execution layer with control plane, three-tier APM observability (hardware counters through quality signals), 6 inference engines, overlay router, 11 cloud providers across Hyperscalers/Neo-Clouds/Token Factories, and 4 accelerator families}{figure.1}{}}
+\citation{patel2024splitwise,zhong2024distserve}
+\citation{dao2024flashattention3}
+\citation{zheng2024sglang}
+\citation{kwon2023vllm}
+\citation{liu2024deepseekv3}
+\citation{dao2024flashattention3}
+\citation{zheng2024sglang}
+\citation{liu2024deepseekv3}
+\citation{nvidia2026nvlink6}
+\citation{leviathan2023speculative}
+\citation{li2024eagle2}
+\citation{li2024eagle2}
+\citation{frantar2023gptq}
+\citation{lin2024awq}
+\@writefile{lot}{\contentsline {table}{\numberline {III}{\ignorespaces Prefill vs.\ Decode Compute Characteristics}}{4}{table.3}\protected@file@percent }
+\newlabel{tab:pd}{{III}{4}{Prefill vs.\ Decode Compute Characteristics}{table.3}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-A}2}Axis 2: Disaggregated Prefill/Decode and CPU-GPU Transfer}{4}{table.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {IV}{\ignorespaces Attention Mechanism Comparison Matrix}}{4}{table.4}\protected@file@percent }
+\newlabel{tab:attn}{{IV}{4}{Attention Mechanism Comparison Matrix}{table.4}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-A}3}Axis 3: Attention Mechanism Deep Comparison}{4}{table.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-A}4}Axis 4: MoE Routing and Expert Parallelism}{4}{subsubsection.3.1.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {V}{\ignorespaces Speculative Decoding Method Comparison}}{4}{table.5}\protected@file@percent }
+\newlabel{tab:spec}{{V}{4}{Speculative Decoding Method Comparison}{table.5}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-A}5}Axis 5: Speculative Decoding Variants}{4}{table.5}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {VI}{\ignorespaces Native Quantization Support by Architecture}}{4}{table.6}\protected@file@percent }
+\newlabel{tab:quant}{{VI}{4}{Native Quantization Support by Architecture}{table.6}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-A}6}Axis 6: Quantization and Precision}{4}{table.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-B}}Tier 2: Model Architecture Axes}{4}{subsection.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-B}1}Axis 7: Multi-Modal Inference}{4}{subsubsection.3.2.1}\protected@file@percent }
+\citation{ding2024longrope}
+\citation{xiao2024streamingllm}
+\citation{sheng2024slora}
+\citation{yu2022orca}
+\citation{nvidia2026nvlink6}
+\citation{cxl2025memorydisagg}
+\citation{nvidia2026nvlink6}
+\citation{inan2023llamaguard}
+\citation{kirchner2024watermarking}
+\citation{nvidia2026verarubin}
+\citation{nvidia2026nvlink6}
+\citation{amd2025mi350}
+\citation{mlcommons2026mlperfv6}
+\citation{intel2025gaudi3}
+\citation{google2025tpuv6}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-B}2}Axes 8--10: Long-Context, LoRA, Constrained Generation}{5}{subsubsection.3.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-C}}Tier 3: Infrastructure Axes}{5}{subsection.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-C}1}Axis 11: Network, Interconnect, and Memory Fabric}{5}{subsubsection.3.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-C}2}Axis 12: Production Overhead Profiling}{5}{subsubsection.3.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-D}}Tier 4: Application and Routing Axes}{5}{subsection.3.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {IV}Cross-Architecture Deep Dive}{5}{section.4}\protected@file@percent }
+\newlabel{sec:arch}{{IV}{5}{Cross-Architecture Deep Dive}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-A}}NVIDIA: Hopper to Blackwell to Vera Rubin}{5}{subsection.4.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {VII}{\ignorespaces Compute Paradigms Across Accelerator Families}}{5}{table.7}\protected@file@percent }
+\newlabel{tab:archpara}{{VII}{5}{Compute Paradigms Across Accelerator Families}{table.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-B}}AMD: The Memory Inflection}{5}{subsection.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-C}}Intel: Efficiency Champion}{5}{subsection.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-D}}Google TPU v6e: Pod-Scale Economics}{5}{subsection.4.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {V}Multi-Cloud Provider Analysis}{5}{section.5}\protected@file@percent }
+\newlabel{sec:cloud}{{V}{5}{Multi-Cloud Provider Analysis}{section.5}{}}
+\citation{nvidia2025dcgm}
+\citation{otel2025gpu}
+\citation{nvidia2025dcgm}
+\citation{otel2025gpu}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Normalized performance (H200=1.0). MI355X leads memory capacity (+104\%) and MoE fit (+180\%). Gaudi\nobreakspace  {}3 leads tok/W (+50\%). B200 leads throughput (+180\%). No single architecture dominates.}}{6}{figure.2}\protected@file@percent }
+\newlabel{fig:archcomp}{{2}{6}{Normalized performance (H200=1.0). MI355X leads memory capacity (+104\%) and MoE fit (+180\%). Gaudi~3 leads tok/W (+50\%). B200 leads throughput (+180\%). No single architecture dominates}{figure.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {VIII}{\ignorespaces Multi-Cloud Provider Matrix (11 Providers, 3 Categories)}}{6}{table.8}\protected@file@percent }
+\newlabel{tab:cloud}{{VIII}{6}{Multi-Cloud Provider Matrix (11 Providers, 3 Categories)}{table.8}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VI}APM Observability Architecture}{6}{section.6}\protected@file@percent }
+\newlabel{sec:apm}{{VI}{6}{APM Observability Architecture}{section.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-A}}Cross-Tier Causal Correlation}{6}{subsection.6.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Three-tier APM architecture. Hardware telemetry (DCGM\nobreakspace  {}\cite  {nvidia2025dcgm}, rocm-smi, hl-smi, low-level GPU counters), engine metrics, and quality signals unified via OpenTelemetry\nobreakspace  {}\cite  {otel2025gpu}. Cross-architecture normalization enables vendor-neutral alerting.}}{6}{figure.3}\protected@file@percent }
+\newlabel{fig:apm}{{3}{6}{Three-tier APM architecture. Hardware telemetry (DCGM~\cite {nvidia2025dcgm}, rocm-smi, hl-smi, low-level GPU counters), engine metrics, and quality signals unified via OpenTelemetry~\cite {otel2025gpu}. Cross-architecture normalization enables vendor-neutral alerting}{figure.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-B}}AI-Native APM Platform Requirements}{6}{subsection.6.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {VII}InferMark Composite Score}{6}{section.7}\protected@file@percent }
+\newlabel{sec:score}{{VII}{6}{InferMark Composite Score}{section.7}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VIII}Experimental Studies}{6}{section.8}\protected@file@percent }
+\newlabel{sec:exp}{{VIII}{6}{Experimental Studies}{section.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VIII-A}}Study 1: Cross-Cloud Throughput Variance}{6}{subsection.8.1}\protected@file@percent }
+\citation{triton2024openai}
+\citation{thunderkittens2025}
+\@writefile{lot}{\contentsline {table}{\numberline {IX}{\ignorespaces InferMark Score Components and Weights}}{7}{table.9}\protected@file@percent }
+\newlabel{tab:wt}{{IX}{7}{InferMark Score Components and Weights}{table.9}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Cross-cloud throughput. CoreWeave leads (4,680); Azure trails (2,890) -- 1.62$\times $ gap for identical hardware. Token Factories (Modal, Baseten) achieve mid-range throughput with zero-ops overhead.}}{7}{figure.4}\protected@file@percent }
+\newlabel{fig:tp}{{4}{7}{Cross-cloud throughput. CoreWeave leads (4,680); Azure trails (2,890) -- 1.62$\times $ gap for identical hardware. Token Factories (Modal, Baseten) achieve mid-range throughput with zero-ops overhead}{figure.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VIII-B}}Study 2: Production Overhead Quantification}{7}{subsection.8.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Progressive production overhead. Full stack: +64\,ms (+64\%). Guardrails dominate (+18\,ms). Completely invisible to MLPerf and all current benchmarks.}}{7}{figure.5}\protected@file@percent }
+\newlabel{fig:oh}{{5}{7}{Progressive production overhead. Full stack: +64\,ms (+64\%). Guardrails dominate (+18\,ms). Completely invisible to MLPerf and all current benchmarks}{figure.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Roofline analysis. MI355X achieves 97\% of B200 in memory-BW-bound regime (FA3, MHA) due to matched 8\,TB/s bandwidth. Gaudi\nobreakspace  {}3's lower BW limits absolute TFLOPS but delivers best tok/W.}}{7}{figure.6}\protected@file@percent }
+\newlabel{fig:rf}{{6}{7}{Roofline analysis. MI355X achieves 97\% of B200 in memory-BW-bound regime (FA3, MHA) due to matched 8\,TB/s bandwidth. Gaudi~3's lower BW limits absolute TFLOPS but delivers best tok/W}{figure.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VIII-C}}Study 3: Cross-Architecture Roofline Analysis}{7}{subsection.8.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VIII-D}}Study 4: Multi-Hop Disaggregated Routing}{7}{subsection.8.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {X}{\ignorespaces Multi-Cloud Routing Path Analysis}}{7}{table.10}\protected@file@percent }
+\newlabel{tab:rt}{{X}{7}{Multi-Cloud Routing Path Analysis}{table.10}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VIII-E}}Study 5: Energy Efficiency}{7}{subsection.8.5}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {XI}{\ignorespaces Energy Efficiency (Llama-70B, FP8, C=128)}}{7}{table.11}\protected@file@percent }
+\newlabel{tab:en}{{XI}{7}{Energy Efficiency (Llama-70B, FP8, C=128)}{table.11}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VIII-F}}Study 6: Kernel-Level Profiling}{7}{subsection.8.6}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces End-to-end TTFT latency waterfall across 5 providers (P50). LB queue depth is the highest-variance component ($\pm $11\,ms for Azure). OCI bare-metal achieves lowest TTFT (23.1\,ms) due to zero hypervisor overhead.}}{8}{figure.7}\protected@file@percent }
+\newlabel{fig:waterfall}{{7}{8}{End-to-end TTFT latency waterfall across 5 providers (P50). LB queue depth is the highest-variance component ($\pm $11\,ms for Azure). OCI bare-metal achieves lowest TTFT (23.1\,ms) due to zero hypervisor overhead}{figure.7}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {IX}Latency Decomposition and Routing}{8}{section.9}\protected@file@percent }
+\newlabel{sec:latency}{{IX}{8}{Latency Decomposition and Routing}{section.9}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IX-A}}Routing Framework}{8}{subsection.9.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Multi-objective routing decision framework. Requests scored across latency, cost, quality, and overhead before selecting single-cloud or disaggregated multi-hop routing across Hyperscalers, Neo-Clouds, and Token Factories.}}{8}{figure.8}\protected@file@percent }
+\newlabel{fig:routing}{{8}{8}{Multi-objective routing decision framework. Requests scored across latency, cost, quality, and overhead before selecting single-cloud or disaggregated multi-hop routing across Hyperscalers, Neo-Clouds, and Token Factories}{figure.8}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {X}Benchmarking Methodology}{8}{section.10}\protected@file@percent }
+\newlabel{sec:method}{{X}{8}{Benchmarking Methodology}{section.10}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {X-A}}Benchmark Harness Architecture}{8}{subsection.10.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {XII}{\ignorespaces Benchmark Workload Profiles}}{8}{table.12}\protected@file@percent }
+\newlabel{tab:workload}{{XII}{8}{Benchmark Workload Profiles}{table.12}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {X-B}}Statistical Methodology}{9}{subsection.10.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {X-C}}Metric Definitions}{9}{subsection.10.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {X-D}}Token Factory Benchmarking Methodology}{9}{subsection.10.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {XI}Cross-Architecture Case Studies}{9}{section.11}\protected@file@percent }
+\newlabel{sec:cases}{{XI}{9}{Cross-Architecture Case Studies}{section.11}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XI-A}}Case Study 1: DeepSeek-V3 on MI355X vs.\ B200}{9}{subsection.11.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XI-B}}Case Study 2: Llama-70B Batch on Gaudi\nobreakspace  {}3}{9}{subsection.11.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XI-C}}Case Study 3: Multi-Modal VLM on MI355X}{9}{subsection.11.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XI-D}}Case Study 4: CXL Memory Pooling}{9}{subsection.11.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {XII}Discussion}{9}{section.12}\protected@file@percent }
+\newlabel{sec:disc}{{XII}{9}{Discussion}{section.12}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XII-A}}Principal Findings}{9}{subsection.12.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XII-B}}The Heterogeneous Fleet Imperative}{9}{subsection.12.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {XIII}{\ignorespaces Optimal Architecture Selection by Workload}}{9}{table.13}\protected@file@percent }
+\newlabel{tab:fleet}{{XIII}{9}{Optimal Architecture Selection by Workload}{table.13}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XII-C}}The Three-Category Cloud Strategy}{10}{subsection.12.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XII-D}}APM Market Opportunity}{10}{subsection.12.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XII-E}}Reproducibility and Open Science}{10}{subsection.12.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XII-F}}Limitations}{10}{subsection.12.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {XIII}Conclusion}{10}{section.13}\protected@file@percent }
+\newlabel{sec:conc}{{XIII}{10}{Conclusion}{section.13}{}}
+\citation{cxl2025memorydisagg}
+\bibstyle{IEEEtran}
+\bibdata{references}
+\bibcite{mlcommons2026mlperfv6}{1}
+\bibcite{liang2023helm}{2}
+\bibcite{inan2023llamaguard}{3}
+\bibcite{kirchner2024watermarking}{4}
+\bibcite{amd2025mi350}{5}
+\bibcite{intel2025gaudi3}{6}
+\bibcite{nvidia2025blackwell}{7}
+\bibcite{iea2025datacenter}{8}
+\bibcite{nvidia2026verarubin}{9}
+\bibcite{liu2024deepseekv3}{10}
+\bibcite{wang2024survey_agents}{11}
+\bibcite{kwon2023vllm}{12}
+\bibcite{zheng2024sglang}{13}
+\bibcite{nvidia2024tensorrtllm}{14}
+\bibcite{patel2024splitwise}{15}
+\bibcite{zhong2024distserve}{16}
+\bibcite{zhang2024h2o}{17}
+\bibcite{xiao2024streamingllm}{18}
+\bibcite{cxl2025memorydisagg}{19}
+\bibcite{dao2024flashattention3}{20}
+\bibcite{nvidia2026nvlink6}{21}
+\@writefile{toc}{\contentsline {section}{References}{11}{section*.2}\protected@file@percent }
+\bibcite{leviathan2023speculative}{22}
+\bibcite{li2024eagle2}{23}
+\bibcite{frantar2023gptq}{24}
+\bibcite{lin2024awq}{25}
+\bibcite{ding2024longrope}{26}
+\bibcite{sheng2024slora}{27}
+\bibcite{yu2022orca}{28}
+\bibcite{google2025tpuv6}{29}
+\bibcite{nvidia2025dcgm}{30}
+\bibcite{otel2025gpu}{31}
+\bibcite{triton2024openai}{32}
+\bibcite{thunderkittens2025}{33}
+\gdef \@abspage@last{12}
