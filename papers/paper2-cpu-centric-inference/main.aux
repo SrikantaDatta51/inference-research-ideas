@@ -1,0 +1,207 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyperFirstAtBeginDocument{\AtBeginDocument}
+\HyperFirstAtBeginDocument{\ifx\hyper@anchor\@undefined
+\global\let\oldcontentsline\contentsline
+\gdef\contentsline#1#2#3#4{\oldcontentsline{#1}{#2}{#3}}
+\global\let\oldnewlabel\newlabel
+\gdef\newlabel#1#2{\newlabelxx{#1}#2}
+\gdef\newlabelxx#1#2#3#4#5#6{\oldnewlabel{#1}{{#2}{#3}}}
+\AtEndDocument{\ifx\hyper@anchor\@undefined
+\let\contentsline\oldcontentsline
+\let\newlabel\oldnewlabel
+\fi}
+\fi}
+\global\let\hyper@last\relax 
+\gdef\HyperFirstAtBeginDocument#1{#1}
+\providecommand*\HyPL@Entry[1]{}
+\HyPL@Entry{0<</S/D>>}
+\@writefile{toc}{\contentsline {section}{\numberline {I}Introduction}{1}{section.1}\protected@file@percent }
+\citation{nvidia2024b200}
+\citation{amd2024mi300x}
+\citation{intel2024gaudi3}
+\@writefile{toc}{\contentsline {section}{\numberline {II}The Compute-Memory Divide}{2}{section.2}\protected@file@percent }
+\newlabel{sec:divide}{{II}{2}{The Compute-Memory Divide}{section.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-A}}Arithmetic Intensity Analysis}{2}{subsection.2.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Arithmetic Intensity by Inference Phase (Llama-3.1-70B)}}{2}{table.1}\protected@file@percent }
+\newlabel{tab:ai}{{I}{2}{Arithmetic Intensity by Inference Phase (Llama-3.1-70B)}{table.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-B}}GPU Utilization During Decode}{2}{subsection.2.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces GPU Compute Utilization by Inference Phase}}{2}{table.2}\protected@file@percent }
+\newlabel{tab:util}{{II}{2}{GPU Compute Utilization by Inference Phase}{table.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {III}{\ignorespaces Cost-Normalized Memory Bandwidth (June 2026 Pricing)}}{2}{table.3}\protected@file@percent }
+\newlabel{tab:costbw}{{III}{2}{Cost-Normalized Memory Bandwidth (June 2026 Pricing)}{table.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-C}}Vendor Stack Comparison}{2}{subsection.2.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {IV}{\ignorespaces Complete Vendor Stack Comparison for Disaggregated Inference}}{2}{table.4}\protected@file@percent }
+\newlabel{tab:vendorstack}{{IV}{2}{Complete Vendor Stack Comparison for Disaggregated Inference}{table.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {III}CPU-Centric Disaggregated Architecture}{2}{section.3}\protected@file@percent }
+\newlabel{sec:arch}{{III}{2}{CPU-Centric Disaggregated Architecture}{section.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-A}}Architecture Overview}{2}{subsection.3.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces End-to-end CPU-centric disaggregated inference flow. \textbf  {Stage\nobreakspace  {}1}: Incoming requests (chat, RAG, agentic) are classified by a workload router. \textbf  {Stage\nobreakspace  {}2}: Compute-bound prefill is routed to a multi-vendor GPU cluster (NVIDIA B200, AMD MI300X, Intel Gaudi\nobreakspace  {}3) operating at 85\%+ FLOPS utilization. \textbf  {Stage\nobreakspace  {}3}: Memory-bound decode is routed to CPU clusters (Intel Xeon AMX, AMD EPYC AVX-512, ARM Graviton4 SVE2) with EAGLE-2 speculative decoding, backed by CXL\nobreakspace  {}3.1 shared memory pool (2--16\,TB) and NVMe/object storage. \textbf  {Stage\nobreakspace  {}4}: Output tokens delivered at 3.7--47$\times $ lower cost (\$0.059/M tokens). Key insight: GPUs handle only prefill (high utilization), CPUs handle only decode (low cost).}}{3}{figure.1}\protected@file@percent }
+\newlabel{fig:arch}{{1}{3}{End-to-end CPU-centric disaggregated inference flow. \textbf {Stage~1}: Incoming requests (chat, RAG, agentic) are classified by a workload router. \textbf {Stage~2}: Compute-bound prefill is routed to a multi-vendor GPU cluster (NVIDIA B200, AMD MI300X, Intel Gaudi~3) operating at 85\%+ FLOPS utilization. \textbf {Stage~3}: Memory-bound decode is routed to CPU clusters (Intel Xeon AMX, AMD EPYC AVX-512, ARM Graviton4 SVE2) with EAGLE-2 speculative decoding, backed by CXL~3.1 shared memory pool (2--16\,TB) and NVMe/object storage. \textbf {Stage~4}: Output tokens delivered at 3.7--47$\times $ lower cost (\$0.059/M tokens). Key insight: GPUs handle only prefill (high utilization), CPUs handle only decode (low cost)}{figure.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-B}}CPU Decode Performance}{4}{subsection.3.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {V}{\ignorespaces CPU Decode Throughput (Llama-3.1-70B, INT4 GGUF)}}{4}{table.5}\protected@file@percent }
+\newlabel{tab:cpudecode}{{V}{4}{CPU Decode Throughput (Llama-3.1-70B, INT4 GGUF)}{table.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-C}}CPU Architecture Comparison for Decode}{4}{subsection.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-C}1}Intel Xeon Granite Rapids with AMX}{4}{subsubsection.3.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-C}2}AMD EPYC Genoa/Turin with AVX-512}{4}{subsubsection.3.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-C}3}ARM Graviton4 with SVE2}{4}{subsubsection.3.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {IV}CXL Memory Pooling for KV-Cache}{4}{section.4}\protected@file@percent }
+\newlabel{sec:cxl}{{IV}{4}{CXL Memory Pooling for KV-Cache}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-A}}The KV-Cache Memory Challenge}{4}{subsection.4.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {VI}{\ignorespaces KV-Cache Size by Model and Context Length}}{4}{table.6}\protected@file@percent }
+\newlabel{tab:kvsize}{{VI}{4}{KV-Cache Size by Model and Context Length}{table.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-B}}CXL 3.1 Memory Pooling Architecture}{4}{subsection.4.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces CXL\nobreakspace  {}3.1 memory pooling for disaggregated KV-cache. CPU decode and GPU prefill nodes share a unified pool via CXL switch fabric with $<$300\,ns added latency.}}{4}{figure.2}\protected@file@percent }
+\newlabel{fig:cxl}{{2}{4}{CXL~3.1 memory pooling for disaggregated KV-cache. CPU decode and GPU prefill nodes share a unified pool via CXL switch fabric with $<$300\,ns added latency}{figure.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-C}}Seven-Tier Memory and Storage Hierarchy}{4}{subsection.4.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {VII}{\ignorespaces Seven-Tier Memory/Storage Hierarchy for LLM Inference}}{4}{table.7}\protected@file@percent }
+\newlabel{tab:7tier}{{VII}{4}{Seven-Tier Memory/Storage Hierarchy for LLM Inference}{table.7}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Seven-tier memory and storage hierarchy for CPU-centric disaggregated inference. Each layer is annotated with access latency (left) and capacity (right). The architecture spans 9 orders of magnitude in latency (1\,ns to 1\,s) and 7 orders in capacity (50\,MB to unlimited).}}{5}{figure.3}\protected@file@percent }
+\newlabel{fig:hierarchy}{{3}{5}{Seven-tier memory and storage hierarchy for CPU-centric disaggregated inference. Each layer is annotated with access latency (left) and capacity (right). The architecture spans 9 orders of magnitude in latency (1\,ns to 1\,s) and 7 orders in capacity (50\,MB to unlimited)}{figure.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {V}Cache Coherence Across the Stack}{5}{section.5}\protected@file@percent }
+\newlabel{sec:coherence}{{V}{5}{Cache Coherence Across the Stack}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Hardware Cache Coherence (Tiers 0--3)}{5}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}Software Cache Coherence (Tiers 3--6)}{5}{subsection.5.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {VIII}{\ignorespaces Cache Coherence Overhead by Protocol Layer}}{6}{table.8}\protected@file@percent }
+\newlabel{tab:coherence}{{VIII}{6}{Cache Coherence Overhead by Protocol Layer}{table.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-C}}Coherence Overhead Quantification}{6}{subsection.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {VI}Multi-Fold Cost and Performance Strategies}{6}{section.6}\protected@file@percent }
+\newlabel{sec:multifold}{{VI}{6}{Multi-Fold Cost and Performance Strategies}{section.6}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {IX}{\ignorespaces Compounding Optimization Strategies}}{6}{table.9}\protected@file@percent }
+\newlabel{tab:compound}{{IX}{6}{Compounding Optimization Strategies}{table.9}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VII}Cluster-Wide KV-Cache Fabrics}{6}{section.7}\protected@file@percent }
+\newlabel{sec:memalloy}{{VII}{6}{Cluster-Wide KV-Cache Fabrics}{section.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VII-A}}MemoryAlloy Architecture}{6}{subsection.7.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VII-B}}Integration with CPU Decode}{6}{subsection.7.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {X}{\ignorespaces MemoryAlloy Impact on CPU-Centric Architecture}}{6}{table.10}\protected@file@percent }
+\newlabel{tab:memalloy}{{X}{6}{MemoryAlloy Impact on CPU-Centric Architecture}{table.10}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VIII}Speculative Decoding on CPUs}{6}{section.8}\protected@file@percent }
+\newlabel{sec:spec}{{VIII}{6}{Speculative Decoding on CPUs}{section.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VIII-A}}Why Speculative Decoding Favors CPUs}{6}{subsection.8.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {XI}{\ignorespaces Speculative Decoding Speedup by Platform}}{7}{table.11}\protected@file@percent }
+\newlabel{tab:spec}{{XI}{7}{Speculative Decoding Speedup by Platform}{table.11}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VIII-B}}EAGLE-2 CPU Implementation}{7}{subsection.8.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VIII-C}}Impact on Cost-Parity Analysis}{7}{subsection.8.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {XII}{\ignorespaces Cost per Million Tokens: CPU vs. GPU Decode}}{7}{table.12}\protected@file@percent }
+\newlabel{tab:costparity}{{XII}{7}{Cost per Million Tokens: CPU vs. GPU Decode}{table.12}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {IX}Workload Routing and Classification}{7}{section.9}\protected@file@percent }
+\newlabel{sec:routing}{{IX}{7}{Workload Routing and Classification}{section.9}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IX-A}}Routing Decision Framework}{7}{subsection.9.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IX-B}}Workload Distribution Analysis}{7}{subsection.9.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {XIII}{\ignorespaces Production Workload Distribution (ShareGPT + Enterprise Mix)}}{7}{table.13}\protected@file@percent }
+\newlabel{tab:workload}{{XIII}{7}{Production Workload Distribution (ShareGPT + Enterprise Mix)}{table.13}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IX-C}}Cross-Cloud Routing Results}{7}{subsection.9.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {XIV}{\ignorespaces Cross-Cloud CPU-Centric Routing (Llama-70B INT4)}}{7}{table.14}\protected@file@percent }
+\newlabel{tab:crosscloud}{{XIV}{7}{Cross-Cloud CPU-Centric Routing (Llama-70B INT4)}{table.14}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {X}Frontier Model Scaling on CPUs}{7}{section.10}\protected@file@percent }
+\newlabel{sec:frontier}{{X}{7}{Frontier Model Scaling on CPUs}{section.10}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {X-A}}MoE Models: The CPU Advantage}{7}{subsection.10.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {X-B}}Dense Frontier Models}{7}{subsection.10.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {XV}{\ignorespaces Frontier MoE Model: CPU vs. GPU Decode}}{8}{table.15}\protected@file@percent }
+\newlabel{tab:moe}{{XV}{8}{Frontier MoE Model: CPU vs. GPU Decode}{table.15}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {X-C}}Attention Architecture Impact}{8}{subsection.10.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {XVI}{\ignorespaces CPU Decode Efficiency by Attention Architecture}}{8}{table.16}\protected@file@percent }
+\newlabel{tab:attn}{{XVI}{8}{CPU Decode Efficiency by Attention Architecture}{table.16}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {XI}Optimization Stack}{8}{section.11}\protected@file@percent }
+\newlabel{sec:optstack}{{XI}{8}{Optimization Stack}{section.11}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XI-A}}Full-Stack Optimization Layers}{8}{subsection.11.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {XVII}{\ignorespaces Full-Stack Optimization Impact (Cumulative, Llama-70B)}}{8}{table.17}\protected@file@percent }
+\newlabel{tab:optstack}{{XVII}{8}{Full-Stack Optimization Impact (Cumulative, Llama-70B)}{table.17}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XI-B}}Quantization for CPU Decode}{8}{subsection.11.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XI-C}}Memory Prefetch Pipeline}{8}{subsection.11.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {XII}Cloud Provider Analysis}{8}{section.12}\protected@file@percent }
+\newlabel{sec:cloud}{{XII}{8}{Cloud Provider Analysis}{section.12}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {XIII}Experimental Evaluation}{8}{section.13}\protected@file@percent }
+\newlabel{sec:eval}{{XIII}{8}{Experimental Evaluation}{section.13}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XIII-A}}End-to-End System Comparison}{8}{subsection.13.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XIII-B}}Latency Analysis}{8}{subsection.13.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XIII-C}}Case Study: Enterprise RAG Pipeline}{8}{subsection.13.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XIII-D}}Case Study: Agentic Workflow}{8}{subsection.13.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {XVIII}{\ignorespaces Cloud Provider Instance Pricing for Disaggregated Inference (June 2026 On-Demand)}}{9}{table.18}\protected@file@percent }
+\newlabel{tab:cloudcpu}{{XVIII}{9}{Cloud Provider Instance Pricing for Disaggregated Inference (June 2026 On-Demand)}{table.18}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Cost per million output tokens: GPU-only vs. disaggregated serving. GPU-only H100 baseline (\$2.80/M, dashed line) compared to three cross-vendor disaggregated configurations. NVIDIA B200 prefill + Graviton4 decode achieves \$0.059/M (47$\times $ reduction). AMD MI300X + EPYC achieves \$0.072/M (39$\times $). Intel Gaudi\nobreakspace  {}3 + Xeon AMX achieves \$0.079/M (35$\times $). Even GPU-only MI300X (\$1.90/M) costs 32$\times $ more than the best disaggregated configuration.}}{9}{figure.4}\protected@file@percent }
+\newlabel{fig:crossvendor}{{4}{9}{Cost per million output tokens: GPU-only vs. disaggregated serving. GPU-only H100 baseline (\$2.80/M, dashed line) compared to three cross-vendor disaggregated configurations. NVIDIA B200 prefill + Graviton4 decode achieves \$0.059/M (47$\times $ reduction). AMD MI300X + EPYC achieves \$0.072/M (39$\times $). Intel Gaudi~3 + Xeon AMX achieves \$0.079/M (35$\times $). Even GPU-only MI300X (\$1.90/M) costs 32$\times $ more than the best disaggregated configuration}{figure.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {XIV}KV-Cache Transfer Optimization}{9}{section.14}\protected@file@percent }
+\newlabel{sec:transfer}{{XIV}{9}{KV-Cache Transfer Optimization}{section.14}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Cost per million output tokens across deployment strategies (Llama-70B). GPU+CPU with speculative decoding and MemoryAlloy achieves \$0.22/M, a 12.7$\times $ reduction vs. GPU-only (\$2.80/M).}}{9}{figure.5}\protected@file@percent }
+\newlabel{fig:cost}{{5}{9}{Cost per million output tokens across deployment strategies (Llama-70B). GPU+CPU with speculative decoding and MemoryAlloy achieves \$0.22/M, a 12.7$\times $ reduction vs. GPU-only (\$2.80/M)}{figure.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces End-to-end latency vs. output length. CPU+speculative decode tracks GPU within 15\% up to 512 tokens. Beyond 512 tokens, the gap widens but remains within 2$\times $. For 98\% of production requests ($<$512 output tokens), CPU decode is latency-competitive.}}{9}{figure.6}\protected@file@percent }
+\newlabel{fig:latency}{{6}{9}{End-to-end latency vs. output length. CPU+speculative decode tracks GPU within 15\% up to 512 tokens. Beyond 512 tokens, the gap widens but remains within 2$\times $. For 98\% of production requests ($<$512 output tokens), CPU decode is latency-competitive}{figure.6}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {XV}Network Architecture for Disaggregation}{9}{section.15}\protected@file@percent }
+\newlabel{sec:network}{{XV}{9}{Network Architecture for Disaggregation}{section.15}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XV-A}}Intra-Cloud High-Bandwidth Networks}{9}{subsection.15.1}\protected@file@percent }
+\citation{patel2024splitwise}
+\citation{zhong2024distserve}
+\citation{gerganov2024llamacpp}
+\citation{song2024powerinfer}
+\citation{sheng2023flexgen}
+\citation{dong2024dovetail}
+\@writefile{lot}{\contentsline {table}{\numberline {XIX}{\ignorespaces KV-Cache Transfer Mechanisms (Llama-70B, 128K, GQA)}}{10}{table.19}\protected@file@percent }
+\newlabel{tab:transfer}{{XIX}{10}{KV-Cache Transfer Mechanisms (Llama-70B, 128K, GQA)}{table.19}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {XX}{\ignorespaces Cloud Provider Network Capabilities for Disaggregation}}{10}{table.20}\protected@file@percent }
+\newlabel{tab:network}{{XX}{10}{Cloud Provider Network Capabilities for Disaggregation}{table.20}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {XVI}Total Cost of Ownership Analysis}{10}{section.16}\protected@file@percent }
+\newlabel{sec:tco}{{XVI}{10}{Total Cost of Ownership Analysis}{section.16}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XVI-A}}Fleet-Level Cost Modeling}{10}{subsection.16.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {XXI}{\ignorespaces Fleet TCO: GPU-Only vs.\ CPU-Centric (10M tok/hr)}}{10}{table.21}\protected@file@percent }
+\newlabel{tab:tco}{{XXI}{10}{Fleet TCO: GPU-Only vs.\ CPU-Centric (10M tok/hr)}{table.21}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XVI-B}}Break-Even Analysis}{10}{subsection.16.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {XXII}{\ignorespaces Cost Sensitivity to Workload Parameters}}{10}{table.22}\protected@file@percent }
+\newlabel{tab:sensitivity}{{XXII}{10}{Cost Sensitivity to Workload Parameters}{table.22}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XVI-C}}Sensitivity Analysis}{10}{subsection.16.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XVI-D}}Case Study: Multi-Cloud Heterogeneous Fleet}{10}{subsection.16.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XVI-E}}Energy Implications}{10}{subsection.16.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {XVII}Related Work}{10}{section.17}\protected@file@percent }
+\newlabel{sec:related}{{XVII}{10}{Related Work}{section.17}{}}
+\citation{kwon2023vllm}
+\citation{zheng2024sglang}
+\citation{qin2024mooncake}
+\citation{crusoe2025memoryalloy}
+\citation{maruf2023cxl}
+\citation{sun2024cxl}
+\citation{li2024eagle}
+\citation{li2024eagle2}
+\citation{cai2024medusa}
+\citation{frantar2023gptq}
+\citation{lin2024awq}
+\citation{nvidia2024b200}
+\citation{amd2024mi300x}
+\citation{intel2024gaudi3}
+\citation{dao2023flashattention2}
+\citation{deepseek2024v3}
+\citation{liu2024mla}
+\@writefile{toc}{\contentsline {section}{\numberline {XVIII}Implementation Details}{11}{section.18}\protected@file@percent }
+\newlabel{sec:impl}{{XVIII}{11}{Implementation Details}{section.18}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {XIX}Discussion}{11}{section.19}\protected@file@percent }
+\newlabel{sec:disc}{{XIX}{11}{Discussion}{section.19}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {XX}Conclusion}{11}{section.20}\protected@file@percent }
+\newlabel{sec:conc}{{XX}{11}{Conclusion}{section.20}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {XXIII}{\ignorespaces Summary of Key Results}}{11}{table.23}\protected@file@percent }
+\newlabel{tab:summary}{{XXIII}{11}{Summary of Key Results}{table.23}{}}
+\bibstyle{IEEEtran}
+\bibdata{references}
+\bibcite{nvidia2024b200}{1}
+\bibcite{amd2024mi300x}{2}
+\bibcite{intel2024gaudi3}{3}
+\bibcite{patel2024splitwise}{4}
+\bibcite{zhong2024distserve}{5}
+\bibcite{gerganov2024llamacpp}{6}
+\bibcite{song2024powerinfer}{7}
+\bibcite{sheng2023flexgen}{8}
+\bibcite{dong2024dovetail}{9}
+\bibcite{kwon2023vllm}{10}
+\bibcite{zheng2024sglang}{11}
+\bibcite{qin2024mooncake}{12}
+\bibcite{crusoe2025memoryalloy}{13}
+\bibcite{maruf2023cxl}{14}
+\bibcite{sun2024cxl}{15}
+\bibcite{li2024eagle}{16}
+\bibcite{li2024eagle2}{17}
+\bibcite{cai2024medusa}{18}
+\bibcite{frantar2023gptq}{19}
+\bibcite{lin2024awq}{20}
+\bibcite{dao2023flashattention2}{21}
+\bibcite{deepseek2024v3}{22}
+\bibcite{liu2024mla}{23}
+\@writefile{toc}{\contentsline {section}{References}{12}{section*.2}\protected@file@percent }
+\gdef \@abspage@last{12}
