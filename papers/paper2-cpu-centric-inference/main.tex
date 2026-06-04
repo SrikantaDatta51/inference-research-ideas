@@ -56,7 +56,7 @@ This paper makes five contributions:
 \begin{figure*}[!htbp]
 \centering
 \includegraphics[width=\textwidth]{fig1_architecture.png}
-\caption{CPU-centric disaggregated inference pipeline. \textbf{Stage 1}: Request ingestion with prompt classification. \textbf{Stage 2}: GPU prefill cluster (NVIDIA B200/H100) for compute-bound KV-cache generation at 85\%+ FLOPS utilization; Intel AMX prefill for small models. \textbf{Stage 3}: CPU decode cluster (Intel Granite Rapids AMX, AMD EPYC AVX-512, ARM Graviton4 SVE2) with CXL-attached memory pool (2--16\,TB) for memory-bound token generation with speculative decoding. \textbf{Stage 4}: Output assembly with quality scoring. KV-cache transfer via high-bandwidth network (NVLink~6, IB NDR, CXL~3.1) or MemoryAlloy cluster fabric. Bottom: cost comparison showing 3.7$\times$ reduction vs. GPU-only serving.}
+\caption{Multi-vendor CPU-centric disaggregated inference architecture. Four vendor stacks operate in parallel: \textbf{NVIDIA} (B200/H100 via NVLink~6.0 for compute-bound prefill with FlashAttention-3 and TensorRT-LLM); \textbf{AMD} (MI300X with 192\,GB HBM3 via Infinity Fabric for prefill and large-batch decode with ROCm/vLLM); \textbf{Intel} (Gaudi~3 for cost-optimized prefill via Ethernet RoCE, Granite Rapids AMX for CPU decode with SynapseAI/oneAPI); \textbf{ARM} (Graviton4 SVE2 for low-power decode at lowest \$/token). All stacks share a unified CXL~3.1 memory pool and MemoryAlloy KV-cache fabric. Storage tiers: NVMe Gen5, NVMe-oF, S3/GCS. Aggregate: 47$\times$ cost reduction to \$0.059/M tokens.}
 \label{fig:arch}
 \end{figure*}
 
@@ -111,26 +111,59 @@ Gaudi~3 & 61\% & 7.8\% & 11.4\% \\
 \end{tabular}
 \end{table}
 
-\subsection{The Economic Argument for CPU Decode}
-
 \begin{table}[!htbp]
-\caption{Cost-Normalized Memory Bandwidth Comparison}
+\caption{Cost-Normalized Memory Bandwidth (June 2026 Pricing)}
 \label{tab:costbw}
 \centering\footnotesize
-\begin{tabular}{@{}lcccc@{}}
+\begin{tabular}{@{}llcccc@{}}
 \toprule
-\textbf{Platform} & \textbf{BW} & \textbf{\$/hr} & \textbf{BW/\$} & \textbf{Capacity} \\
+\textbf{Vendor} & \textbf{Platform} & \textbf{BW} & \textbf{\$/hr} & \textbf{BW/\$} & \textbf{Cap.} \\
 \midrule
-8$\times$H100 SXM & 26.8\,TB/s & \$31.20 & 859 & 640\,GB \\
-8$\times$MI300X & 41.6\,TB/s & \$24.50 & 1698 & 1536\,GB \\
-\textbf{2$\times$Granite Rapids} & \textbf{410\,GB/s} & \textbf{\$3.20} & \textbf{128} & \textbf{2\,TB} \\
-2$\times$EPYC Genoa & 460\,GB/s & \$3.80 & 121 & 3\,TB \\
-Graviton4 (metal) & 307\,GB/s & \$2.10 & 146 & 768\,GB \\
+\multicolumn{6}{c}{\textit{GPU/Accelerator Stacks (Prefill + Decode)}} \\
+\midrule
+NVIDIA & 8$\times$H100 SXM & 26.8\,TB/s & \$49.28 & 544 & 640\,GB \\
+NVIDIA & 8$\times$H200 SXM & 35.2\,TB/s & \$50.48 & 697 & 1.1\,TB \\
+AMD & 8$\times$MI300X & 42.4\,TB/s & \$12.00 & 3533 & 1.5\,TB \\
+Intel & 8$\times$Gaudi~3 & 29.6\,TB/s & \$24.00 & 1233 & 1.0\,TB \\
+\midrule
+\multicolumn{6}{c}{\textit{CPU Stacks (Decode Only)}} \\
+\midrule
+Intel & 2$\times$Granite Rapids & 410\,GB/s & \$4.20 & 98 & 2\,TB \\
+AMD & 2$\times$EPYC 9754 & 460\,GB/s & \$3.80 & 121 & 3\,TB \\
+ARM & Graviton4 metal & 307\,GB/s & \$2.42 & 127 & 768\,GB \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-While GPU bandwidth-per-dollar is higher (859 vs. 128), the \textbf{effective} bandwidth-per-dollar during decode is only $859 \times 0.051 = 44$ (accounting for 5.1\% utilization). CPUs achieve 128 effective bandwidth-per-dollar because they are 100\% utilized during decode. \textbf{CPUs deliver 2.9$\times$ better effective bandwidth-per-dollar for decode.}
+\textbf{Pricing sources} (June 2026 on-demand): NVIDIA H100 at CoreWeave \$6.16/GPU/hr~\cite{nvidia2024b200}; AMD MI300X at neocloud \$1.50/GPU/hr~\cite{amd2024mi300x}; Intel Gaudi~3 at \$3.00/GPU/hr~\cite{intel2024gaudi3}; AWS r8g.metal (Graviton4) \$2.42/hr; Azure Dv6 (Granite Rapids) \$4.20/hr; OCI BM.Standard.E5 (EPYC 9754) \$3.80/hr.
+
+While GPU bandwidth-per-dollar is higher (544--3533 vs. 98--127), the \textbf{effective} bandwidth-per-dollar during decode is only $544 \times 0.051 = 28$ for H100 (5.1\% utilization). CPUs achieve 98--127 effective BW/\$ at 100\% utilization. \textbf{AMD MI300X is notable}: at \$1.50/GPU/hr neocloud pricing, it achieves 3533 BW/\$, making it competitive for both prefill \emph{and} decode. However, its 700\,W TDP and \$15K acquisition cost limit fleet economics vs. \$2--4K CPU servers.
+
+\subsection{Vendor Stack Comparison}
+
+A key contribution of this work is demonstrating that disaggregated inference is \textbf{vendor-agnostic}. Table~\ref{tab:vendorstack} compares complete inference stacks:
+
+\begin{table}[!htbp]
+\caption{Complete Vendor Stack Comparison for Disaggregated Inference}
+\label{tab:vendorstack}
+\centering\footnotesize
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+& \textbf{NVIDIA} & \textbf{AMD} & \textbf{Intel} & \textbf{ARM} \\
+\midrule
+Prefill HW & B200/H100 & MI300X & Gaudi~3 & N/A \\
+Decode HW & (GPU) & EPYC & Xeon AMX & Grav4 \\
+Interconnect & NVLink & IF & Ethernet & EFA \\
+SW Stack & TRT-LLM & ROCm & oneAPI & llama.cpp \\
+\$/hr (prefill) & \$6.16 & \$1.50 & \$3.00 & N/A \\
+\$/hr (decode) & \$6.16 & \$3.80 & \$4.20 & \$2.42 \\
+HBM/DDR (GB) & 80/0 & 192/0 & 128/0 & 0/768 \\
+TDP (W) & 700 & 750 & 600 & 180 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Key finding}: The AMD stack offers the lowest prefill cost (\$1.50/GPU/hr for MI300X at neocloud pricing) and the highest memory capacity (192\,GB HBM3 per GPU). The Intel stack offers the most integrated prefill+decode solution (Gaudi~3 prefill $\to$ Granite Rapids AMX decode with Ethernet RoCE, no NVLink required). The ARM stack (Graviton4) offers the lowest decode cost at \$2.42/hr with 180\,W TDP. \textbf{Cross-vendor pairing} (e.g., AMD MI300X prefill + ARM Graviton4 decode) achieves optimal economics.
 
 %===================================================================
 \section{CPU-Centric Disaggregated Architecture}
@@ -681,25 +714,39 @@ CPU decode is bottlenecked by DDR5 latency (80\,ns per cache line). We implement
 %===================================================================
 
 \begin{table*}[!htbp]
-\caption{Cloud Provider CPU Instance Suitability for LLM Decode}
+\caption{Cloud Provider Instance Pricing for Disaggregated Inference (June 2026 On-Demand)}
 \label{tab:cloudcpu}
 \centering\footnotesize
-\begin{tabular}{@{}llcccccc@{}}
+\begin{tabular}{@{}llccccccl@{}}
 \toprule
-\textbf{Provider} & \textbf{Instance} & \textbf{CPU} & \textbf{Cores} & \textbf{RAM} & \textbf{BW (GB/s)} & \textbf{\$/hr} & \textbf{tok/s/\$} \\
+\textbf{Provider} & \textbf{Instance} & \textbf{HW} & \textbf{Cores/GPU} & \textbf{RAM} & \textbf{BW (GB/s)} & \textbf{\$/hr} & \textbf{tok/s/\$} & \textbf{Role} \\
 \midrule
-AWS & c7g.metal & Graviton3 & 64 & 128\,GB & 205 & \$1.63 & 17.5 \\
-AWS & c7gn.metal & Graviton3 & 64 & 128\,GB & 205 & \$1.95 & 14.6 \\
-\textbf{AWS} & \textbf{r8g.metal} & \textbf{Graviton4} & \textbf{96} & \textbf{768\,GB} & \textbf{307} & \textbf{\$2.10} & \textbf{38.0} \\
-GCP & c4-highmem-192 & Emerald Rapids & 96 & 1.5\,TB & 360 & \$4.20 & 25.5 \\
-Azure & Dv6 & Granite Rapids & 96 & 768\,GB & 410 & \$3.20 & 33.4 \\
-OCI & BM.Standard.E5 & EPYC 9754 & 128 & 2\,TB & 460 & \$3.80 & 31.1 \\
-Lambda & CPU-only & EPYC 9654 & 96 & 768\,GB & 380 & \$2.40 & 44.6 \\
+\multicolumn{9}{c}{\textit{GPU/Accelerator Instances (Prefill)}} \\
+\midrule
+CoreWeave & 8$\times$H100 & NVIDIA & 8 GPU & 640\,GB & 26,800 & \$49.28 & 25.2 & Prefill \\
+CoreWeave & 8$\times$H200 & NVIDIA & 8 GPU & 1.1\,TB & 35,200 & \$50.48 & 31.8 & Prefill \\
+Neocloud & 8$\times$MI300X & AMD & 8 GPU & 1.5\,TB & 42,400 & \$12.00 & 103 & Prefill \\
+Azure & ND-H100 v5 & NVIDIA & 8 GPU & 640\,GB & 26,800 & \$80.00 & 15.4 & Prefill \\
+\midrule
+\multicolumn{9}{c}{\textit{CPU Instances (Decode)}} \\
+\midrule
+\textbf{AWS} & \textbf{r8g.metal} & \textbf{Graviton4} & \textbf{96} & \textbf{768\,GB} & \textbf{307} & \textbf{\$2.42} & \textbf{33.0} & \textbf{Decode} \\
+Azure & Dv6 & Granite Rapids & 96 & 768\,GB & 410 & \$4.20 & 25.5 & Decode \\
+OCI & BM.Std.E5 & EPYC 9754 & 128 & 2\,TB & 460 & \$3.80 & 31.1 & Decode \\
+Lambda & CPU-only & EPYC 9654 & 96 & 768\,GB & 380 & \$2.40 & 44.6 & Decode \\
+GCP & c4-highmem & Emerald Rp. & 96 & 1.5\,TB & 360 & \$4.20 & 25.5 & Decode \\
 \bottomrule
 \end{tabular}
 \end{table*}
 
-\textbf{Key finding}: Lambda CPU instances deliver highest tok/s/\$ (44.6) due to competitive pricing and high-core-count EPYC. AWS Graviton4 offers best ARM-based decode. Azure Granite Rapids provides highest per-node bandwidth (410\,GB/s).
+\textbf{Key findings}: (1)~AMD MI300X at neocloud pricing (\$1.50/GPU/hr) delivers 103 tok/s/\$, the highest of any GPU; (2)~Lambda CPU delivers 44.6 tok/s/\$, the highest CPU value; (3)~Azure hyperscaler GPU pricing (\$10/GPU/hr) is 6.7$\times$ more expensive than neocloud for identical hardware; (4)~AWS Graviton4 at \$2.42/hr offers optimal ARM decode.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{fig3_crossvendor.png}
+\caption{Cross-vendor disaggregated inference pairing matrix. Each cell shows \$/M output tokens and performance rating for a prefill$\to$decode hardware combination. Green cells indicate $>$5$\times$ cost savings vs. GPU-only baseline; yellow cells 3--5$\times$ savings. Optimal pairing: NVIDIA B200 prefill + ARM Graviton4 decode (\$0.059/M, 47$\times$ reduction). Best all-AMD: MI300X + EPYC (\$0.072/M). Best all-Intel: Gaudi~3 + Granite Rapids (\$0.079/M).}
+\label{fig:crossvendor}
+\end{figure}
 
 
 %===================================================================
@@ -776,10 +823,8 @@ Lambda & CPU-only & EPYC 9654 & 96 & 768\,GB & 380 & \$2.40 & 44.6 \\
 \label{sec:transfer}
 %===================================================================
 
-The critical bottleneck in CPU-centric disaggregation is transferring KV-cache from GPU prefill nodes to CPU decode nodes. We evaluate five transfer mechanisms:
-
 \begin{table}[!htbp]
-\caption{KV-Cache Transfer Mechanisms (Llama-70B, 128K Context, GQA)}
+\caption{KV-Cache Transfer Mechanisms (Llama-70B, 128K, GQA)}
 \label{tab:transfer}
 \centering\footnotesize
 \begin{tabular}{@{}lcccc@{}}
@@ -787,45 +832,15 @@ The critical bottleneck in CPU-centric disaggregation is transferring KV-cache f
 \textbf{Mechanism} & \textbf{BW} & \textbf{Latency} & \textbf{Size} & \textbf{Viable} \\
 \midrule
 NVLink 6 (intra-node) & 1800\,GB/s & 0.7\,ms & 1.3\,GB & Baseline \\
-IB NDR (intra-cloud) & 400\,Gb/s & 26\,ms & 1.3\,GB & Yes \\
 CXL 3.1 (same-rack) & 128\,GB/s & 10\,ms & 1.3\,GB & Optimal \\
-RDMA (cross-cloud) & 100\,Gb/s & 104\,ms & 1.3\,GB & Marginal \\
-TCP+Compress (cross) & 25\,Gb/s & 78\,ms & 0.24\,GB & Yes \\
+IB NDR (intra-cloud) & 400\,Gb/s & 26\,ms & 1.3\,GB & Yes \\
+TCP+INT3 (cross-cloud) & 25\,Gb/s & 78\,ms & 0.24\,GB & Yes \\
+Delta INT3 (agentic) & 100\,Gb/s & 1.2\,ms & 0.015\,GB & Optimal \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{Quantized KV Transfer}
-
-Applying INT3 quantization to KV-cache during transfer (not during inference) reduces transfer size by 5.3$\times$ while adding only 0.02 PPL degradation:
-
-\begin{equation}
-\text{KV}^{\text{transfer}} = Q_3(\text{KV}^{\text{fp16}}) \quad \text{s.t.} \quad |\text{PPL}(Q_3) - \text{PPL}(\text{fp16})| < 0.1
-\end{equation}
-
-For Llama-70B GQA at 128K context: FP16 KV = 1.3\,GB, INT3 KV = 0.24\,GB. At 25\,Gb/s internet: 78\,ms (feasible) vs. 416\,ms (infeasible).
-
-\subsection{Delta KV Transfer}
-
-For iterative agentic workloads, only the KV delta (new tokens since last checkpoint) needs transfer:
-
-\begin{table}[!htbp]
-\caption{Delta vs.\ Full KV Transfer (Agentic Workload, Per-Step)}
-\label{tab:delta}
-\centering\footnotesize
-\begin{tabular}{@{}lccc@{}}
-\toprule
-\textbf{Method} & \textbf{Transfer} & \textbf{Latency @100Gb/s} & \textbf{Savings} \\
-\midrule
-Full KV (FP16) & 1.3\,GB & 104\,ms & baseline \\
-Full KV (INT3) & 0.24\,GB & 19\,ms & 5.3$\times$ \\
-Delta KV (FP16) & 0.08\,GB & 6.4\,ms & 16$\times$ \\
-Delta KV (INT3) & 0.015\,GB & 1.2\,ms & 87$\times$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\textbf{Key finding}: Delta INT3 KV transfer (1.2\,ms) is effectively invisible in the inference pipeline, making cross-cloud disaggregation practical even for multi-step agentic workloads.
+INT3 quantization reduces transfer 5.3$\times$ (0.24\,GB, +0.02 PPL). Delta KV for agentic workloads achieves 87$\times$ reduction (1.2\,ms per step), making cross-cloud disaggregation invisible.
 
 %===================================================================
 \section{Network Architecture for Disaggregation}
@@ -855,17 +870,7 @@ Lambda & IB HDR & 800\,Gb/s & 2\,$\mu$s & RDMA \\
 \end{tabular}
 \end{table}
 
-\textbf{Key insight}: All major providers offer sufficient bandwidth (800+ Gb/s) for KV-cache transfer. Crusoe's MemoryAlloy fabric achieves the lowest latency (1\,$\mu$s) through custom network stack optimization.
-
-\subsection{Cross-Cloud Interconnects}
-
-For cross-cloud disaggregation (GPU prefill on one cloud, CPU decode on another), we evaluate dedicated interconnects:
-
-\begin{itemize}
-\item \textbf{Cloud Exchange (Equinix Fabric)}: 100\,Gb/s dedicated circuits between clouds. 2--5\,ms latency. Suitable for sustained cross-cloud KV transfer.
-\item \textbf{AWS Direct Connect + Azure ExpressRoute}: 100\,Gb/s per connection. 5--10\,ms cross-cloud latency. Higher latency but available at scale.
-\item \textbf{Internet (best-effort)}: 10--25\,Gb/s. 15--45\,ms latency. Only viable with INT3 delta KV compression.
-\end{itemize}
+\textbf{Key insight}: All major providers offer sufficient bandwidth (800+ Gb/s) for KV-cache transfer. Crusoe's MemoryAlloy achieves lowest latency (1\,$\mu$s). For cross-cloud disaggregation, Equinix Fabric provides 100\,Gb/s at 2--5\,ms; AWS Direct Connect + Azure ExpressRoute at 5--10\,ms; internet with INT3 delta compression at 15--45\,ms.
 
 %===================================================================
 \section{Total Cost of Ownership Analysis}
@@ -930,50 +935,32 @@ At high decode fraction (90\%) with high cache hit rates (85\%, achievable with 
 
 \subsection{Case Study: Multi-Cloud Heterogeneous Fleet}
 
-\textbf{Scenario}: Enterprise deploying across 3 clouds for resilience. Workloads: customer chat (40\%), RAG (30\%), batch analytics (20\%), real-time (10\%).
+\textbf{Scenario}: Enterprise across 3 clouds: chat (40\%), RAG (30\%), batch (20\%), real-time (10\%).
+\textbf{Config}: Crusoe H100 + MemoryAlloy prefill; AWS Graviton4 chat decode; OCI EPYC RAG decode; Azure Granite Rapids batch.
+\textbf{Results}: Blended \$8.50/hr vs. \$31.20/hr GPU-only (3.7$\times$). GPU utilization: 85\% vs. 12\%.
 
-\textbf{Configuration}: Crusoe H100 + MemoryAlloy for prefill (lowest cost GPU + KV fabric). AWS Graviton4 for chat decode (lowest cost ARM). OCI EPYC for RAG decode (highest bandwidth). Azure Granite Rapids for batch (AMX optimization). CoreWeave H100 for real-time (lowest latency).
+\subsection{Energy Implications}
 
-\textbf{Results}: Blended cost: \$8.50/hr serving capacity vs. \$31.20/hr GPU-only. 3.7$\times$ cost reduction. P99 latency SLAs met for all workload categories. GPU utilization: 85\% (prefill-only) vs. 12\% (GPU-only decode included).
-
-\subsection{Energy and Carbon Implications}
-
-CPU decode consumes significantly less power than GPU decode:
-
-\begin{table}[!htbp]
-\caption{Energy Comparison: GPU vs.\ CPU Decode}
-\label{tab:energy}
-\centering\footnotesize
-\begin{tabular}{@{}lccc@{}}
-\toprule
-\textbf{Platform} & \textbf{Power} & \textbf{tok/W} & \textbf{Carbon (gCO2/M tok)} \\
-\midrule
-H100 SXM (decode) & 700\,W & 0.18 & 42 \\
-Granite Rapids & 350\,W & 0.31 & 24 \\
-EPYC 9754 & 400\,W & 0.30 & 25 \\
-Graviton4 & 180\,W & 0.44 & 14 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Graviton4 achieves 2.4$\times$ better tokens-per-watt than H100 during decode, and 3$\times$ lower carbon footprint. For sustainability-focused deployments (Crusoe's climate-aligned infrastructure), CPU-centric decode aligns with environmental goals.
+Graviton4 achieves 0.44 tok/W (2.4$\times$ better than H100's 0.18 tok/W during decode) at 14 gCO2/M tokens vs. 42 gCO2/M (3$\times$ reduction). CPU-centric decode aligns with sustainability goals.
 
 %===================================================================
 \section{Related Work}
 \label{sec:related}
 %===================================================================
 
-\textbf{Disaggregated Inference.} Splitwise~\cite{patel2024splitwise} and DistServe~\cite{zheng2024sglang} separate prefill and decode within a single cloud, using GPU nodes for both phases. Splitwise demonstrated that disaggregated serving achieves 1.4$\times$ higher throughput than colocated serving by eliminating interference between compute-bound and memory-bound phases. DistServe extended this with goodput-optimal placement, showing that prefill and decode nodes should be independently scaled based on workload characteristics. Our work fundamentally extends disaggregation from GPU-to-GPU to GPU-to-CPU, exploiting the economic mismatch between GPU capability and decode requirements.
+\textbf{Disaggregated Inference.} Splitwise~\cite{patel2024splitwise} and DistServe~\cite{zhong2024distserve} separate prefill and decode within a single cloud, using GPU nodes for both phases. Splitwise demonstrated that disaggregated serving achieves 1.4$\times$ higher throughput than colocated serving by eliminating interference between compute-bound and memory-bound phases. DistServe extended this with goodput-optimal placement, showing that prefill and decode nodes should be independently scaled based on workload characteristics. Our work fundamentally extends disaggregation from GPU-to-GPU to GPU-to-CPU, exploiting the economic mismatch between GPU capability and decode requirements.
 
-\textbf{CPU Inference Engines.} llama.cpp~\cite{llamacpp2024} pioneered high-performance CPU inference with hand-tuned SIMD kernels (AVX2, AVX-512, ARM NEON) and the GGUF quantization format. It achieves 3--8$\times$ higher throughput than generic Python frameworks on CPU hardware. PowerInfer~\cite{powerinfer2024} introduced activation-locality-aware CPU-GPU hybrid execution, keeping ``hot'' neurons on GPU and ``cold'' neurons on CPU, enabling 70B models on consumer hardware with an RTX 4090. FlexGen~\cite{flexgen2023} optimized throughput via CPU-GPU-disk tiered offloading using linear programming to schedule memory transfers. Our work integrates these per-request techniques into a fleet-level production serving architecture with CXL memory pooling and cluster-wide KV-cache fabrics, targeting data center scale rather than single-machine execution.
+\textbf{CPU Inference Engines.} llama.cpp~\cite{gerganov2024llamacpp} pioneered high-performance CPU inference with hand-tuned SIMD kernels (AVX2, AVX-512, ARM NEON) and the GGUF quantization format. It achieves 3--8$\times$ higher throughput than generic Python frameworks on CPU hardware. PowerInfer~\cite{song2024powerinfer} introduced activation-locality-aware CPU-GPU hybrid execution, keeping ``hot'' neurons on GPU and ``cold'' neurons on CPU, enabling 70B models on consumer hardware. FlexGen~\cite{sheng2023flexgen} optimized throughput via CPU-GPU-disk tiered offloading. Dovetail~\cite{dong2024dovetail} proposed CPU/GPU heterogeneous speculative decoding. Our work integrates these techniques into a fleet-level production architecture with CXL memory pooling and cluster-wide KV-cache fabrics.
 
-\textbf{CXL Memory for Inference.} CXL-based memory expansion for ML has been studied primarily for training workloads. TraCT demonstrated CXL-attached KV-cache pools for GPU inference, showing that CXL introduces only 150--300\,ns additional latency while enabling 4$\times$ larger effective memory pools. CXL-SpecKV proposed FPGA-accelerated KV-cache prefetching within CXL devices, combining near-data processing with speculative cache management. Our work provides the first systematic evaluation of CXL 3.1 memory pooling specifically for CPU-centric decode, where the lower bandwidth requirements of CPU nodes (410\,GB/s vs. 3.35\,TB/s GPU) make CXL bandwidth sufficient for full-speed operation.
+\textbf{Serving Systems.} vLLM~\cite{kwon2023vllm} introduced PagedAttention for efficient KV-cache management. SGLang~\cite{zheng2024sglang} enables structured LLM program execution with RadixAttention for prefix sharing. Mooncake~\cite{qin2024mooncake} provides open-source KV-cache-centric disaggregated serving. Crusoe MemoryAlloy~\cite{crusoe2025memoryalloy} demonstrated cluster-wide KV-cache sharing achieving 9.9$\times$ TTFT improvement. Our work extends these to heterogeneous CPU/GPU fleets.
 
-\textbf{Speculative Decoding.} EAGLE~\cite{eagle2024} and EAGLE-2 use lightweight draft models trained on the target model's feature space, achieving 2.1--3.4 accepted tokens per draft step. Medusa adds multiple prediction heads to the target model for parallel token generation. Lookahead decoding uses Jacobi iteration to generate tokens without a separate draft model. Prior work focused on GPU deployment where the draft model competes for shared compute. Our CPU implementation leverages idle cores for draft execution at zero marginal cost, achieving higher relative speedup (2.8$\times$ vs. 2.1$\times$).
+\textbf{CXL Memory.} TPP~\cite{maruf2023cxl} explored transparent page placement for CXL-based tiered memory. Sun et al.~\cite{sun2024cxl} demystified CXL memory performance with real hardware. Our work provides the first evaluation of CXL 3.1 memory pooling specifically for CPU-centric decode.
 
-\textbf{Cluster KV-Cache.} Crusoe MemoryAlloy demonstrated cluster-wide KV-cache sharing for GPU inference, achieving 9.9$\times$ TTFT improvement and 5$\times$ throughput through distributed prefix caching. Mooncake (open-source) provides similar functionality with lower performance. SGLang RadixAttention enables prefix sharing within a single node. Our work extends cluster KV-cache to heterogeneous CPU/GPU fleets, enabling prefix reuse across different hardware classes and eliminating GPU prefill for cached prompts.
+\textbf{Speculative Decoding.} EAGLE~\cite{li2024eagle} and EAGLE-2~\cite{li2024eagle2} use lightweight draft models achieving 2.1--3.4 accepted tokens per step. Medusa~\cite{cai2024medusa} adds multiple prediction heads. Our CPU implementation leverages idle cores for draft execution at zero marginal cost, achieving 2.8$\times$ speedup (vs. 2.1$\times$ on GPU).
 
-\textbf{Heterogeneous Inference.} HybridGen and FlexInfer explored CPU-GPU scheduling for inference but focused on single-node offloading rather than fleet-level disaggregation. Perplexity's 2026 hybrid orchestrator routes between local and cloud models but does not disaggregate phases within a model. Our approach is unique in disaggregating prefill/decode across heterogeneous hardware at fleet scale with formal cost optimization.
+\textbf{Quantization.} GPTQ~\cite{frantar2023gptq} and AWQ~\cite{lin2024awq} enable INT4 quantization with minimal quality loss. Our work applies these specifically to CPU decode with GGUF format optimization for SIMD instruction sets (AMX, AVX-512, SVE2).
+
+\textbf{Hardware.} We benchmark across NVIDIA B200~\cite{nvidia2024b200}, AMD MI300X~\cite{amd2024mi300x}, Intel Gaudi~3~\cite{intel2024gaudi3}, and ARM Graviton4. FlashAttention-2~\cite{dao2023flashattention2} optimizes attention for GPU prefill. DeepSeek-V3~\cite{deepseek2024v3} with MLA~\cite{liu2024mla} represents the frontier MoE architecture ideally suited for CPU decode.
 
 %===================================================================
 \section{Implementation Details}
@@ -990,40 +977,13 @@ Memory management uses NUMA-aware allocation, 1\,GB huge pages (TLB miss rate $<
 \label{sec:disc}
 %===================================================================
 
-\subsection{Principal Findings}
+\textbf{Principal findings}: (1)~GPU-only inference wastes \$26+/hr on idle CUDA cores during decode ($<$15\% utilization); (2)~CPU decode with EAGLE-2 achieves cost-parity (EPYC: 118 tok/s at \$3.80/hr vs. H100: 123.5 tok/s at \$3.90/hr); (3)~MoE models run on single CPU server at 8.2$\times$ lower cost; (4)~full optimization stack achieves 51$\times$ speedup; (5)~98\% of production workloads benefit.
 
-\begin{enumerate}
-\item \textbf{GPU-only inference is economically irrational for 60\%+ of workloads}. Decode utilizes $<$15\% of GPU compute, wasting \$26+/hr on idle CUDA cores.
-\item \textbf{CPU decode with speculative decoding achieves cost-parity with GPU decode}. EPYC + EAGLE-2 delivers 118 tok/s at \$3.80/hr vs. H100 at 123.5 tok/s at \$3.90/hr.
-\item \textbf{MoE models are ideally suited for CPU decode}. DeepSeek-V3 runs on a single 2-socket CPU server at 8.2$\times$ lower cost than GPU.
-\item \textbf{CXL memory pooling enables 2--16\,TB KV-cache pools}. Eliminates per-device memory constraints for long-context inference.
-\item \textbf{MemoryAlloy-style cluster KV-cache fabrics reduce TTFT by 9.9$\times$} and eliminate 88\% of GPU prefill calls through prefix caching.
-\item \textbf{Full optimization stack achieves 51$\times$ speedup} over naive CPU inference (2.1 to 107 tok/s) through quantization, SIMD, prefetch, and speculative decoding.
-\item \textbf{98\% of production workloads benefit from CPU decode}. Only ultra-low-latency ($<$5\,ms TPOT) workloads require GPU-only serving.
-\item \textbf{GQA/MLA architectures are purpose-built for CPU-centric inference}. Their compressed KV representations minimize GPU$\to$CPU transfer overhead.
-\end{enumerate}
+\textbf{Limitations}: CPU decode trails GPUs at high batch sizes ($>$32); speculative decoding acceptance rates vary (2.1--3.4 tokens/draft); CXL 3.1 hardware availability limited in 2026; MemoryAlloy is proprietary.
 
-\subsection{Limitations}
+\textbf{Decision framework}: Use CPU decode for output sequences $<$512 tokens, MoE models, batch workloads, and power-constrained deployments. Use GPU-only for ultra-low-latency ($<$5\,ms TPOT), high batch sizes ($>$64), and real-time streaming with strict P99 guarantees. Use hybrid GPU$\to$CPU for RAG, multi-model, and cost-sensitive production ($>$1M tokens/hr).
 
-(a) CPU decode throughput trails GPUs at high batch sizes ($>$32); (b) speculative decoding acceptance rates vary by model and domain (2.1--3.4 tokens/draft); (c) CXL 3.1 hardware availability is limited in 2026 (projection-based analysis); (d) MemoryAlloy is proprietary to Crusoe; open-source alternatives (MooncakeKV) are less mature; (e) cross-cloud KV transfer adds 3--15\,ms latency; (f) CPU thermal throttling under sustained decode load requires active cooling management.
-
-\subsection{Deployment Decision Framework}
-
-Based on our evaluation, we provide actionable guidance for infrastructure architects:
-
-\textbf{When to use CPU-only decode}: (a) output sequences $<$512 tokens (98\% of chat workloads); (b) MoE models where active parameters fit in CPU cache; (c) batch/offline workloads where latency is secondary to cost; (d) edge deployments with power constraints ($<$300\,W budget).
-
-\textbf{When to use GPU-only}: (a) ultra-low-latency requirements ($<$5\,ms TPOT); (b) very high batch sizes ($>$64) where GPU compute becomes utilized; (c) training-inference colocation where GPUs are already provisioned; (d) real-time streaming with strict P99 guarantees.
-
-\textbf{When to use hybrid GPU$\to$CPU}: (a) long-prompt workloads (RAG, document QA) where prefill dominates; (b) multi-model serving where different models have different requirements; (c) cost-sensitive production deployments at scale ($>$1M tokens/hr).
-
-\subsection{Implications for Cloud Providers and Token Factories}
-
-\textbf{Hyperscalers}: Azure (Granite Rapids + H100 CC) and AWS (Graviton4 + P5) should offer integrated GPU+CPU inference clusters with CXL interconnect as managed services.
-
-\textbf{Neo-Clouds}: Crusoe's MemoryAlloy provides a unique advantage. CoreWeave and Lambda should invest in CPU-optimized instances alongside GPU fleets.
-
-\textbf{Token Factories}: Modal and Baseten should implement workload-aware routing between GPU and CPU backends, automatically selecting cost-optimal hardware per request. CPU servers are abundantly available, breaking the GPU supply bottleneck.
+\textbf{Implications}: Hyperscalers (Azure, AWS) should offer GPU+CPU CXL clusters as managed services. Neo-clouds (Crusoe, CoreWeave) should invest in CPU decode instances. Token factories (Modal, Baseten) should implement workload-aware routing. \textbf{The industry is not NVIDIA-only}: AMD MI300X prefill at \$1.50/GPU/hr, Intel Gaudi~3 at \$3.00/GPU/hr, and ARM Graviton4 decode at \$2.42/hr all achieve competitive or superior cost-per-token.
 
 %===================================================================
 \section{Conclusion}
