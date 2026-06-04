@@ -45,6 +45,10 @@ Y.~Zhong, S.~Liu, J.~Chen, J.~Hu, Y.~Zhu, X.~Liu, X.~Jin, and H.~Zhang,
   ``{DistServe}: Disaggregating prefill and decoding for goodput-optimized
   {LLM} serving,'' in \emph{Proc. USENIX OSDI}, 2024.
 
+\bibitem{qin2024mooncake}
+R.~Qin \emph{et~al.}, ``{Mooncake}: A {KVCache}-centric disaggregated
+  architecture for {LLM} serving,'' in \emph{Proc. ASPLOS}, 2025.
+
 \bibitem{gerganov2024llamacpp}
 G.~Gerganov, ``llama.cpp: Inference of {LLaMA} model in pure {C/C++},''
   \url{https://github.com/ggerganov/llama.cpp}, 2024.
@@ -71,10 +75,6 @@ W.~Kwon, Z.~Li, S.~Zhuang, Y.~Sheng, L.~Zheng, C.~H. Yu, J.~E. Gonzalez,
 L.~Zheng, L.~Yin, Z.~Xie \emph{et~al.}, ``{SGLang}: Efficient execution of
   structured language model programs,'' in \emph{Proc. NeurIPS}, 2024.
 
-\bibitem{qin2024mooncake}
-R.~Qin \emph{et~al.}, ``{Mooncake}: A {KVCache}-centric disaggregated
-  architecture for {LLM} serving,'' in \emph{Proc. ASPLOS}, 2025.
-
 \bibitem{crusoe2025memoryalloy}
 {Crusoe Energy Systems}, ``{MemoryAlloy}: Cluster-wide {KV}-cache sharing for
   {LLM} inference,'' \url{https://crusoe.ai/blog/memoryalloy}, 2025.
@@ -88,13 +88,9 @@ H.~A. Maruf, H.~Wang, A.~Dhakal, J.~Shen, N.~Jog, S.~Kannan, and M.~Chowdhury,
 Y.~Sun \emph{et~al.}, ``Demystifying {CXL} memory with genuine {CXL}-ready
   systems and devices,'' \emph{Proc. IEEE/ACM MICRO}, 2024.
 
-\bibitem{li2024eagle}
-Y.~Li, F.~Wei, C.~Zhang, and H.~Zhang, ``{EAGLE}: Speculative sampling requires
-  rethinking feature uncertainty,'' in \emph{Proc. ICML}, 2024.
-
 \bibitem{li2024eagle2}
-------, ``{EAGLE-2}: Faster inference of language models with dynamic draft
-  trees,'' in \emph{Proc. EMNLP}, 2024.
+Y.~Li, F.~Wei, C.~Zhang, and H.~Zhang, ``{EAGLE-2}: Faster inference of
+  language models with dynamic draft trees,'' in \emph{Proc. EMNLP}, 2024.
 
 \bibitem{cai2024medusa}
 T.~Cai, Y.~Li, Z.~Geng, H.~Peng, J.~D. Lee, D.~Chen, and T.~Dao, ``{Medusa}:
@@ -110,10 +106,6 @@ E.~Frantar, S.~Ashkboos, T.~Hoefler, and D.~Alistarh, ``{GPTQ}: Accurate
 J.~Lin, J.~Tang, H.~Tang, S.~Yang, W.-M. Chen, W.-C. Wang, G.~Xiao, X.~Dang,
   C.~Gan, and S.~Han, ``{AWQ}: Activation-aware weight quantization for
   on-device {LLM} compression,'' in \emph{Proc. MLSys}, 2024.
-
-\bibitem{dao2023flashattention2}
-T.~Dao, ``{FlashAttention-2}: Faster attention with better parallelism and work
-  partitioning,'' in \emph{Proc. ICLR}, 2024.
 
 \bibitem{deepseek2024v3}
 {DeepSeek-AI}, ``{DeepSeek-V3} technical report,'' \emph{arXiv preprint
