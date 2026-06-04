@@ -18,9 +18,9 @@
 \begin{document}
 \title{Beyond GPU-Only Serving:\\CPU-Centric Disaggregated LLM Inference\\with CXL Memory Pooling and Cluster-Wide KV-Cache Fabrics}
 \author{
-\IEEEauthorblockN{Srikanta Datta Tumkur\IEEEauthorrefmark{1}, Anshu Bansal\IEEEauthorrefmark{1}, Meher Simhadri\IEEEauthorrefmark{2}, Jay Iyer\IEEEauthorrefmark{2}}
+\IEEEauthorblockN{Srikanta Datta Tumkur\IEEEauthorrefmark{1}, Anshu Bansal\IEEEauthorrefmark{1}, Mehar Simhadri\IEEEauthorrefmark{2}, Jay Iyer\IEEEauthorrefmark{2}}
 \IEEEauthorblockA{\IEEEauthorrefmark{1}MIT Sloan School of Management, Cambridge, MA \texttt{\{srikanta, anshu.bansal\}@sloan.mit.edu}}
-\IEEEauthorblockA{\IEEEauthorrefmark{2}IEEE Senior Members \texttt{\{meher.simhadri, jay.iyer\}@ieee.org}}
+\IEEEauthorblockA{\IEEEauthorrefmark{2}IEEE Senior Members \texttt{\{mehar.simhadri, jay.iyer\}@ieee.org}}
 }
 \maketitle
 
@@ -56,7 +56,7 @@ This paper makes five contributions:
 \begin{figure*}[!htbp]
 \centering
 \includegraphics[width=\textwidth]{fig1_architecture.png}
-\caption{Multi-vendor CPU-centric disaggregated inference architecture. Four vendor stacks operate in parallel: \textbf{NVIDIA} (B200/H100 via NVLink~6.0 for compute-bound prefill with FlashAttention-3 and TensorRT-LLM); \textbf{AMD} (MI300X with 192\,GB HBM3 via Infinity Fabric for prefill and large-batch decode with ROCm/vLLM); \textbf{Intel} (Gaudi~3 for cost-optimized prefill via Ethernet RoCE, Granite Rapids AMX for CPU decode with SynapseAI/oneAPI); \textbf{ARM} (Graviton4 SVE2 for low-power decode at lowest \$/token). All stacks share a unified CXL~3.1 memory pool and MemoryAlloy KV-cache fabric. Storage tiers: NVMe Gen5, NVMe-oF, S3/GCS. Aggregate: 47$\times$ cost reduction to \$0.059/M tokens.}
+\caption{End-to-end CPU-centric disaggregated inference flow. \textbf{Stage~1}: Incoming requests (chat, RAG, agentic) are classified by a workload router. \textbf{Stage~2}: Compute-bound prefill is routed to a multi-vendor GPU cluster (NVIDIA B200, AMD MI300X, Intel Gaudi~3) operating at 85\%+ FLOPS utilization. \textbf{Stage~3}: Memory-bound decode is routed to CPU clusters (Intel Xeon AMX, AMD EPYC AVX-512, ARM Graviton4 SVE2) with EAGLE-2 speculative decoding, backed by CXL~3.1 shared memory pool (2--16\,TB) and NVMe/object storage. \textbf{Stage~4}: Output tokens delivered at 3.7--47$\times$ lower cost (\$0.059/M tokens). Key insight: GPUs handle only prefill (high utilization), CPUs handle only decode (low cost).}
 \label{fig:arch}
 \end{figure*}
 
@@ -744,7 +744,7 @@ GCP & c4-highmem & Emerald Rp. & 96 & 1.5\,TB & 360 & \$4.20 & 25.5 & Decode \\
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=\linewidth]{fig3_crossvendor.png}
-\caption{Cross-vendor disaggregated inference pairing matrix. Each cell shows \$/M output tokens and performance rating for a prefill$\to$decode hardware combination. Green cells indicate $>$5$\times$ cost savings vs. GPU-only baseline; yellow cells 3--5$\times$ savings. Optimal pairing: NVIDIA B200 prefill + ARM Graviton4 decode (\$0.059/M, 47$\times$ reduction). Best all-AMD: MI300X + EPYC (\$0.072/M). Best all-Intel: Gaudi~3 + Granite Rapids (\$0.079/M).}
+\caption{Cost per million output tokens: GPU-only vs. disaggregated serving. GPU-only H100 baseline (\$2.80/M, dashed line) compared to three cross-vendor disaggregated configurations. NVIDIA B200 prefill + Graviton4 decode achieves \$0.059/M (47$\times$ reduction). AMD MI300X + EPYC achieves \$0.072/M (39$\times$). Intel Gaudi~3 + Xeon AMX achieves \$0.079/M (35$\times$). Even GPU-only MI300X (\$1.90/M) costs 32$\times$ more than the best disaggregated configuration.}
 \label{fig:crossvendor}
 \end{figure}
 
