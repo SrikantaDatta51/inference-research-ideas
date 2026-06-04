@@ -88,12 +88,12 @@ InferMark addresses all three gaps through a 14-axis benchmarking framework with
 \node[ax,fill=t2!15,minimum width=2cm] at (-5.9,-1.6) {A10: Constrained Gen};
 
 \node[hdr,t1] at (-8.1,-2.1) {\footnotesize T1};
-\node[ax,fill=t1!15,minimum width=1.5cm] at (-7.1,-2.5) {A1: KV-Cache};
-\node[ax,fill=t1!15,minimum width=1.5cm] at (-5.5,-2.5) {A2: Disagg P/D};
-\node[ax,fill=t1!15,minimum width=1.5cm] at (-3.9,-2.5) {A3: Attention};
-\node[ax,fill=t1!15,minimum width=1.5cm] at (-7.1,-2.95) {A4: MoE Route};
-\node[ax,fill=t1!15,minimum width=1.5cm] at (-5.5,-2.95) {A5: Spec Dec};
-\node[ax,fill=t1!15,minimum width=1.5cm] at (-3.9,-2.95) {A6: Quantize};
+\node[ax,fill=t1!15,minimum width=1.65cm] at (-7.2,-2.5) {A1: KV-Cache};
+\node[ax,fill=t1!15,minimum width=1.65cm] at (-5.4,-2.5) {A2: Disagg};
+\node[ax,fill=t1!15,minimum width=1.65cm] at (-3.7,-2.5) {A3: Attention};
+\node[ax,fill=t1!15,minimum width=1.65cm] at (-7.2,-2.95) {A4: MoE Rte};
+\node[ax,fill=t1!15,minimum width=1.65cm] at (-5.4,-2.95) {A5: SpecDec};
+\node[ax,fill=t1!15,minimum width=1.65cm] at (-3.7,-2.95) {A6: Quant};
 
 \node[font=\tiny\sffamily\itshape,gray] at (-3.5,0.5) {Apps};
 \node[font=\tiny\sffamily\itshape,gray] at (-3.5,-0.15) {Infra};
@@ -868,9 +868,9 @@ r^* = \arg\max_{r \in \mathcal{R}} \sum_j \alpha_j \cdot f_j(r)
 
 \draw[arr] (inp) -- (d1);
 \draw[arr] (d1) -- node[right,font=\tiny]{yes} (d2);
-\draw[arr] (d1.west) -- ++(-0.8,0) node[above,font=\tiny]{no} |- ++(-0.8,-1) node[right,font=\tiny]{filter clouds};
+\draw[arr] (d1) -- ++(-2,0) node[left,font=\tiny]{no: filter} |- (sc);
 \draw[arr] (d2) -- node[right,font=\tiny]{yes} (sc);
-\draw[arr] (d2.east) -- ++(0.8,0) node[above,font=\tiny]{no} |- ++(0.8,-1) node[left,font=\tiny]{check GPU util};
+\draw[arr] (d2) -- ++(2,0) node[right,font=\tiny]{no: wait} |- (sc);
 \draw[arr] (sc) -- (d3);
 \draw[arr] (d3) -| node[above left,font=\tiny]{no} (r1);
 \draw[arr] (d3) -| node[above right,font=\tiny]{yes} (r2);
