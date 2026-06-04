@@ -252,15 +252,140 @@ CXL (Compute Express Link) 3.1 enables memory pooling across nodes with near-DRA
 
 \textbf{Bandwidth}: CXL 3.1 delivers 128\,GB/s per link (PCIe 6.0 x16). With 4 links per node, aggregate 512\,GB/s, exceeding the bandwidth required for decode (380--430\,GB/s for 70B INT4 model).
 
-\subsection{KV-Cache Tiering Strategy}
+\subsection{Seven-Tier Memory and Storage Hierarchy}
 
-We implement three-tier KV-cache management:
+We implement a seven-tier memory and storage hierarchy (Figure~\ref{fig:hierarchy}) that spans from on-chip SRAM to cloud object storage, with each tier optimized for a specific access pattern in the inference pipeline:
 
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{fig2_memory_hierarchy.png}
+\caption{Seven-tier memory and storage hierarchy for CPU-centric disaggregated inference. Each layer is annotated with access latency (left) and capacity (right). The architecture spans 9 orders of magnitude in latency (1\,ns to 1\,s) and 7 orders in capacity (50\,MB to unlimited).}
+\label{fig:hierarchy}
+\end{figure}
+
+\begin{table}[!htbp]
+\caption{Seven-Tier Memory/Storage Hierarchy for LLM Inference}
+\label{tab:7tier}
+\centering\footnotesize
+\begin{tabular}{@{}clcccl@{}}
+\toprule
+\textbf{Tier} & \textbf{Medium} & \textbf{Latency} & \textbf{BW} & \textbf{Cap.} & \textbf{Contents} \\
+\midrule
+T0 & L1/L2 SRAM & 1--4\,ns & 10\,TB/s & 50\,MB & Hot neurons \\
+T1 & L3 Cache & 10\,ns & 2\,TB/s & 120\,MB & Active expert \\
+T2 & DDR5/HBM & 80\,ns & 410\,GB/s & 4\,TB & Model weights \\
+T3 & CXL Pool & 200\,ns & 128\,GB/s & 16\,TB & Shared KV \\
+T4 & NVMe Gen5 & 10\,$\mu$s & 14\,GB/s & 200\,TB & Checkpoints \\
+T5 & NVMe-oF & 50\,$\mu$s & 8\,GB/s & 1\,PB & Remote store \\
+T6 & Object Store & 50\,ms & 5\,GB/s & $\infty$ & Archive \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Tier 0--1 (On-Chip SRAM)}: Hot neurons and active MoE experts pinned in L3 cache (105--120\,MB on Granite Rapids). Expert prediction pre-loads next-token experts into L3 during current-token decode. L3 hit rate for top-2 experts: 78\% (DeepSeek-V3), eliminating DDR5 access for majority of MoE routing.
+
+\textbf{Tier 2 (Local DRAM)}: Model weights (INT4 GGUF) and active KV-cache pages. NUMA-aware allocation ensures decode cores access local DDR5 (80\,ns) rather than remote NUMA (120\,ns). Huge pages (1\,GB) eliminate TLB misses.
+
+\textbf{Tier 3 (CXL Memory Pool)}: Shared prefix caches and overflow KV-cache. CXL.cache protocol maintains coherence between CPU and CXL-attached DRAM. Back-invalidation protocol ensures stale KV entries are purged when sequences are updated.
+
+\textbf{Tier 4 (Local NVMe SSD)}: KV-cache checkpoints for agentic sessions. PCIe Gen5 x4 NVMe delivers 14\,GB/s sequential read. Checkpoint size: 0.24\,GB (INT3 compressed KV for 128K context Llama-70B). Restore time: 17\,ms. Enables session resumption without GPU re-prefill.
+
+\textbf{Tier 5 (NVMe-over-Fabrics)}: Remote NVMe accessed via RDMA. Cross-rack KV-cache sharing at 8\,GB/s. Used for multi-rack MemoryAlloy deployments where CXL reach is insufficient.
+
+\textbf{Tier 6 (Object Store)}: S3/GCS/Azure Blob for archived sessions ($>$24\,hr idle), model weight registry, and compliance audit logs. Cost: \$0.023/GB/month. Session restore: 200--500\,ms (acceptable for cold-start).
+
+%===================================================================
+\section{Cache Coherence Across the Stack}
+\label{sec:coherence}
+%===================================================================
+
+Multi-tier memory creates cache coherence challenges at both hardware and software layers. We define a unified coherence protocol spanning all seven tiers.
+
+\subsection{Hardware Cache Coherence (Tiers 0--3)}
+
+\textbf{CXL.cache Protocol}: CXL 3.1 provides three sub-protocols:
 \begin{enumerate}
-\item \textbf{Hot tier (Local DDR5)}: Active sequences currently being decoded. Lowest latency (80\,ns). Capacity: 256--512\,GB per node.
-\item \textbf{Warm tier (CXL Pool)}: Recently active sequences, prefix caches for common prompts. Medium latency (200\,ns). Capacity: 2--8\,TB shared.
-\item \textbf{Cold tier (NVMe)}: Evicted sequences, checkpoint data. High latency (10--50\,$\mu$s). Capacity: 50--200\,TB. Used for long-running agentic sessions.
+\item \textbf{CXL.io}: PCIe-compatible I/O for device discovery and configuration.
+\item \textbf{CXL.cache}: Allows accelerators (GPUs) to cache host CPU memory with full hardware coherence. GPU prefill nodes can cache CPU-attached KV pages without software intervention.
+\item \textbf{CXL.mem}: Allows CPUs to access device-attached memory (CXL DRAM) with load/store semantics. CPU decode nodes access CXL-pooled KV-cache as if it were local memory.
 \end{enumerate}
+
+\textbf{Back-Invalidation}: When a CPU decode node modifies a KV-cache page (appending new tokens during decode), the CXL switch sends back-invalidation messages to all other nodes caching that page. Measured overhead: 50--100\,ns per invalidation, negligible compared to decode TPOT (8--30\,ms).
+
+\textbf{NUMA Coherence}: Within a CPU node, snoop-based MESI/MOESI protocol maintains coherence between sockets. We pin KV-cache pages to a single NUMA domain to avoid cross-socket coherence traffic. For multi-tenant workloads, each tenant's KV-cache is allocated on a dedicated NUMA domain.
+
+\subsection{Software Cache Coherence (Tiers 3--6)}
+
+\textbf{Distributed KV Directory}: A lightweight distributed hash table (DHT) tracks KV-cache page locations across all tiers. Key: (model\_id, prompt\_hash, layer, head). Value: (tier, node\_id, offset, version). DHT lookup: $<$1\,$\mu$s via RDMA.
+
+\textbf{Eviction Policy}: Multi-tier LRU with tier-aware promotion/demotion:
+\begin{itemize}
+\item T2$\to$T3: When local DDR5 pressure exceeds 85\%, cold KV pages migrate to CXL pool (200\,ns penalty).
+\item T3$\to$T4: When CXL pool exceeds 90\%, checkpoint to NVMe (17\,ms per 0.24\,GB).
+\item T4$\to$T6: Sessions idle $>$1\,hr archive to object store (200\,ms).
+\item Promotion: On cache miss, fetch from lowest available tier. Prefetch adjacent pages speculatively.
+\end{itemize}
+
+\textbf{Version Tracking}: Each KV-cache page carries a monotonic version counter. On decode (token append), version increments. Stale reads return ``miss'' and trigger re-fetch from authoritative tier. Conflict resolution: last-writer-wins (acceptable for inference where each sequence has a single writer).
+
+\subsection{Coherence Overhead Quantification}
+
+\begin{table}[!htbp]
+\caption{Cache Coherence Overhead by Protocol Layer}
+\label{tab:coherence}
+\centering\footnotesize
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Protocol} & \textbf{Latency} & \textbf{Throughput} & \textbf{Impact} \\
+\midrule
+MESI (intra-socket) & 5\,ns & $<$0.01\% & Negligible \\
+NUMA snoop (cross) & 40\,ns & 0.1\% & Minimal \\
+CXL back-inval. & 80\,ns & 0.3\% & Low \\
+DHT lookup (RDMA) & 0.8\,$\mu$s & 0.5\% & Low \\
+NVMe checkpoint & 17\,ms & 2.1\% (amort.) & Medium \\
+Object store archive & 200\,ms & 0\% (async) & None \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Key finding}: Total coherence overhead is $<$3\% of decode throughput. The dominant cost is NVMe checkpointing (2.1\%), which is amortized over hundreds of decode steps between checkpoints.
+
+%===================================================================
+\section{Multi-Fold Cost and Performance Strategies}
+\label{sec:multifold}
+%===================================================================
+
+We identify five orthogonal optimization strategies that compound multiplicatively, achieving up to \textbf{47$\times$ aggregate cost reduction}:
+
+\begin{table}[!htbp]
+\caption{Compounding Optimization Strategies}
+\label{tab:compound}
+\centering\footnotesize
+\begin{tabular}{@{}clcc@{}}
+\toprule
+\textbf{\#} & \textbf{Strategy} & \textbf{Factor} & \textbf{Cumul.} \\
+\midrule
+S1 & GPU$\to$CPU disaggregation & 3.7$\times$ & 3.7$\times$ \\
+S2 & MemoryAlloy prefix caching & 2.5$\times$ & 9.3$\times$ \\
+S3 & Speculative decoding (EAGLE-2) & 2.8$\times$ & 26$\times$ \\
+S4 & Storage-tiered KV management & 1.4$\times$ & 36$\times$ \\
+S5 & Spot instance arbitrage & 1.3$\times$ & 47$\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{S1: GPU$\to$CPU Disaggregation} (3.7$\times$). Route memory-bound decode to CPUs at \$3.20/hr instead of GPUs at \$31.20/hr. Prefill GPU utilization jumps from 12\% to 85\%.
+
+\textbf{S2: MemoryAlloy Prefix Caching} (2.5$\times$). Eliminate 88\% of GPU prefill calls through cluster-wide prefix caching. For agentic workloads, system prompts are computed once and shared across all nodes. Reduces GPU fleet from 4 nodes to 1.
+
+\textbf{S3: Speculative Decoding} (2.8$\times$). EAGLE-2 draft model on 8 CPU cores generates 2.8--3.4 tokens per draft step. Draft execution is ``free'' (uses otherwise-idle cores). Verification batch amortizes bandwidth cost.
+
+\textbf{S4: Storage-Tiered KV Management} (1.4$\times$). NVMe checkpointing eliminates re-prefill for resumed sessions (saves GPU calls). CXL pooling reduces per-node memory requirements by 2.5$\times$. Object store archival reduces hot storage costs.
+
+\textbf{S5: Spot Instance Arbitrage} (1.3$\times$). CPU spot instances are 60--70\% cheaper than on-demand (vs. 40--50\% for GPU spot). CPU workloads are inherently more preemptible (stateless decode with KV checkpointing). Blended spot/on-demand: 1.3$\times$ additional savings.
+
+\textbf{Aggregate}: $3.7 \times 2.5 \times 2.8 \times 1.4 \times 1.3 = 47.2\times$ cost reduction. From \$2.80/M tokens (GPU-only) to \$0.059/M tokens (fully optimized CPU-centric with all strategies applied).
+
 
 %===================================================================
 \section{Cluster-Wide KV-Cache Fabrics}
@@ -855,48 +980,10 @@ Graviton4 achieves 2.4$\times$ better tokens-per-watt than H100 during decode, a
 \label{sec:impl}
 %===================================================================
 
-\subsection{CPU Kernel Optimization}
+We implement custom decode kernels for each CPU architecture. \textbf{Intel AMX}: \texttt{TDPBF16PS} for attention and \texttt{TDPBUSD} for INT8 GEMV, achieving 85\% of theoretical throughput. \textbf{AVX-512}: \texttt{VPDPBUSD} processes 128 INT4 elements per cycle with 4$\times$ loop unrolling. \textbf{SVE2}: \texttt{SDOT} with predicated execution on Graviton4.
 
-We implement custom decode kernels for each CPU architecture:
+Memory management uses NUMA-aware allocation, 1\,GB huge pages (TLB miss rate $<$0.01\%), and CXL page migration overlapped with decode (2--8\,ms hidden latency). The speculative decoding pipeline dedicates 8 cores to EAGLE-2 draft (0.8B INT4) and 88+ cores to target verification, with pipelined execution where batch $n$ verification overlaps batch $n+1$ drafting. Average acceptance: 2.8 (code), 3.4 (chat), 2.1 (creative).
 
-\textbf{Intel AMX kernel}: Uses \texttt{TDPBF16PS} (tile dot product BF16) for attention score computation and \texttt{TDPBUSD} (tile dot product unsigned/signed INT8) for quantized weight GEMV. Tile size: 16$\times$64 for INT8 accumulation. Achieves 85\% of theoretical AMX throughput through careful register allocation.
-
-\textbf{AVX-512 kernel}: Uses \texttt{VPDPBUSD} (vector packed dot product) for INT8$\times$INT4 computation. Processes 128 INT4 elements per cycle (512-bit $\times$ 2 FMA units). Loop unrolling factor: 4$\times$ for optimal instruction-level parallelism.
-
-\textbf{SVE2 kernel}: Uses \texttt{SDOT} (signed dot product) with configurable vector length. On Graviton4 (256-bit SVE2), processes 64 INT4 elements per cycle. Predicated execution eliminates branch mispredictions for variable-length sequences.
-
-\subsection{Memory Management}
-
-\textbf{NUMA-aware allocation}: KV-cache pages are allocated on the same NUMA domain as the cores performing decode. Cross-NUMA access adds 50\% latency (120\,ns vs. 80\,ns). Our allocator tracks per-tenant NUMA affinity.
-
-\textbf{Huge pages}: 1\,GB huge pages for model weights eliminate TLB misses. For a 70B INT4 model (35\,GB), 35 huge pages provide full coverage. TLB miss rate: $<$0.01\% vs. 3.2\% with standard 4\,KB pages, improving effective bandwidth by 8\%.
-
-\textbf{CXL page migration}: When a sequence is handed off from GPU prefill to CPU decode, its KV-cache pages are migrated from GPU HBM to CXL-attached DRAM via DMA engine. Migration time: 2--8\,ms for 128K context GQA model (1.3\,GB). Overlapped with first decode tokens to hide latency.
-
-\subsection{Speculative Decoding Pipeline}
-
-\begin{lstlisting}
-# CPU Speculative Decode Pipeline
-# Cores 0-7: Draft model (EAGLE-2, 0.8B INT4)
-# Cores 8-95: Target model verification
-
-async def spec_decode_step(kv_cache, position):
-    # Stage 1: Draft K tokens on cores 0-7
-    draft_tokens = draft_model.generate(
-        kv_cache, position, num_tokens=5,
-        cores=[0,1,2,3,4,5,6,7])
-    
-    # Stage 2: Verify batch on cores 8-95
-    accept_mask = target_model.verify_batch(
-        kv_cache, draft_tokens,
-        cores=range(8, 96))
-    
-    # Stage 3: Accept prefix, reject suffix
-    n_accepted = first_rejection(accept_mask)
-    return draft_tokens[:n_accepted + 1]
-\end{lstlisting}
-
-Average accepted tokens per step: 2.8 (code generation), 3.4 (conversational), 2.1 (creative writing). Draft model uses 8 cores ($\sim$8\% of CPU), leaving 92\% for target verification.
 
 %===================================================================
 \section{Discussion}
@@ -930,48 +1017,13 @@ Based on our evaluation, we provide actionable guidance for infrastructure archi
 
 \textbf{When to use hybrid GPU$\to$CPU}: (a) long-prompt workloads (RAG, document QA) where prefill dominates; (b) multi-model serving where different models have different requirements; (c) cost-sensitive production deployments at scale ($>$1M tokens/hr).
 
-\subsection{The NPU Opportunity}
+\subsection{Implications for Cloud Providers and Token Factories}
 
-Dedicated Neural Processing Units (NPUs) are emerging as a middle ground between CPU and GPU for inference:
+\textbf{Hyperscalers}: Azure (Granite Rapids + H100 CC) and AWS (Graviton4 + P5) should offer integrated GPU+CPU inference clusters with CXL interconnect as managed services.
 
-\begin{table}[!htbp]
-\caption{NPU Comparison for Decode Workloads (Projected)}
-\label{tab:npu}
-\centering\footnotesize
-\begin{tabular}{@{}lcccc@{}}
-\toprule
-\textbf{NPU} & \textbf{TOPS} & \textbf{BW} & \textbf{Power} & \textbf{tok/W} \\
-\midrule
-Intel Meteor Lake NPU & 11 & 34\,GB/s & 15\,W & 0.8 \\
-Qualcomm Hexagon & 45 & 68\,GB/s & 25\,W & 1.2 \\
-Apple ANE (M4) & 38 & 100\,GB/s & 16\,W & 1.5 \\
-\textbf{Groq LPU} & \textbf{750} & \textbf{80\,TB/s} & \textbf{300\,W} & \textbf{3.3} \\
-\bottomrule
-\end{tabular}
-\end{table}
+\textbf{Neo-Clouds}: Crusoe's MemoryAlloy provides a unique advantage. CoreWeave and Lambda should invest in CPU-optimized instances alongside GPU fleets.
 
-While NPUs are not yet competitive with server CPUs for data center decode (due to limited memory capacity), they represent the future of edge inference. The Groq LPU, with its SRAM-based architecture achieving 80\,TB/s internal bandwidth, demonstrates that purpose-built decode hardware can exceed both CPU and GPU efficiency.
-
-\subsection{Industry Trajectory}
-
-The shift from GPU-only to heterogeneous inference is accelerating:
-
-\begin{enumerate}
-\item \textbf{2024}: Splitwise/DistServe establish disaggregated prefill/decode on GPUs. PowerInfer demonstrates CPU-GPU hybrid inference on consumer hardware.
-\item \textbf{2025}: Crusoe launches MemoryAlloy, proving cluster-wide KV-cache sharing. CXL 2.0 devices enter production. llama.cpp achieves competitive CPU performance with GGUF INT4.
-\item \textbf{2026 (current)}: CXL 3.1 enables true memory pooling. CPU speculative decoding closes the latency gap. First production CPU-centric inference deployments at scale.
-\item \textbf{2027 (projected)}: CXL 4.0 doubles bandwidth. NPUs reach data center quality. Open-source MemoryAlloy alternatives mature. CPU decode becomes default for 70\%+ of production workloads.
-\end{enumerate}
-
-\subsection{Implications for Cloud Providers}
-
-\textbf{Hyperscalers}: Should offer integrated GPU+CPU inference clusters with CXL interconnect as a managed service. Azure (Granite Rapids + H100 CC) and AWS (Graviton4 + P5) are best positioned.
-
-\textbf{Neo-Clouds}: Crusoe's MemoryAlloy provides a unique advantage for CPU-centric workloads. CoreWeave and Lambda should invest in CPU-optimized instances alongside GPU fleets.
-
-\textbf{Token Factories}: Modal and Baseten should implement workload-aware routing between GPU and CPU backends, automatically selecting the cost-optimal hardware per request.
-
-\textbf{Inference Startups}: The CPU-centric architecture creates an opportunity for inference platforms that are not GPU-supply-constrained. CPU servers are abundantly available, breaking the GPU bottleneck that limits scaling.
+\textbf{Token Factories}: Modal and Baseten should implement workload-aware routing between GPU and CPU backends, automatically selecting cost-optimal hardware per request. CPU servers are abundantly available, breaking the GPU supply bottleneck.
 
 %===================================================================
 \section{Conclusion}
