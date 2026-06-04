@@ -31,7 +31,7 @@
 \citation{wiz2025aispm}
 \citation{chainguard2025ai}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-A}}Motivation: From Static Checklists to Dynamic Graphs}{4}{}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces AI Compliance Graph: Wiz-Chainguard inspired query framework. Central \texttt  {LLM Model} node connects to six domains: training data provenance (with bias scores), SBOM attestation (SLSA\nobreakspace  {}L3, 0\nobreakspace  {}CVEs via Chainguard images), deployment context (sovereignty, GDPR), runtime risks (cross-tenant leakage, prompt injection), fine-tune lineage (parent-child bias delta tracking), and access control (per-tenant RBAC). Bottom: example Cypher query for bias-risk models.}}{4}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces AI Security Compliance Query Graph. Central \texttt  {LLM Model} node connects to six domains: training data provenance (with bias scores), SBOM attestation (SLSA\nobreakspace  {}L3, 0\nobreakspace  {}CVEs via hardened base images), deployment context (sovereignty, GDPR), runtime risks (cross-tenant leakage, prompt injection), fine-tune lineage (parent-child bias delta tracking), and access control (per-tenant RBAC). Bottom: example Cypher query for identifying bias-risk models.}}{4}{}\protected@file@percent }
 \newlabel{fig:graph}{{2}{4}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-B}}Graph Schema}{4}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-C}}Query Examples}{4}{}\protected@file@percent }
@@ -59,6 +59,8 @@
 \newlabel{tab:supply}{{VII}{5}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VII-B}}Model Bill of Materials (MBOM)}{5}{}\protected@file@percent }
 \citation{sigstore2024}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Model provenance and bias attestation pipeline. Six stages from training data (with dataset hashes, license audit, bias pre-scan) through base model training, fine-tuning with parent hash verification, bias gate with three-tier escalation ($\Delta < 0.5$: Green, $0.5$--$1.0$: Yellow, $\Delta \geq 1.0$: Red/blocked), TEE deployment with attestation, to production inference with continuous drift detection. Immutable audit trail spans all stages.}}{6}{}\protected@file@percent }
+\newlabel{fig:provenance}{{3}{6}}
 \@writefile{toc}{\contentsline {section}{\numberline {VIII}AI Policy and Regulatory Framework}{6}{}\protected@file@percent }
 \newlabel{sec:policy}{{VIII}{6}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VIII-A}}Regulatory Landscape (2024--2026)}{6}{}\protected@file@percent }
@@ -69,33 +71,37 @@
 \@writefile{toc}{\contentsline {section}{\numberline {IX}Implementation Details}{6}{}\protected@file@percent }
 \newlabel{sec:impl}{{IX}{6}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IX-A}}TEE Configuration}{6}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IX-B}}Multi-Tenant LoRA Hot-Swapping}{6}{}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {IX}{\ignorespaces LoRA Adapter Switching Performance}}{6}{}\protected@file@percent }
-\newlabel{tab:lora}{{IX}{6}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IX-C}}Compliance Graph Implementation}{6}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IX-B}}Multi-Tenant LoRA Hot-Swapping}{7}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {IX}{\ignorespaces LoRA Adapter Switching Performance}}{7}{}\protected@file@percent }
+\newlabel{tab:lora}{{IX}{7}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IX-C}}Compliance Graph Implementation}{7}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IX-D}}Bias Monitoring Pipeline}{7}{}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Bias monitoring pipeline: batch evaluation with Green/Yellow/Red escalation, continuous online sampling, and drift detection feedback loop.}}{7}{}\protected@file@percent }
-\newlabel{fig:biaspipeline}{{3}{7}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IX-E}}Sovereignty Enforcement Engine}{7}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Bias monitoring pipeline: batch evaluation with Green/Yellow/Red escalation, continuous online sampling, and drift detection feedback loop.}}{7}{}\protected@file@percent }
+\newlabel{fig:biaspipeline}{{4}{7}}
 \@writefile{toc}{\contentsline {section}{\numberline {X}Evaluation}{7}{}\protected@file@percent }
 \newlabel{sec:eval}{{X}{7}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {X-A}}Performance Overhead}{7}{}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {X}{\ignorespaces End-to-End Performance: Confidential + Governed Inference}}{7}{}\protected@file@percent }
 \newlabel{tab:e2e}{{X}{7}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {X-B}}Compliance Graph Query Performance}{7}{}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {XI}{\ignorespaces ACG Query Latency (Neo4j, 10K Models, 50K Edges)}}{7}{}\protected@file@percent }
-\newlabel{tab:graphperf}{{XI}{7}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {X-C}}TCO Analysis}{7}{}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {XII}{\ignorespaces TCO Comparison: 100-Tenant Enterprise Deployment}}{7}{}\protected@file@percent }
-\newlabel{tab:tco}{{XII}{7}}
-\@writefile{toc}{\contentsline {section}{\numberline {XI}Discussion}{7}{}\protected@file@percent }
-\newlabel{sec:disc}{{XI}{7}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XI-A}}Limitations and Mitigations}{8}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XI-B}}Industry Implications}{8}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XI-C}}Patent vs.\ Open Research Delineation}{8}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XI-D}}Energy and Sustainability Considerations}{8}{}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {XIII}{\ignorespaces Energy Impact of Confidential Governed Inference}}{8}{}\protected@file@percent }
-\newlabel{tab:energy}{{XIII}{8}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Throughput comparison across confidential computing configurations. GPU baseline (123.5\nobreakspace  {}tok/s) drops by only 7\% with NVIDIA CC and 8\% with full governance. CPU TDX decode operates at lower absolute throughput but with only 2.1--5.2\% CC overhead. The $<$8\% bracket highlights that confidential+governed GPU inference remains within acceptable production overhead.}}{8}{}\protected@file@percent }
+\newlabel{fig:throughput}{{5}{8}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Per-tenant cost comparison. Multi-tenant sharing with confidential computing achieves 4$\times $ savings (GPU: \$6.16 $\rightarrow $ \$1.54/tenant) and 6$\times $ savings (CPU TDX: \$4.20 $\rightarrow $ \$1.05/tenant). Orange line shows throughput overhead remains below 15\%. Net effect: 75\% cost reduction per tenant with full security hardening.}}{8}{}\protected@file@percent }
+\newlabel{fig:tco}{{6}{8}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Waterfall analysis of cumulative throughput impact per security hardening layer (H100 SXM, Llama-3.1-70B). TEE memory encryption ($-4.1\%$) and GPU CC mode ($-2.8\%$) dominate overhead. Governance ($-1.1\%$), bias monitoring ($-0.6\%$), and audit logging ($-0.4\%$) contribute minimal impact. Total: 15.8\% from 123.5 to 104.0\nobreakspace  {}tok/s for a fully hardened, governed, multi-tenant deployment.}}{8}{}\protected@file@percent }
+\newlabel{fig:waterfall}{{7}{8}}
+\@writefile{lot}{\contentsline {table}{\numberline {XI}{\ignorespaces ACG Query Latency (Neo4j, 10K Models, 50K Edges)}}{8}{}\protected@file@percent }
+\newlabel{tab:graphperf}{{XI}{8}}
+\@writefile{lot}{\contentsline {table}{\numberline {XII}{\ignorespaces TCO Comparison: 100-Tenant Enterprise Deployment}}{8}{}\protected@file@percent }
+\newlabel{tab:tco}{{XII}{8}}
+\@writefile{toc}{\contentsline {section}{\numberline {XI}Discussion}{9}{}\protected@file@percent }
+\newlabel{sec:disc}{{XI}{9}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XI-A}}Limitations and Mitigations}{9}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XI-B}}Industry Implications}{9}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XI-C}}Patent vs.\ Open Research Delineation}{9}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XI-D}}Energy and Sustainability Considerations}{9}{}\protected@file@percent }
 \citation{hunt2024confidential}
 \citation{akram2025ccgpu}
 \citation{confidentialconsortium2023}
@@ -115,18 +121,20 @@
 \citation{zheng2024sglang}
 \citation{jobin2023ai}
 \citation{sun2024cxl}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XI-E}}Comparison with Alternative Approaches}{9}{}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {XIV}{\ignorespaces Comparison with Alternative Trust Architectures}}{9}{}\protected@file@percent }
-\newlabel{tab:compare}{{XIV}{9}}
-\@writefile{toc}{\contentsline {section}{\numberline {XII}Related Work}{9}{}\protected@file@percent }
-\newlabel{sec:related}{{XII}{9}}
-\@writefile{toc}{\contentsline {section}{\numberline {XIII}Future Work}{9}{}\protected@file@percent }
-\newlabel{sec:future}{{XIII}{9}}
-\@writefile{toc}{\contentsline {section}{\numberline {XIV}Conclusion}{10}{}\protected@file@percent }
-\newlabel{sec:conc}{{XIV}{10}}
-\@writefile{lot}{\contentsline {table}{\numberline {XV}{\ignorespaces Summary of Key Results}}{10}{}\protected@file@percent }
-\newlabel{tab:summary}{{XV}{10}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XIV-A}}Production Case Studies}{10}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {XIII}{\ignorespaces Energy Impact of Confidential Governed Inference}}{10}{}\protected@file@percent }
+\newlabel{tab:energy}{{XIII}{10}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XI-E}}Comparison with Alternative Approaches}{10}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {XIV}{\ignorespaces Comparison with Alternative Trust Architectures}}{10}{}\protected@file@percent }
+\newlabel{tab:compare}{{XIV}{10}}
+\@writefile{toc}{\contentsline {section}{\numberline {XII}Related Work}{10}{}\protected@file@percent }
+\newlabel{sec:related}{{XII}{10}}
+\@writefile{toc}{\contentsline {section}{\numberline {XIII}Future Work}{10}{}\protected@file@percent }
+\newlabel{sec:future}{{XIII}{10}}
+\@writefile{toc}{\contentsline {section}{\numberline {XIV}Conclusion}{11}{}\protected@file@percent }
+\newlabel{sec:conc}{{XIV}{11}}
+\@writefile{lot}{\contentsline {table}{\numberline {XV}{\ignorespaces Summary of Key Results}}{11}{}\protected@file@percent }
+\newlabel{tab:summary}{{XV}{11}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XIV-A}}Production Case Studies}{11}{}\protected@file@percent }
 \bibstyle{IEEEtran}
 \bibdata{references}
 \bibcite{hunt2024confidential}{1}
@@ -142,10 +150,10 @@
 \bibcite{slsa2024}{11}
 \bibcite{sigstore2024}{12}
 \bibcite{akram2025ccgpu}{13}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XIV-B}}Deployment Recommendations}{11}{}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {XVI}{\ignorespaces Recommended Configuration by Industry Vertical}}{11}{}\protected@file@percent }
-\newlabel{tab:recommend}{{XVI}{11}}
-\@writefile{toc}{\contentsline {section}{References}{11}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {XIV-B}}Deployment Recommendations}{12}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {XVI}{\ignorespaces Recommended Configuration by Industry Vertical}}{12}{}\protected@file@percent }
+\newlabel{tab:recommend}{{XVI}{12}}
+\@writefile{toc}{\contentsline {section}{References}{12}{}\protected@file@percent }
 \bibcite{confidentialconsortium2023}{14}
 \bibcite{nistai2024}{15}
 \bibcite{bommasani2024foundation}{16}
@@ -156,4 +164,4 @@
 \bibcite{kwon2023vllm}{21}
 \bibcite{zheng2024sglang}{22}
 \bibcite{sun2024cxl}{23}
-\gdef \@abspage@last{12}
+\gdef \@abspage@last{13}

@@ -195,7 +195,7 @@ We propose the \textbf{AI Compliance Graph} (ACG)---a queryable knowledge graph 
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=\linewidth]{fig2_compliance_graph.png}
-\caption{AI Compliance Graph: Wiz-Chainguard inspired query framework. Central \texttt{LLM Model} node connects to six domains: training data provenance (with bias scores), SBOM attestation (SLSA~L3, 0~CVEs via Chainguard images), deployment context (sovereignty, GDPR), runtime risks (cross-tenant leakage, prompt injection), fine-tune lineage (parent-child bias delta tracking), and access control (per-tenant RBAC). Bottom: example Cypher query for bias-risk models.}
+\caption{AI Security Compliance Query Graph. Central \texttt{LLM Model} node connects to six domains: training data provenance (with bias scores), SBOM attestation (SLSA~L3, 0~CVEs via hardened base images), deployment context (sovereignty, GDPR), runtime risks (cross-tenant leakage, prompt injection), fine-tune lineage (parent-child bias delta tracking), and access control (per-tenant RBAC). Bottom: example Cypher query for identifying bias-risk models.}
 \label{fig:graph}
 \end{figure}
 
@@ -414,6 +414,13 @@ Analogous to SBOM for software, we define a \textbf{Model Bill of Materials} tha
 
 Every MBOM entry is cryptographically signed using Sigstore~\cite{sigstore2024} and stored as an in-toto attestation, enabling verification at deployment time within the TEE.
 
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{fig6_provenance.png}
+\caption{Model provenance and bias attestation pipeline. Six stages from training data (with dataset hashes, license audit, bias pre-scan) through base model training, fine-tuning with parent hash verification, bias gate with three-tier escalation ($\Delta < 0.5$: Green, $0.5$--$1.0$: Yellow, $\Delta \geq 1.0$: Red/blocked), TEE deployment with attestation, to production inference with continuous drift detection. Immutable audit trail spans all stages.}
+\label{fig:provenance}
+\end{figure}
+
 %===================================================================
 \section{AI Policy and Regulatory Framework}
 \label{sec:policy}
@@ -599,6 +606,27 @@ CPU TDX + gov + 4-tenant & 37 ms & 27.1 ms & 36.9 & 5.2\% & \$1.05* \\
 \end{table}
 
 \textbf{Key findings}: (1)~The governance layer adds only 1\% overhead beyond CC alone (policy evaluation is $<$1\,ms). (2)~Multi-tenant LoRA sharing amortizes cost 4$\times$ (\$1.54/tenant vs.\ \$6.16). (3)~CPU TDX decode achieves the lowest per-tenant cost at \$1.05/hr with full confidential+governed inference. (4)~Total overhead for the complete stack (CC + governance + multi-tenant + sovereignty) is 17.4\% for GPU, 5.2\% for CPU.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{fig4_throughput.png}
+\caption{Throughput comparison across confidential computing configurations. GPU baseline (123.5~tok/s) drops by only 7\% with NVIDIA CC and 8\% with full governance. CPU TDX decode operates at lower absolute throughput but with only 2.1--5.2\% CC overhead. The $<$8\% bracket highlights that confidential+governed GPU inference remains within acceptable production overhead.}
+\label{fig:throughput}
+\end{figure}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{fig5_tco.png}
+\caption{Per-tenant cost comparison. Multi-tenant sharing with confidential computing achieves 4$\times$ savings (GPU: \$6.16 $\rightarrow$ \$1.54/tenant) and 6$\times$ savings (CPU TDX: \$4.20 $\rightarrow$ \$1.05/tenant). Orange line shows throughput overhead remains below 15\%. Net effect: 75\% cost reduction per tenant with full security hardening.}
+\label{fig:tco}
+\end{figure}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{fig7_waterfall.png}
+\caption{Waterfall analysis of cumulative throughput impact per security hardening layer (H100 SXM, Llama-3.1-70B). TEE memory encryption ($-4.1\%$) and GPU CC mode ($-2.8\%$) dominate overhead. Governance ($-1.1\%$), bias monitoring ($-0.6\%$), and audit logging ($-0.4\%$) contribute minimal impact. Total: 15.8\% from 123.5 to 104.0~tok/s for a fully hardened, governed, multi-tenant deployment.}
+\label{fig:waterfall}
+\end{figure}
 
 \subsection{Compliance Graph Query Performance}
 
