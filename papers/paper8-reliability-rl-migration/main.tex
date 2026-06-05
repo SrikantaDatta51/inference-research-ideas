@@ -155,9 +155,9 @@ Failure taxonomy & Coarse & GPU-only & Coarse & 7-layer \\
 \draw[arr] (sac.east) -- (drain.west);
 \draw[arr] (cql.east) -- (xcloud.west);
 
-% --- Feedback loop ---
-\draw[darr] (migrate.south) -- ++(0,-0.6) -| (3.6,-0.6) -- (3.6,2.6);
-\node[font=\tiny\sffamily\itshape, text=black!40] at (7,-0.8) {Outcome feedback to RL training};
+% --- Feedback loop (routed below all boxes) ---
+\draw[darr] (migrate.south) -- ++(0,-0.8) -- (-1.5,-0.8) -- (-1.5,3.6) -- (signals.west);
+\node[font=\tiny\sffamily\itshape, text=black!40] at (6,-1.0) {Outcome feedback to RL training};
 \end{tikzpicture}%
 }
 \caption{ReliableInfer end-to-end architecture. Eight infrastructure layers (left) feed 312 metrics into the DPU-based signal pipeline (center-left). Three hierarchical RL agents (center-right) produce actions (right), with migration outcomes feeding back into training.}

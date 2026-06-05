@@ -100,10 +100,12 @@ We present \textbf{SolarInfer}, a fully integrated, solar-powered edge inference
 % WAN
 \node[box, fill=gray!15, minimum width=2cm] (wan) at (10.5,-0.1) {WAN 100 Gbps};
 
-% Power arrows
-\draw[arr] (pv) -- (inv); \draw[arr] (bess) -- (inv);
-\draw[arr, orange!70!black] (inv) -- ++(0,0.35) -| (srv1);
-\draw[arr, orange!70!black] (inv) -- ++(0,0.35) -| (srv2);
+% Power arrows (chain: Solar -> Battery -> Inverter)
+\draw[arr] (pv) -- (bess);
+\draw[arr] (bess) -- (inv);
+% Power distribution (route below servers)
+\draw[arr, orange!70!black] (inv.north) -- ++(0,0.5) -- (srv2.south -| inv.north) -- (srv2.south);
+\draw[arr, orange!70!black] (inv.north) -- ++(0,0.5) -- (srv1.south -| inv.north) -- (srv1.south);
 
 % Network arrows
 \draw[arr] (srv1.east) -- (srv2.west);
