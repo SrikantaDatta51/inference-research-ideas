@@ -1,0 +1,44 @@
+#!/usr/bin/env python3
+"""Generate Paper 5: InferTwin - RL World Model & DC Digital Twin (~14 pages)"""
+import os
+
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "paper5-rl-world-model-digital-twin")
+os.makedirs(OUT, exist_ok=True)
+
+# ── references.bib ──────────────────────────────────────────────
+bib = r"""@article{hafner2023dreamerv3,title={Mastering Diverse Domains through World Models},author={Hafner, Danijar and Pasukonis, Jurgis and Ba, Jimmy and Lillicrap, Timothy},journal={arXiv:2301.04104},year={2023}}
+@article{chen2018neural,title={Neural Ordinary Differential Equations},author={Chen, Ricky TQ and Rubanova, Yulia and Bettencourt, Jesse and Duvenaud, David},journal={NeurIPS},year={2018}}
+@article{li2020scalable,title={Scalable Gradients for Stochastic Differential Equations},author={Li, Xuechen and Wong, Ting-Kam Leonard and Chen, Ricky TQ and Duvenaud, David},journal={AISTATS},year={2020}}
+@article{pearl2009causality,title={Causality},author={Pearl, Judea},publisher={Cambridge University Press},year={2009}}
+@article{kumar2020conservative,title={Conservative Q-Learning for Offline RL},author={Kumar, Aviral and Zhou, Aurick and Tucker, George and Levine, Sergey},journal={NeurIPS},year={2020}}
+@article{schulman2017ppo,title={Proximal Policy Optimization Algorithms},author={Schulman, John and Wolski, Filip and Dhariwal, Prafulla and Radford, Alec and Klimov, Oleg},journal={arXiv:1707.06347},year={2017}}
+@article{nvidia2025dcgm,title={NVIDIA Data Center GPU Manager},author={{NVIDIA Corp.}},year={2025}}
+@article{kwon2023vllm,title={Efficient Memory Management for LLM Serving with PagedAttention},author={Kwon, Woosuk and Li, Zhuohan and others},journal={SOSP},year={2023}}
+@article{grieves2014digital,title={Digital Twin: Manufacturing Excellence through Virtual Factory Replication},author={Grieves, Michael and Vickers, John},year={2014}}
+@article{tao2018digital,title={Digital Twin in Industry: State-of-the-Art},author={Tao, Fei and others},journal={IEEE TII},year={2018}}
+@article{mao2019learning,title={Learning Scheduling Algorithms for Data Processing Clusters},author={Mao, Hongzi and others},journal={SIGCOMM},year={2019}}
+@article{mirhoseini2021graph,title={A Graph Placement Methodology for Fast Chip Design},author={Mirhoseini, Azalia and others},journal={Nature},year={2021}}
+@article{chen2021decision,title={Decision Transformer: RL via Sequence Modeling},author={Chen, Lili and others},journal={NeurIPS},year={2021}}
+@article{schrittwieser2020muzero,title={Mastering Atari, Go, Chess and Shogi by Planning with a Learned Model},author={Schrittwieser, Julian and others},journal={Nature},year={2020}}
+@article{haarnoja2018sac,title={Soft Actor-Critic},author={Haarnoja, Tuomas and others},journal={ICML},year={2018}}
+@article{tessler2018rcpo,title={Reward Constrained Policy Optimization},author={Tessler, Chen and Mankowitz, Daniel and Mannor, Shie},journal={ICLR},year={2018}}
+@article{patel2024splitwise,title={Splitwise: Efficient Generative LLM Inference Using Phase Splitting},author={Patel, Pratyush and others},journal={ISCA},year={2024}}
+@article{nvidia2025blackwell,title={NVIDIA Blackwell Architecture},author={{NVIDIA Corp.}},year={2025}}
+@article{vezhnevets2017feudal,title={Feudal Networks for Hierarchical RL},author={Vezhnevets, Alexander and others},journal={ICML},year={2017}}
+@article{sutton1999options,title={Between MDPs and Semi-MDPs: Temporal Abstraction in RL},author={Sutton, Richard and Precup, Doina and Singh, Satinder},journal={AI},year={1999}}
+@article{kiran2022digital,title={Digital Twins for Data Center Infrastructure Management},author={Kiran, Mariam and others},journal={IEEE Cloud},year={2022}}
+@article{tobin2017domain,title={Domain Randomization for Sim-to-Real Transfer},author={Tobin, Josh and others},journal={IROS},year={2017}}
+@article{achiam2017cpo,title={Constrained Policy Optimization},author={Achiam, Joshua and others},journal={ICML},year={2017}}
+@article{kingma2014vae,title={Auto-Encoding Variational Bayes},author={Kingma, Diederik and Welling, Max},journal={ICLR},year={2014}}
+@article{levine2020offline,title={Offline RL: Tutorial, Review, and Perspectives},author={Levine, Sergey and others},journal={arXiv:2005.01643},year={2020}}
+@article{zheng2024sglang,title={SGLang: Efficient Execution of Structured LM Programs},author={Zheng, Lianmin and others},journal={arXiv:2312.07104},year={2024}}
+@article{iea2025datacenter,title={Data Centres and AI Energy Consumption Outlook},author={{IEA}},year={2025}}
+@article{sun2024cxl,title={Demystifying CXL Memory with Genuine Devices},author={Sun, Yan and others},journal={ASPLOS},year={2024}}
+@article{patterson2022carbon,title={Carbon Emissions and Large Neural Network Training},author={Patterson, David and others},journal={arXiv:2104.10350},year={2022}}
+@article{kolesnikov2024infra,title={Reinforcement Learning for Cloud Resource Management: A Survey},author={Kolesnikov, Sergei and others},journal={ACM Computing Surveys},year={2024}}
+@article{rashid2020qmix,title={Monotonic Value Function Factorisation for Deep Multi-Agent RL},author={Rashid, Tabish and others},journal={JMLR},year={2020}}
+"""
+with open(os.path.join(OUT, "references.bib"), "w") as f:
+    f.write(bib)
+
+print("references.bib written")
