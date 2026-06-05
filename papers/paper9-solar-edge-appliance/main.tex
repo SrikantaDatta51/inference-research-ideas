@@ -24,7 +24,7 @@ We present \textbf{SolarInfer}, a fully integrated, solar-powered edge inference
 \begin{tikzpicture}[
     box/.style={draw, rounded corners=4pt, minimum height=0.7cm, font=\scriptsize\sffamily\bfseries, text=black, line width=0.6pt},
     sub/.style={font=\tiny\sffamily, text=black!55},
-    arr/.style={-{Stealth[length=2mm]}, line width=0.6pt, black},
+    arr/.style={-{Stealth[length=2mm]}, line width=0.6pt, black, shorten >=3pt, shorten <=3pt},
 ]
 % Physical Layer
 \node[box, fill=yellow!20, minimum width=2.5cm] (pv) at (0,0) {PV Array};
@@ -64,8 +64,8 @@ We present \textbf{SolarInfer}, a fully integrated, solar-powered edge inference
 \begin{tikzpicture}[
     box/.style={draw, rounded corners=4pt, minimum height=0.65cm, font=\scriptsize\sffamily\bfseries, text=black, line width=0.6pt},
     sub/.style={font=\tiny\sffamily, text=black!50},
-    arr/.style={-{Stealth[length=2mm]}, line width=0.6pt, black},
-    darr/.style={-{Stealth[length=2mm]}, line width=0.5pt, black, dashed},
+    arr/.style={-{Stealth[length=2mm]}, line width=0.6pt, black, shorten >=3pt, shorten <=3pt},
+    darr/.style={-{Stealth[length=2mm]}, line width=0.5pt, black, dashed, shorten >=3pt, shorten <=3pt},
     brace/.style={decorate, decoration={brace, amplitude=5pt}},
 ]
 % Power tier
@@ -529,7 +529,7 @@ Each SolarInfer appliance implements a four-stage power architecture designed fo
 \resizebox{\columnwidth}{!}{%
 \begin{tikzpicture}[
     box/.style={draw, rounded corners=3pt, minimum height=0.5cm, font=\tiny\sffamily\bfseries, text=black, line width=0.5pt},
-    arr/.style={-{Stealth[length=1.5mm]}, line width=0.6pt},
+    arr/.style={-{Stealth[length=1.5mm]}, line width=0.6pt, shorten >=3pt, shorten <=3pt},
     lbl/.style={font=\tiny\sffamily, text=black!55},
 ]
 % Sources

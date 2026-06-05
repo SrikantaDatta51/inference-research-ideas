@@ -106,52 +106,61 @@ Failure taxonomy & Coarse & GPU-only & Coarse & 7-layer \\
 
 \begin{figure*}[!t]
 \centering
+\resizebox{\textwidth}{!}{%
 \begin{tikzpicture}[
-    box/.style={draw, rounded corners=4pt, minimum height=0.65cm, font=\scriptsize\sffamily\bfseries, line width=0.6pt, text=black},
-    sub/.style={font=\tiny\sffamily, text=black!55},
-    arr/.style={-{Stealth[length=2mm]}, line width=0.6pt, black},
-    darr/.style={-{Stealth[length=2mm]}, line width=0.5pt, black, dashed},
+    box/.style={draw, rounded corners=4pt, minimum height=0.7cm, font=\scriptsize\sffamily\bfseries, text=black, line width=0.5pt},
+    arr/.style={-{Stealth[length=2mm]}, line width=0.5pt, black, shorten >=4pt, shorten <=4pt},
+    darr/.style={-{Stealth[length=2mm]}, line width=0.4pt, black, dashed, shorten >=4pt, shorten <=4pt},
+    region/.style={draw, dashed, rounded corners=6pt, black!30, line width=0.4pt, inner sep=8pt},
 ]
-% Left: Infrastructure Layers
-\node[box, fill=blue!15, minimum width=2cm] (nic) at (0,0) {L1: NIC};
-\node[box, fill=blue!20, minimum width=2cm] (link) at (2.5,0) {L2: Link};
-\node[box, fill=green!18, minimum width=2cm] (gpu) at (5,0) {L3: GPU};
-\node[box, fill=green!22, minimum width=2cm] (inter) at (7.5,0) {L4: Interconnect};
-\node[box, fill=orange!18, minimum width=2cm] (intra) at (0,1.4) {L5: Intra-Node};
-\node[box, fill=orange!22, minimum width=2cm] (rack) at (2.5,1.4) {L6: Rack};
-\node[box, fill=red!15, minimum width=2cm] (dc) at (5,1.4) {L7: DC};
-\node[box, fill=red!20, minimum width=2cm] (cloud) at (7.5,1.4) {L8: Multi-Cloud};
+% --- Column 1: Infrastructure Layers ---
+\node[box, fill=blue!12, minimum width=2cm] (nic) at (0,0) {L1: NIC};
+\node[box, fill=blue!16, minimum width=2cm] (link) at (2.4,0) {L2: Link};
+\node[box, fill=green!12, minimum width=2cm] (gpu) at (4.8,0) {L3: GPU};
+\node[box, fill=green!16, minimum width=2cm] (inter) at (7.2,0) {L4: Interconnect};
+\node[box, fill=orange!12, minimum width=2cm] (intra) at (0,1.3) {L5: Intra-Node};
+\node[box, fill=orange!16, minimum width=2cm] (rack) at (2.4,1.3) {L6: Rack};
+\node[box, fill=red!10, minimum width=2cm] (dc) at (4.8,1.3) {L7: DC};
+\node[box, fill=red!14, minimum width=2cm] (cloud) at (7.2,1.3) {L8: Multi-Cloud};
+\node[region, fit=(nic)(link)(gpu)(inter)(intra)(rack)(dc)(cloud), label={[font=\tiny\sffamily\bfseries, text=black!50]above:Infrastructure Layers (47 failure modes)}] {};
 
-% Center: Signal Architecture
-\node[box, fill=purple!15, minimum width=3.5cm, minimum height=1.2cm] (signals) at (4,3.2) {\begin{tabular}{c}Signal Pipeline\\{\tiny 312 metrics @ 100ms}\end{tabular}};
+% --- Column 2: Signal Pipeline ---
+\node[box, fill=purple!12, minimum width=3cm, minimum height=1.4cm] (signals) at (3.6,3.6) {\begin{tabular}{c}\scriptsize Signal Pipeline\\\tiny 312 metrics @ 100ms\\\tiny (Pensando DPU)\end{tabular}};
 
-% Right: RL Agents
-\node[box, fill=cyan!15, minimum width=2.8cm] (ppo) at (10.5,0) {Node PPO (100ms)};
-\node[box, fill=cyan!20, minimum width=2.8cm] (sac) at (10.5,1.4) {Rack SAC (1s)};
-\node[box, fill=cyan!25, minimum width=2.8cm] (cql) at (10.5,2.8) {DC CQL (10s)};
+% --- Column 3: RL Agents ---
+\node[box, fill=cyan!10, minimum width=2.6cm] (ppo) at (10.2,0.3) {Node PPO};
+\node[box, fill=cyan!14, minimum width=2.6cm] (sac) at (10.2,1.3) {Rack SAC};
+\node[box, fill=cyan!18, minimum width=2.6cm] (cql) at (10.2,2.3) {DC CQL};
+\node[font=\tiny\sffamily, text=black!45] at (10.2,-0.15) {100ms cycle};
+\node[font=\tiny\sffamily, text=black!45] at (10.2,0.85) {1s cycle};
+\node[font=\tiny\sffamily, text=black!45] at (10.2,1.85) {10s cycle};
+\node[region, fit=(ppo)(sac)(cql), label={[font=\tiny\sffamily\bfseries, text=black!50]above:Hierarchical RL Agents}] {};
 
-% Far Right: Actions
-\node[box, fill=yellow!18, minimum width=2.5cm] (migrate) at (14.5,0) {CRIU Migrate};
-\node[box, fill=yellow!22, minimum width=2.5cm] (drain) at (14.5,1.0) {Drain/Re-shard};
-\node[box, fill=yellow!15, minimum width=2.5cm] (xcloud) at (14.5,2.0) {Cross-Cloud};
-\node[box, fill=yellow!12, minimum width=2.5cm] (govern) at (14.5,3.0) {Governance};
+% --- Column 4: Actions ---
+\node[box, fill=yellow!12, minimum width=2.2cm] (migrate) at (14,0.3) {CRIU Migrate};
+\node[box, fill=yellow!16, minimum width=2.2cm] (drain) at (14,1.3) {Drain / Re-shard};
+\node[box, fill=yellow!10, minimum width=2.2cm] (xcloud) at (14,2.3) {Cross-Cloud};
+\node[region, fit=(migrate)(drain)(xcloud), label={[font=\tiny\sffamily\bfseries, text=black!50]above:Actions}] {};
 
-% Arrows
-\draw[arr] (nic.north) -- ++(0,0.4); \draw[arr] (link.north) -- ++(0,0.4);
-\draw[arr] (gpu.north) -- ++(0,0.4); \draw[arr] (inter.north) -- ++(0,0.4);
-\draw[arr] (intra.north) -- ++(0,0.5) -| (signals); \draw[arr] (rack.north) -- ++(0,0.5);
-\draw[arr] (dc.north) -- ++(0,0.5); \draw[arr] (cloud.north) -- ++(0,0.5);
-\draw[arr] (signals.east) -| (ppo.west); \draw[arr] (signals.east) -| (sac.west);
-\draw[arr] (signals.north east) -| (cql.west);
+% --- Arrows: Infra -> Signal ---
+\draw[arr, black!50] (3.6,1.8) -- (signals);
+
+% --- Arrows: Signal -> RL Agents ---
+\draw[arr] (signals.east) -- ++(1,0) |- (ppo.west);
+\draw[arr] (signals.east) -- ++(1,0) |- (sac.west);
+\draw[arr] (signals.east) -- ++(1,0) |- (cql.west);
+
+% --- Arrows: RL -> Actions ---
 \draw[arr] (ppo.east) -- (migrate.west);
 \draw[arr] (sac.east) -- (drain.west);
 \draw[arr] (cql.east) -- (xcloud.west);
-\draw[darr] (govern.west) -- ++(-0.5,0) |- (cql.east);
 
-% Feedback
-\draw[darr] (migrate.south) -- ++(0,-0.5) -| (signals.south);
-\end{tikzpicture}
-\caption{ReliableInfer end-to-end architecture. Eight infrastructure layers feed 312 metrics into the signal pipeline running on DPUs. Three hierarchical RL agents (PPO/SAC/CQL) produce migration, drain, and cross-cloud actions governed by human-in-the-loop policies. Migration outcomes feed back into RL training.}
+% --- Feedback loop ---
+\draw[darr] (migrate.south) -- ++(0,-0.6) -| (3.6,-0.6) -- (3.6,2.6);
+\node[font=\tiny\sffamily\itshape, text=black!40] at (7,-0.8) {Outcome feedback to RL training};
+\end{tikzpicture}%
+}
+\caption{ReliableInfer end-to-end architecture. Eight infrastructure layers (left) feed 312 metrics into the DPU-based signal pipeline (center-left). Three hierarchical RL agents (center-right) produce actions (right), with migration outcomes feeding back into training.}
 \label{fig:arch}
 \end{figure*}
 
@@ -167,7 +176,7 @@ ReliableInfer defines seven infrastructure layers, each with distinct failure mo
 \resizebox{\columnwidth}{!}{%
 \begin{tikzpicture}[
     layer/.style={draw, rounded corners=2pt, minimum height=0.45cm, font=\tiny\sffamily\bfseries, text=black, line width=0.4pt},
-    arr/.style={-{Stealth[length=1.2mm]}, line width=0.3pt, black!50},
+    arr/.style={-{Stealth[length=1.2mm]}, line width=0.3pt, black!50, shorten >=3pt, shorten <=3pt},
 ]
 % Layers stacked
 \node[layer, fill=red!20, minimum width=6.5cm] (mc) at (0,3.5) {L8: Multi-Cloud (3 modes)};
@@ -345,8 +354,8 @@ We use Conservative Q-Learning (CQL)~\cite{kumar2020conservative} because DC-lev
 \centering
 \begin{tikzpicture}[
     tier/.style={draw, rounded corners=4pt, minimum width=3.2cm, minimum height=0.6cm, font=\scriptsize\sffamily, thick, text=black},
-    arr/.style={-{Stealth[length=2mm]}, thick, black},
-    darr/.style={-{Stealth[length=2mm]}, thick, black, dashed},
+    arr/.style={-{Stealth[length=2mm]}, thick, black, shorten >=4pt, shorten <=4pt},
+    darr/.style={-{Stealth[length=2mm]}, thick, black, dashed, shorten >=4pt, shorten <=4pt},
 ]
 % Tiers
 \node[tier, fill=dc!15] (t3) at (0,3) {DC/Cloud Agent (CQL)};
@@ -359,15 +368,15 @@ We use Conservative Q-Learning (CQL)~\cite{kumar2020conservative} because DC-lev
 \node[font=\tiny\sffamily, text=black!50] at (0,2.55) {CQL (10s)};
 
 % Arrows
-\draw[arr] (t1a.north) -- (t2.south west);
-\draw[arr] (t1b.north) -- (t2.south east);
-\draw[arr] (t2.north) -- (t3.south);
-\draw[darr] (t3.south west) -- ++(0,-0.4) -| ([xshift=-3pt]t1a.north);
-\draw[darr] (t3.south east) -- ++(0,-0.4) -| ([xshift=3pt]t1b.north);
+\draw[arr] (t1a) -- (t2);
+\draw[arr] (t1b) -- (t2);
+\draw[arr] (t2) -- (t3);
+\draw[darr] (t3.west) -- ++(-0.6,0) |- (t1a.west);
+\draw[darr] (t3.east) -- ++(0.6,0) |- (t1b.east);
 
 % Labels
-\node[font=\tiny, text=black!60] at (-2.5,2.2) {escalate};
-\node[font=\tiny, text=black!60] at (2.5,2.2) {constrain};
+\node[font=\tiny, text=black!60] at (-2.8,2.2) {escalate};
+\node[font=\tiny, text=black!60] at (2.8,2.2) {constrain};
 \end{tikzpicture}
 \caption{Three-tier hierarchical RL architecture. Node agents escalate to rack agents, which escalate to DC/cloud agents. Higher tiers constrain lower tiers' action spaces.}
 \label{fig:rl}
@@ -535,7 +544,7 @@ Restore time & 220--500\,ms & 250--550\,ms & 180--420\,ms \\
 \resizebox{\columnwidth}{!}{%
 \begin{tikzpicture}[
     phase/.style={draw, rounded corners=3pt, minimum width=1.6cm, minimum height=0.55cm, font=\tiny\sffamily\bfseries, text=black, line width=0.5pt},
-    arr/.style={-{Stealth[length=1.5mm]}, line width=0.5pt, black},
+    arr/.style={-{Stealth[length=1.5mm]}, line width=0.5pt, black, shorten >=3pt, shorten <=3pt},
     lbl/.style={font=\tiny\sffamily, text=black!60},
 ]
 % Source node
@@ -1018,7 +1027,7 @@ where $\mu_i(t) = \alpha x_i(t) + (1-\alpha)\mu_i(t-1)$ and $\sigma_i(t)$ is the
 \centering
 \begin{tikzpicture}[
     box/.style={draw, rounded corners=3pt, minimum width=1.4cm, minimum height=0.5cm, font=\tiny\sffamily\bfseries, text=black, line width=0.5pt},
-    arr/.style={-{Stealth[length=1.5mm]}, line width=0.5pt, black},
+    arr/.style={-{Stealth[length=1.5mm]}, line width=0.5pt, black, shorten >=3pt, shorten <=3pt},
 ]
 % Pipeline stages
 \node[box, fill=blue!12] (raw) at (0,0) {Raw Metrics};
@@ -1518,7 +1527,7 @@ ReliableInfer exports comprehensive observability:
 \begin{tikzpicture}[
     decision/.style={draw, diamond, aspect=2, minimum width=1.2cm, minimum height=0.6cm, font=\tiny\sffamily\bfseries, text=black, line width=0.5pt, inner sep=1pt},
     action/.style={draw, rounded corners=3pt, minimum width=1.5cm, minimum height=0.4cm, font=\tiny\sffamily\bfseries, text=black, line width=0.5pt},
-    arr/.style={-{Stealth[length=1.5mm]}, line width=0.5pt, black},
+    arr/.style={-{Stealth[length=1.5mm]}, line width=0.5pt, black, shorten >=3pt, shorten <=3pt},
     lbl/.style={font=\tiny\sffamily, text=black!60},
 ]
 \node[action, fill=blue!15] (detect) at (0,3.5) {Failure Detected};
