@@ -19,44 +19,8 @@ We present \textbf{SolarInfer}, a fully integrated, solar-powered edge inference
 
 
 
-\begin{figure*}[!t]
-\centering
-\begin{tikzpicture}[
-    box/.style={draw, rounded corners=4pt, minimum height=0.7cm, font=\scriptsize\sffamily\bfseries, text=black, line width=0.6pt},
-    sub/.style={font=\tiny\sffamily, text=black!55},
-    arr/.style={-{Stealth[length=2mm]}, line width=0.6pt, black, shorten >=3pt, shorten <=3pt},
-]
-% Physical Layer
-\node[box, fill=yellow!20, minimum width=2.5cm] (pv) at (0,0) {PV Array};
-\node[box, fill=yellow!25, minimum width=2.5cm] (bess) at (3.2,0) {BESS (LFP)};
-\node[box, fill=yellow!15, minimum width=2.5cm] (inv) at (6.4,0) {Inverter + ATS};
-\node[box, fill=gray!15, minimum width=2.5cm] (grid) at (9.6,0) {Grid Backup};
-\node[sub] at (0,-0.5) {120 kWp bifacial};
-\node[sub] at (3.2,-0.5) {464 kWh};
-\node[sub] at (6.4,-0.5) {100 kW};
-\node[sub] at (9.6,-0.5) {Optional};
 
-% Compute Layer
-\node[box, fill=blue!18, minimum width=3.5cm] (gpu1) at (1.6,1.5) {Server 1: 8$\times$MI355X};
-\node[box, fill=blue!18, minimum width=3.5cm] (gpu2) at (6.4,1.5) {Server 2: 8$\times$MI355X};
-\node[box, fill=green!15, minimum width=2.5cm] (sw) at (11,1.5) {Arista 7060X5};
 
-% Network + Control
-\node[box, fill=purple!15, minimum width=4cm] (dpu) at (1.6,2.8) {AMD Pensando DPU $\times$2};
-\node[box, fill=orange!15, minimum width=4cm] (ctrl) at (7.5,2.8) {Zetta Control Plane};
-\node[box, fill=red!12, minimum width=3cm] (cool) at (12,2.8) {DLC Cooling};
-
-% Arrows
-\draw[arr] (pv) -- (inv); \draw[arr] (bess) -- (inv);
-\draw[arr] (grid) -- (inv); \draw[arr] (inv) -- ++(0,0.6) -| (gpu1);
-\draw[arr] (inv) -- ++(0,0.6) -| (gpu2);
-\draw[arr] (gpu1) -- (dpu); \draw[arr] (gpu2) -- (ctrl);
-\draw[arr] (gpu1) -- (sw); \draw[arr] (gpu2) -- (sw);
-\draw[arr] (dpu) -- (ctrl);
-\end{tikzpicture}
-\caption{SolarInfer Edge SKU physical architecture showing power flow (bottom), compute layer (middle), and control/network layer (top). Solar array feeds through BESS and inverter to dual GPU servers, managed by DPU-based telemetry and the Zetta control plane.}
-\label{fig:physical}
-\end{figure*}
 
 
 \begin{figure*}[!t]
@@ -100,12 +64,14 @@ We present \textbf{SolarInfer}, a fully integrated, solar-powered edge inference
 % WAN
 \node[box, fill=gray!15, minimum width=2cm] (wan) at (10.5,-0.1) {WAN 100 Gbps};
 
-% Power arrows (chain: Solar -> Battery -> Inverter)
-\draw[arr] (pv) -- (bess);
-\draw[arr] (bess) -- (inv);
-% Power distribution (route below servers)
-\draw[arr, orange!70!black] (inv.north) -- ++(0,0.5) -- (srv2.south -| inv.north) -- (srv2.south);
-\draw[arr, orange!70!black] (inv.north) -- ++(0,0.5) -- (srv1.south -| inv.north) -- (srv1.south);
+% Power chain: Solar -> Battery -> Inverter (using absolute coords)
+\draw[-{Stealth[length=2mm]}, line width=0.6pt, black] (1.15,0) -- (1.65,0);
+\draw[-{Stealth[length=2mm]}, line width=0.6pt, black] (3.95,0) -- (4.45,0);
+% Power distribution: horizontal bus at y=0.7, then vertical stubs up to servers
+\draw[orange!70!black, line width=0.6pt] (5.6,0.38) -- (5.6,0.7);
+\draw[orange!70!black, line width=0.6pt] (5.6,0.7) -- (0.5,0.7);
+\draw[-{Stealth[length=2mm]}, orange!70!black, line width=0.6pt] (0.5,0.7) -- (0.5,1.12);
+\draw[-{Stealth[length=2mm]}, orange!70!black, line width=0.6pt] (4,0.7) -- (4,1.12);
 
 % Network arrows
 \draw[arr] (srv1.east) -- (srv2.west);
