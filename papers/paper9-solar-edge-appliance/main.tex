@@ -58,6 +58,68 @@ We present \textbf{SolarInfer}, a fully integrated, solar-powered edge inference
 \label{fig:physical}
 \end{figure*}
 
+
+\begin{figure*}[!t]
+\centering
+\begin{tikzpicture}[
+    box/.style={draw, rounded corners=4pt, minimum height=0.65cm, font=\scriptsize\sffamily\bfseries, text=black, line width=0.6pt},
+    sub/.style={font=\tiny\sffamily, text=black!50},
+    arr/.style={-{Stealth[length=2mm]}, line width=0.6pt, black},
+    darr/.style={-{Stealth[length=2mm]}, line width=0.5pt, black, dashed},
+    brace/.style={decorate, decoration={brace, amplitude=5pt}},
+]
+% Power tier
+\node[box, fill=yellow!20, minimum width=2.2cm] (pv) at (0,0) {Solar Panels};
+\node[box, fill=yellow!25, minimum width=2.2cm] (bess) at (2.8,0) {LFP Battery};
+\node[box, fill=yellow!15, minimum width=2.2cm] (inv) at (5.6,0) {Inverter + ATS};
+\node[sub] at (0,-0.45) {120 kWp bifacial};
+\node[sub] at (2.8,-0.45) {464 kWh LFP};
+\node[sub] at (5.6,-0.45) {100 kW, 98.4\%};
+
+% Compute tier
+\node[box, fill=blue!18, minimum width=2.5cm] (srv1) at (0.5,1.5) {Server 1: 8$\times$MI355X};
+\node[box, fill=blue!18, minimum width=2.5cm] (srv2) at (4,1.5) {Server 2: 8$\times$MI355X};
+\node[sub] at (0.5,1.05) {288GB HBM3E $\times$8};
+\node[sub] at (4,1.05) {288GB HBM3E $\times$8};
+
+% Network tier
+\node[box, fill=green!18, minimum width=2.2cm] (sw) at (7.5,1.5) {Arista 7060X5};
+\node[box, fill=green!22, minimum width=2.2cm] (dpu1) at (7.5,0.7) {Pensando DPU};
+\node[sub] at (7.5,2.0) {64$\times$400GbE};
+
+% Control tier
+\node[box, fill=purple!15, minimum width=3cm] (ctrl) at (10.5,1.5) {Zetta Control Plane};
+\node[box, fill=purple!20, minimum width=3cm] (fleet) at (10.5,0.7) {Fleet Mgmt + RL};
+\node[sub] at (10.5,2.0) {Papers 1--8};
+
+% Cooling + Security
+\node[box, fill=cyan!15, minimum width=2.2cm] (cool) at (13.5,1.5) {DLC Cooling};
+\node[box, fill=red!12, minimum width=2.2cm] (sec) at (13.5,0.7) {Security Suite};
+\node[sub] at (13.5,2.0) {PUE 1.05};
+
+% WAN
+\node[box, fill=gray!15, minimum width=2cm] (wan) at (10.5,-0.1) {WAN 100 Gbps};
+
+% Power arrows
+\draw[arr] (pv) -- (inv); \draw[arr] (bess) -- (inv);
+\draw[arr, orange!70!black] (inv) -- ++(0,0.65) -| (srv1.south);
+\draw[arr, orange!70!black] (inv) -- ++(0,0.65) -| (srv2.south);
+
+% Network arrows
+\draw[arr] (srv1.east) -- (srv2.west);
+\draw[arr] (srv2.east) -- (sw.west);
+\draw[arr] (sw.east) -- (ctrl.west);
+\draw[arr] (dpu1) -- (fleet);
+\draw[darr] (fleet) -- (wan);
+
+% Tier labels
+\draw[brace] (-1.3,-0.7) -- (-1.3,0.3) node[midway, left, font=\tiny\sffamily\bfseries, text=black!60] {Power};
+\draw[brace] (-1.3,0.8) -- (-1.3,2.2) node[midway, left, font=\tiny\sffamily\bfseries, text=black!60] {Compute};
+\end{tikzpicture}
+\caption{SolarInfer Edge SKU complete architecture. Power tier (solar + BESS) feeds compute tier (2$\times$8-GPU servers), connected via 400GbE fabric with DPU-based telemetry to the Zetta control plane. DLC cooling maintains PUE of 1.05.}
+\label{fig:appliance}
+\end{figure*}
+
 \section{Introduction}
 \label{sec:intro}
 
@@ -221,6 +283,30 @@ Gaudi 3 & \$1.72 & \$1.28 & 26\% \\
 }
 \end{table}
 
+
+\begin{figure}[!t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    width=\linewidth, height=5.5cm,
+    ybar, bar width=8pt,
+    xlabel={},
+    ylabel={Cost per M Tokens (\$)},
+    symbolic x coords={H200 Grid, B200 Grid, MI300X Grid, MI300X Solar, MI355X Grid, MI355X Solar},
+    xtick=data, x tick label style={rotate=35, anchor=east, font=\tiny},
+    ymin=0, ymax=3.5,
+    grid=major, grid style={gray!15},
+    nodes near coords, nodes near coords style={font=\tiny, above},
+    every node near coord/.append style={/pgf/number format/.cd, fixed, precision=2},
+    legend style={font=\tiny, at={(0.02,0.98)}, anchor=north west},
+]
+\addplot[fill=black!20, draw=black!50] coordinates {(H200 Grid,2.84)(B200 Grid,1.64)(MI300X Grid,1.52)(MI300X Solar,1.08)(MI355X Grid,1.18)(MI355X Solar,0.82)};
+\end{axis}
+\end{tikzpicture}
+\caption{Cost per million tokens across accelerator and power configurations. AMD MI355X with solar achieves \$0.82/M tokens---71\% cheaper than NVIDIA H200 on grid.}
+\label{fig:costbar}
+\end{figure}
+
 \textbf{Key finding}: AMD MI355X with solar power achieves \$0.82/M tokens---\textbf{71\% cheaper} than NVIDIA H200 on grid power (\$2.84/M tokens). Even the older MI300X with solar (\$1.08/M tokens) undercuts H200 on grid by 62\%.
 
 
@@ -360,6 +446,41 @@ Fire suppression & FM-200 clean agent system & 1 & \$5,500 \\
 }
 \end{table}
 
+
+\begin{figure}[!t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    width=\linewidth, height=5cm,
+    xlabel={Total CAPEX (\$K)},
+    ylabel={Monthly Revenue (\$K)},
+    grid=major, grid style={gray!15},
+    xmin=0, xmax=750, ymin=0, ymax=55,
+    legend style={font=\tiny, at={(0.02,0.98)}, anchor=north west},
+]
+% AMD SKUs
+\addplot[only marks, mark=*, mark size=4pt, black, fill=blue!40] coordinates {(113,12.8)};
+\addlegendentry{Nano (4$\times$MI300X)}
+\addplot[only marks, mark=square*, mark size=4pt, black, fill=green!40] coordinates {(290,28.5)};
+\addlegendentry{Micro (8$\times$MI325X)}
+\addplot[only marks, mark=triangle*, mark size=5pt, black, fill=red!40] coordinates {(697,48.4)};
+\addlegendentry{Edge (16$\times$MI355X)}
+
+% NVIDIA equivalents
+\addplot[only marks, mark=o, mark size=4pt, black] coordinates {(224,11.2)};
+\addlegendentry{Nano NV equiv.}
+\addplot[only marks, mark=square, mark size=4pt, black] coordinates {(990,42.1)};
+\addlegendentry{Edge NV equiv.}
+
+% Payback line (6.2 month)
+\addplot[black, dashed, thin, domain=0:750] {x/6.2};
+\node[font=\tiny, text=black!50, rotate=30] at (axis cs:500,70) {6.2-mo payback};
+\end{axis}
+\end{tikzpicture}
+\caption{SKU portfolio: CAPEX vs.\ monthly revenue. AMD-based SKUs (filled markers) achieve higher revenue-to-CAPEX ratio than NVIDIA equivalents (hollow markers).}
+\label{fig:skumap}
+\end{figure}
+
 \subsection{NVIDIA Comparison SKUs}
 
 For fair comparison, we construct equivalent NVIDIA-based SKUs:
@@ -400,6 +521,54 @@ Each SolarInfer appliance implements a four-stage power architecture designed fo
 \textbf{Stage 3: Transfer Switch.} An automatic transfer switch (ATS) manages seamless switching between solar/battery and grid backup. Transfer time: $<$10\,ms (uninterruptible for GPU workloads via the UPS bridge). The ATS prioritizes: (1) direct solar consumption, (2) battery discharge, (3) grid fallback.
 
 \textbf{Stage 4: Power Distribution.} High-efficiency PDUs (Vertiv Geist, 99.5\% efficiency) distribute power to compute racks with per-outlet monitoring. Power factor correction (PFC) maintains $>$0.99 power factor, maximizing useful power from the solar array.
+
+
+\begin{figure}[!t]
+\centering
+\begin{tikzpicture}[
+    box/.style={draw, rounded corners=3pt, minimum height=0.5cm, font=\tiny\sffamily\bfseries, text=black, line width=0.5pt},
+    arr/.style={-{Stealth[length=1.5mm]}, line width=0.6pt},
+    lbl/.style={font=\tiny\sffamily, text=black!55},
+]
+% Sources
+\node[box, fill=yellow!25, minimum width=1.8cm] (solar) at (0,2) {Solar PV};
+\node[box, fill=yellow!15, minimum width=1.8cm] (batt) at (0,1) {Battery};
+\node[box, fill=gray!20, minimum width=1.8cm] (grid) at (0,0) {Grid Backup};
+
+% Bus
+\node[box, fill=orange!15, minimum width=1.2cm] (bus) at (3,1) {AC Bus};
+
+% Loads
+\node[box, fill=blue!18, minimum width=1.6cm] (gpu) at (6,2.5) {GPUs (81\%)};
+\node[box, fill=green!15, minimum width=1.6cm] (cpu) at (6,1.5) {CPUs (8\%)};
+\node[box, fill=cyan!15, minimum width=1.6cm] (cool) at (6,0.5) {Cooling (5\%)};
+\node[box, fill=purple!12, minimum width=1.6cm] (net) at (6,-0.3) {Network (4\%)};
+\node[box, fill=gray!15, minimum width=1.6cm] (other) at (6,-1.1) {Other (2\%)};
+
+% Power values
+\node[lbl] at (0,2.4) {120 kWp peak};
+\node[lbl] at (0,0.6) {464 kWh};
+\node[lbl] at (0,-0.4) {100 kW max};
+
+% Arrows with widths
+\draw[arr, yellow!70!black, line width=2pt] (solar) -- (bus);
+\draw[arr, yellow!50!black, line width=1pt] (batt) -- (bus);
+\draw[arr, gray!50, line width=0.5pt, dashed] (grid) -- (bus);
+
+\draw[arr, blue!50, line width=1.8pt] (bus) -- (gpu);
+\draw[arr, green!50, line width=0.5pt] (bus) -- (cpu);
+\draw[arr, cyan!50, line width=0.4pt] (bus) -- (cool);
+\draw[arr, purple!50, line width=0.3pt] (bus) -- (net);
+\draw[arr, gray!50, line width=0.2pt] (bus) -- (other);
+
+% Percentages
+\node[lbl] at (1.5,2.3) {99.9\%};
+\node[lbl] at (1.5,0.5) {nighttime};
+\node[lbl] at (1.5,-0.3) {0.1\%};
+\end{tikzpicture}
+\caption{Power distribution in the Edge SKU. Solar provides 99.9\% of energy. GPUs consume 81\% of total power. Grid backup is used $<$9 hours per year.}
+\label{fig:powerflow}
+\end{figure}
 
 \subsection{Cooling Architecture}
 
@@ -865,23 +1034,7 @@ SolarInfer leverages the full Zetta control plane stack developed across Papers~
 
 \textbf{ReliableInfer} (Paper~8): Multi-layer reliability with CRIU-based migration ensures 99.997\% availability even at remote edge sites with limited on-site support.
 
-\begin{figure}[!t]
-\centering
-\begin{tikzpicture}[
-    box/.style={draw, rounded corners=3pt, minimum height=0.5cm, font=\tiny\sffamily\bfseries, text=black, line width=0.5pt},
-    arr/.style={-{Stealth[length=1.5mm]}, line width=0.4pt, black},
-]
-\node[box, fill=yellow!20, minimum width=6cm] (solar) at (0,0) {Solar Array + BESS + Inverter};
-\node[box, fill=blue!15, minimum width=6cm] (compute) at (0,0.9) {AMD MI355X $\times$16 + EPYC CPUs};
-\node[box, fill=green!15, minimum width=6cm] (network) at (0,1.7) {Pensando DPU + Arista Switch + RoCE};
-\node[box, fill=purple!15, minimum width=6cm] (ctrl) at (0,2.5) {Zetta Control Plane (Papers 1--8)};
-\node[box, fill=red!12, minimum width=6cm] (fleet) at (0,3.3) {Fleet Management + RL Routing};
-\draw[arr] (solar) -- (compute); \draw[arr] (compute) -- (network);
-\draw[arr] (network) -- (ctrl); \draw[arr] (ctrl) -- (fleet);
-\end{tikzpicture}
-\caption{SolarInfer appliance software stack.}
-\label{fig:stack}
-\end{figure}
+
 
 
 
@@ -1617,7 +1770,7 @@ We presented SolarInfer, a solar-powered edge inference appliance framework with
 
 \emph{Grid codes and safety standards.} Each country has specific electrical interconnection requirements. German VDE 4105 and UK G98/G99 impose stricter requirements than US UL 1741 for anti-islanding protection. Our SMA inverters are certified for all major grid codes, but installation must be performed by locally certified electricians. We budget an additional \$5,000 per site for international compliance.
 
-\emph{Import duties and VAT.} GPU accelerators imported into the EU face 14\% import duty + 19--25\% VAT. Solar panels are VAT-exempt in most EU countries under the Energy Directive. Net impact: approximately 8--12\% increase in total CAPEX for EU deployments, partially offset by EU-specific incentives (German EEG surcharge exemption, French solar tax credit).
+\emph{Import duties.} EU deployments face 8--12\% higher CAPEX due to import duties and VAT, partially offset by local incentives.
 
 \emph{Data sovereignty.} The EU AI Act, India's DPDP Act, and Brazil's LGPD all impose data localization requirements that SolarInfer inherently satisfies through on-premises deployment. For multinational enterprises, a SolarInfer deployment in each jurisdiction eliminates cross-border data transfer issues entirely.
 

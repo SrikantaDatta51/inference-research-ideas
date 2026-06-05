@@ -1,6 +1,6 @@
 \documentclass[conference,10pt,letterpaper]{IEEEtran}
 \usepackage{amsmath,amssymb,graphicx,booktabs,algorithm,algorithmic,tikz,pgfplots,xcolor,hyperref}
-\usetikzlibrary{arrows.meta,positioning,calc,decorations.pathreplacing,shapes.geometric}
+\usetikzlibrary{arrows.meta,positioning,calc,decorations.pathreplacing,shapes.geometric,fit}
 \pgfplotsset{compat=1.18}
 \definecolor{nic}{RGB}{70,130,180}\definecolor{gpu}{RGB}{220,120,60}\definecolor{rack}{RGB}{80,160,80}\definecolor{dc}{RGB}{140,100,180}\definecolor{cloud}{RGB}{60,60,60}
 
@@ -160,6 +160,42 @@ Failure taxonomy & Coarse & GPU-only & Coarse & 7-layer \\
 %===================================================================
 
 ReliableInfer defines seven infrastructure layers, each with distinct failure modes, detection mechanisms, and remediation strategies. This taxonomy is the foundation for the RL agent's state representation.
+
+
+\begin{figure}[!t]
+\centering
+\begin{tikzpicture}[
+    layer/.style={draw, rounded corners=2pt, minimum height=0.45cm, font=\tiny\sffamily\bfseries, text=black, line width=0.4pt},
+    arr/.style={-{Stealth[length=1.2mm]}, line width=0.3pt, black!50},
+]
+% Layers stacked
+\node[layer, fill=red!20, minimum width=6.5cm] (mc) at (0,3.5) {L8: Multi-Cloud (3 modes)};
+\node[layer, fill=red!15, minimum width=6cm] (dc) at (0,3.0) {L7: Datacenter (5 modes)};
+\node[layer, fill=orange!20, minimum width=5.5cm] (rk) at (0,2.5) {L6: Rack (6 modes)};
+\node[layer, fill=orange!15, minimum width=5cm] (in) at (0,2.0) {L5: Intra-Node (8 modes)};
+\node[layer, fill=green!20, minimum width=4.5cm] (ix) at (0,1.5) {L4: Interconnect (5 modes)};
+\node[layer, fill=green!15, minimum width=4cm] (gp) at (0,1.0) {L3: GPU/Accelerator (6 modes)};
+\node[layer, fill=blue!20, minimum width=3.5cm] (lk) at (0,0.5) {L2: Link/Fabric (8 modes)};
+\node[layer, fill=blue!15, minimum width=3cm] (nc) at (0,0.0) {L1: NIC (6 modes)};
+
+% Blast radius annotations
+\node[font=\tiny\sffamily, text=black!50] at (4.2,0) {1 port};
+\node[font=\tiny\sffamily, text=black!50] at (4.2,1.0) {1 GPU};
+\node[font=\tiny\sffamily, text=black!50] at (4.2,2.0) {1 node};
+\node[font=\tiny\sffamily, text=black!50] at (4.2,2.5) {16--48 nodes};
+\node[font=\tiny\sffamily, text=black!50] at (4.2,3.5) {Region};
+
+% Escalation arrow
+\draw[arr, line width=0.6pt] (-3.8,0) -- (-3.8,3.5);
+\node[font=\tiny\sffamily\bfseries, text=black!60, rotate=90] at (-4.2,1.75) {Escalation};
+
+% MTTR arrow
+\draw[arr, line width=0.6pt] (5.2,0) -- (5.2,3.5);
+\node[font=\tiny\sffamily\bfseries, text=black!60, rotate=90] at (5.6,1.75) {MTTR increases};
+\end{tikzpicture}
+\caption{Seven-layer failure taxonomy. Lower layers have smaller blast radius and faster recovery. Failures escalate upward when unresolved.}
+\label{fig:taxonomy}
+\end{figure}
 
 \subsection{Layer 1: Network Interface (NIC)}
 
@@ -490,6 +526,48 @@ Restore time & 220--500\,ms & 250--550\,ms & 180--420\,ms \\
 \end{tabular}
 }
 \end{table}
+
+
+\begin{figure}[!t]
+\centering
+\begin{tikzpicture}[
+    phase/.style={draw, rounded corners=3pt, minimum width=1.6cm, minimum height=0.55cm, font=\tiny\sffamily\bfseries, text=black, line width=0.5pt},
+    arr/.style={-{Stealth[length=1.5mm]}, line width=0.5pt, black},
+    lbl/.style={font=\tiny\sffamily, text=black!60},
+]
+% Source node
+\node[phase, fill=blue!15] (pre) at (0,0) {Pre-Stage};
+\node[phase, fill=blue!20] (chk) at (2.2,0) {Checkpoint};
+\node[phase, fill=orange!18] (xfer) at (4.4,0) {Transfer};
+\node[phase, fill=green!18] (rest) at (6.6,0) {Restore};
+
+% Timing labels
+\node[lbl] at (0,-0.5) {30--120s ahead};
+\node[lbl] at (2.2,-0.5) {280ms};
+\node[lbl] at (4.4,-0.5) {320ms};
+\node[lbl] at (6.6,-0.5) {480ms};
+
+% Sub-items
+\node[font=\tiny\sffamily, text=black!50, align=center] at (0,0.55) {Model weights\\via RDMA};
+\node[font=\tiny\sffamily, text=black!50, align=center] at (2.2,0.55) {CPU + GPU\\+ KV-cache};
+\node[font=\tiny\sffamily, text=black!50, align=center] at (4.4,0.55) {RoCE v2\\25--100 Gbps};
+\node[font=\tiny\sffamily, text=black!50, align=center] at (6.6,0.55) {Reconstruct\\+ warm cache};
+
+\draw[arr] (pre) -- (chk);
+\draw[arr] (chk) -- (xfer);
+\draw[arr] (xfer) -- (rest);
+
+% Timeline bar
+\draw[line width=1.5pt, green!60!black] (0,-0.9) -- (1.8,-0.9);
+\draw[line width=1.5pt, red!60] (1.8,-0.9) -- (6.6,-0.9);
+\draw[line width=1.5pt, green!60!black] (6.6,-0.9) -- (7.8,-0.9);
+\node[font=\tiny\sffamily, text=green!60!black] at (0.9,-1.15) {Serving};
+\node[font=\tiny\sffamily, text=red!60] at (4.2,-1.15) {Downtime: 1.3s};
+\node[font=\tiny\sffamily, text=green!60!black] at (7.2,-1.15) {Serving};
+\end{tikzpicture}
+\caption{CRIU migration pipeline. Pre-staging overlaps with active serving; user-visible downtime is only 1.3\,s for intra-vendor migration.}
+\label{fig:criu}
+\end{figure}
 
 \subsection{KV-Cache Migration}
 
@@ -930,6 +1008,52 @@ where $\mu_i(t) = \alpha x_i(t) + (1-\alpha)\mu_i(t-1)$ and $\sigma_i(t)$ is the
 \textbf{Stage 3: Correlation Analysis.} Cross-metric correlations detect compound failures that individual metrics miss. We maintain a running correlation matrix $\mathbf{C} \in \mathbb{R}^{47 \times 47}$ (top 47 critical metrics) and trigger alerts when the spectral gap of $\mathbf{C}$ drops below a learned threshold---indicating a shift in the system's normal operating mode.
 
 \textbf{Stage 4: Temporal Aggregation.} For the RL agents, we provide three temporal views: instantaneous (100\,ms), short-term (5\,min rolling statistics), and long-term (1\,hr trends). The node-level PPO agent receives all three views; the rack-level SAC receives only short-term and long-term; the DC-level CQL receives only long-term aggregates.
+
+
+\begin{figure}[!t]
+\centering
+\begin{tikzpicture}[
+    box/.style={draw, rounded corners=3pt, minimum width=1.4cm, minimum height=0.5cm, font=\tiny\sffamily\bfseries, text=black, line width=0.5pt},
+    arr/.style={-{Stealth[length=1.5mm]}, line width=0.5pt, black},
+]
+% Pipeline stages
+\node[box, fill=blue!12] (raw) at (0,0) {Raw Metrics};
+\node[box, fill=blue!18] (norm) at (0,0.9) {Normalize};
+\node[box, fill=orange!15] (anom) at (0,1.8) {Anomaly Score};
+\node[box, fill=orange!20] (corr) at (0,2.7) {Correlation};
+\node[box, fill=green!15] (agg) at (0,3.6) {Aggregate};
+
+% RL agents
+\node[box, fill=purple!15] (ppo) at (2.5,1.8) {PPO Agent};
+\node[box, fill=purple!20] (sac) at (2.5,2.7) {SAC Agent};
+\node[box, fill=purple!25] (cql) at (2.5,3.6) {CQL Agent};
+
+% LSTM predictor
+\node[box, fill=red!12] (lstm) at (-2.2,2.7) {LSTM Predictor};
+
+% Labels
+\node[font=\tiny\sffamily, text=black!50] at (-1.2,0) {312/node};
+\node[font=\tiny\sffamily, text=black!50] at (-1.2,0.9) {[0,1] range};
+\node[font=\tiny\sffamily, text=black!50] at (-1.2,1.8) {EWMA};
+\node[font=\tiny\sffamily, text=black!50] at (-1.5,2.7) {47$\times$47};
+
+% Arrows
+\draw[arr] (raw) -- (norm);
+\draw[arr] (norm) -- (anom);
+\draw[arr] (anom) -- (corr);
+\draw[arr] (corr) -- (agg);
+\draw[arr] (agg.east) -- (cql.west);
+\draw[arr] (corr.east) -- (sac.west);
+\draw[arr] (anom.east) -- (ppo.west);
+\draw[arr] (corr.west) -- (lstm.east);
+\draw[arr] (lstm.south) |- (ppo.west);
+
+% DPU label
+\node[draw, dashed, rounded corners=5pt, fit=(raw)(norm)(anom)(corr)(lstm), inner sep=4pt, label={[font=\tiny\sffamily\bfseries,text=black!70]below:AMD Pensando DPU}] {};
+\end{tikzpicture}
+\caption{Signal processing pipeline on DPU. Raw metrics flow through four stages before reaching RL agents. LSTM predictor runs on DPU ARM cores.}
+\label{fig:signal}
+\end{figure}
 
 \subsection{DPU-Accelerated Signal Processing}
 
@@ -1381,6 +1505,37 @@ ReliableInfer exports comprehensive observability:
 \item \textbf{OpenTelemetry traces}: End-to-end migration traces with sub-millisecond span granularity
 \item \textbf{Audit logs}: Structured JSON logs of every RL decision for compliance and debugging
 \end{itemize}
+
+
+\begin{figure}[!t]
+\centering
+\begin{tikzpicture}[
+    decision/.style={draw, diamond, aspect=2, minimum width=1.2cm, minimum height=0.6cm, font=\tiny\sffamily\bfseries, text=black, line width=0.5pt, inner sep=1pt},
+    action/.style={draw, rounded corners=3pt, minimum width=1.5cm, minimum height=0.4cm, font=\tiny\sffamily\bfseries, text=black, line width=0.5pt},
+    arr/.style={-{Stealth[length=1.5mm]}, line width=0.5pt, black},
+    lbl/.style={font=\tiny\sffamily, text=black!60},
+]
+\node[action, fill=blue!15] (detect) at (0,3.5) {Failure Detected};
+\node[decision, fill=yellow!20] (sev) at (0,2.5) {Severity?};
+\node[action, fill=red!15] (auto) at (-2.5,1.5) {Auto Execute};
+\node[decision, fill=yellow!15] (cost) at (0,1.5) {Cost OK?};
+\node[action, fill=orange!15] (semi) at (0,0.5) {Semi-Auto};
+\node[action, fill=green!15] (manual) at (2.5,1.5) {Manual Only};
+
+\draw[arr] (detect) -- (sev);
+\draw[arr] (sev) -- node[lbl, left] {Critical} (auto);
+\draw[arr] (sev) -- node[lbl, right] {High cost} (manual);
+\draw[arr] (sev) -- (cost);
+\draw[arr] (cost) -- node[lbl, left] {Yes} (semi);
+\draw[arr] (cost.east) -- node[lbl, above] {No} (manual);
+
+\node[lbl] at (-2.5,1.0) {$<$100ms};
+\node[lbl] at (0,0.1) {60s timeout};
+\node[lbl] at (2.5,1.0) {Human required};
+\end{tikzpicture}
+\caption{Governance decision flow. Critical failures trigger immediate auto-migration; non-critical failures follow cost-aware semi-automated or manual paths.}
+\label{fig:governance}
+\end{figure}
 
 \subsection{Deployment Procedure}
 
