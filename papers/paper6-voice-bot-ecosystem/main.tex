@@ -42,57 +42,77 @@ VoxOps addresses all three through a unified architecture with six technical inn
 \begin{figure*}[!htbp]
 \centering
 \begin{tikzpicture}[
-    mod/.style={rectangle,draw,rounded corners=4pt,minimum height=0.7cm,font=\scriptsize\sffamily,line width=0.5pt,minimum width=2.4cm},
-    lora/.style={rectangle,draw,rounded corners=2pt,minimum height=0.45cm,font=\tiny\sffamily\bfseries,line width=0.4pt,minimum width=1.8cm,fill=lang!8},
-    pipe/.style={rectangle,draw,rounded corners=3pt,minimum height=0.55cm,font=\scriptsize\sffamily,line width=0.4pt,minimum width=2cm},
-    arr/.style={-{Stealth[length=2mm]},line width=0.5pt},
-    darr/.style={{Stealth[length=1.5mm]}-{Stealth[length=1.5mm]},line width=0.4pt,dashed},
+    mod/.style={rectangle,draw,rounded corners=4pt,minimum height=0.7cm,font=\scriptsize\sffamily,line width=0.5pt,minimum width=2.4cm,text=black},
+    lora/.style={rectangle,draw,rounded corners=2pt,minimum height=0.45cm,font=\tiny\sffamily\bfseries,line width=0.4pt,minimum width=1.8cm,text=black},
+    pipe/.style={rectangle,draw,rounded corners=3pt,minimum height=0.55cm,font=\scriptsize\sffamily,line width=0.4pt,minimum width=2cm,text=black},
+    arr/.style={-{Stealth[length=2mm]},line width=0.5pt,black},
+    darr/.style={-{Stealth[length=2mm]},line width=0.4pt,dashed,black},
 ]
-% Voice Pipeline (left)
-\node[pipe,fill=asr!10] (mic) at (-5,3) {Microphone};
-\node[pipe,fill=asr!12] (vad) at (-5,2) {VAD (8ms)};
-\node[pipe,fill=asr!15] (asr) at (-5,1) {Whisper-v3};
-\node[pipe,fill=emo!10] (emo) at (-5,0) {Emotion Det.};
+% Voice Input Pipeline (left column, vertically stacked)
+\node[pipe,fill=asr!8] (mic) at (-5.5,3.5) {Microphone};
+\node[pipe,fill=asr!8] (vad) at (-5.5,2.5) {VAD (8\,ms)};
+\node[pipe,fill=asr!8] (asr) at (-5.5,1.5) {Whisper-v3 ASR};
+\node[pipe,fill=emo!6] (emo) at (-5.5,0.3) {Emotion Detector};
 
-% Central Backbone
-\node[mod,fill=vox!12,text=white,minimum width=4cm,minimum height=1.2cm] (llm) at (0,1.5) {\large\textbf{Llama-3.1-70B}};
-\node[font=\tiny\sffamily,gray] at (0,0.7) {Shared Reasoning Backbone};
+% Central LLM Backbone (light fill, black text)
+\node[mod,fill=vox!6,minimum width=4.2cm,minimum height=1.2cm,font=\normalsize\sffamily\bfseries] (llm) at (0,2) {Llama-3.1-70B};
+\node[font=\tiny\sffamily,text=black!50] at (0,1.15) {Shared Reasoning Backbone};
 
-% LoRA Adapters (around backbone)
-\node[lora,fill=cust!10] (l1) at (-2.8,3.2) {billing-v3};
-\node[lora,fill=cust!10] (l2) at (-0.8,3.2) {provision-v2};
-\node[lora,fill=ops!10] (l3) at (1.2,3.2) {noc-triage-v4};
-\node[lora,fill=ops!10] (l4) at (3.2,3.2) {incident-v2};
+% LoRA Adapters (above backbone, evenly spaced)
+\node[lora,fill=cust!6] (l1) at (-2.8,3.8) {billing-v3};
+\node[lora,fill=cust!6] (l2) at (-0.6,3.8) {provision-v2};
+\node[lora,fill=ops!6] (l3) at (1.6,3.8) {noc-triage-v4};
+\node[lora,fill=ops!6] (l4) at (3.8,3.8) {incident-v2};
+\node[font=\tiny\sffamily,text=black!50] at (-1.7,4.3) {CX Adapters};
+\node[font=\tiny\sffamily,text=black!50] at (2.7,4.3) {Ops Adapters};
 
-% Knowledge bases
-\node[mod,fill=cust!8] (ckg) at (-2,0) {Customer KB};
-\node[mod,fill=ops!8] (okg) at (2,0) {Operations KB};
-\node[mod,fill=vox!6,minimum width=3cm] (shared) at (0,-0.8) {Shared Infra Graph (73\%)};
+% Knowledge Graphs (below backbone, spaced apart)
+\node[mod,fill=cust!5,minimum width=2.2cm] (ckg) at (-2.2,-0.1) {Customer KB};
+\node[mod,fill=ops!5,minimum width=2.2cm] (okg) at (2.2,-0.1) {Operations KB};
+\node[mod,fill=vox!4,minimum width=5cm] (shared) at (0,-1.1) {Shared Infra Knowledge Graph (73\% overlap)};
 
-% Output pipeline (right)
-\node[pipe,fill=tts!12] (gen) at (5,2) {Response Gen};
-\node[pipe,fill=tts!15] (tts) at (5,1) {XTTS-v2 TTS};
-\node[pipe,fill=tts!10] (spk) at (5,0) {Speaker};
+% Voice Output Pipeline (right column)
+\node[pipe,fill=tts!6] (gen) at (5.5,2.8) {Response Gen};
+\node[pipe,fill=tts!6] (tts) at (5.5,1.8) {XTTS-v2 TTS};
+\node[pipe,fill=tts!6] (spk) at (5.5,0.8) {Speaker};
 
-% RL Agent
-\node[mod,fill=rl2!10,minimum width=2.8cm] (rl) at (0,-2) {\textbf{RL Policy ($\pi_\theta$)}};
+% RL Agent (bottom center)
+\node[mod,fill=rl2!5,minimum width=3cm] (rl) at (0,-2.3) {\textbf{RL Policy ($\pi_\theta$)}};
 
-% Arrows
+% ── Input pipeline arrows (vertical, clean) ──
 \draw[arr] (mic) -- (vad);
 \draw[arr] (vad) -- (asr);
 \draw[arr] (asr) -- (emo);
-\draw[arr] (asr) -| (llm);
-\draw[arr] (emo) -- (rl);
-\draw[arr] (llm) -- (gen);
+
+% ── ASR to LLM (L-shaped, avoids crossing) ──
+\draw[arr] (asr.east) -- (-3.2,1.5) -- (-3.2,2.0) -- (llm.west);
+
+% ── Emotion to RL (down then right) ──
+\draw[arr] (emo.south) |- (rl.west);
+
+% ── LoRA to LLM (short vertical drops, no overlap) ──
+\draw[darr] (l1.south) -- ++(0,-0.65);
+\draw[darr] (l2.south) -- ++(0,-0.65);
+\draw[darr] (l3.south) -- ++(0,-0.65);
+\draw[darr] (l4.south) -- ++(0,-0.65);
+
+% ── LLM to output pipeline ──
+\draw[arr] (llm.east) -- (gen.west);
 \draw[arr] (gen) -- (tts);
 \draw[arr] (tts) -- (spk);
-\draw[arr,dashed] (l1) -- (llm); \draw[arr,dashed] (l2) -- (llm);
-\draw[arr,dashed] (l3) -- (llm); \draw[arr,dashed] (l4) -- (llm);
-\draw[darr] (ckg) -- (llm); \draw[darr] (okg) -- (llm);
-\draw[arr] (ckg) -- (shared); \draw[arr] (okg) -- (shared);
-\draw[arr,rl2,thick] (rl) -- (llm);
+
+% ── KBs to LLM (vertical, separated) ──
+\draw[darr] (ckg.north) -- ++(0,0.7);
+\draw[darr] (okg.north) -- ++(0,0.7);
+
+% ── KBs to shared graph ──
+\draw[arr] (ckg.south) -- (shared.north -| ckg.south);
+\draw[arr] (okg.south) -- (shared.north -| okg.south);
+
+% ── RL to LLM (vertical, centered) ──
+\draw[arr] (rl.north) -- ++(0,1.3);
 \end{tikzpicture}
-\caption{VoxOps unified architecture. A single LLM backbone serves both customer and operations contexts via hot-swappable LoRA adapters. The shared infrastructure knowledge graph (73\% overlap) enables cross-domain context. Emotion detection feeds the RL conversation policy. Voice pipeline achieves 188\,ms P50 end-to-end.}
+\caption{VoxOps unified architecture. A single LLM backbone serves both customer experience (CX) and network operations (Ops) via hot-swappable LoRA adapters. The shared infrastructure knowledge graph (73\% entity overlap) enables cross-domain context transfer. Emotion detection feeds the RL conversation policy. Voice pipeline achieves 188\,ms P50 end-to-end latency.}
 \label{fig:arch}
 \end{figure*}
 
@@ -104,7 +124,7 @@ The core insight is that customer support and IT operations require the \emph{sa
 \caption{Domain-Specific LoRA Adapter Configuration}
 \label{tab:lora}
 \centering\scriptsize
-\resizebox{\linewidth}{!}{
+\resizebox{\columnwidth}{!}{
 \begin{tabular}{@{}llccl@{}}
 \toprule
 \textbf{Adapter} & \textbf{Domain} & \textbf{Rank} & \textbf{Size} & \textbf{Swap Time} \\
@@ -248,7 +268,7 @@ The key innovation: \textbf{begin LLM prefill before ASR completes}. After 300\,
 \centering
 \begin{tikzpicture}[
     blk/.style={rectangle,draw,rounded corners=2pt,minimum height=0.4cm,font=\tiny\sffamily,line width=0.3pt},
-    scale=0.9
+    xscale=0.75, yscale=0.9
 ]
 % Timeline
 \draw[-{Stealth},thick] (0,0) -- (8.5,0) node[right,font=\tiny]{time (ms)};
@@ -257,26 +277,24 @@ The key innovation: \textbf{begin LLM prefill before ASR completes}. After 300\,
 }
 
 % Traditional pipeline
-\node[font=\tiny\sffamily\bfseries,left] at (-0.1,2.2) {Traditional:};
-\fill[asr!30] (0,1.8) rectangle (2.5,2.5) node[midway,font=\tiny]{ASR (125ms)};
-\fill[vox!20] (2.5,1.8) rectangle (4.8,2.5) node[midway,font=\tiny]{LLM (115ms)};
-\fill[tts!20] (4.8,1.8) rectangle (6.5,2.5) node[midway,font=\tiny]{TTS (85ms)};
-\fill[gray!15] (6.5,1.8) rectangle (8,2.5) node[midway,font=\tiny]{Stream};
-\draw[red,thick,dashed] (6.5,1.6) -- (6.5,2.7) node[above,font=\tiny,red]{first audio: 325ms};
+\node[font=\tiny\sffamily\bfseries,anchor=east] at (-0.1,2.2) {Trad.};
+\fill[gray!20] (0,1.8) rectangle (2.5,2.5) node[midway,font=\tiny,text=black]{ASR (125ms)};
+\fill[gray!30] (2.5,1.8) rectangle (4.8,2.5) node[midway,font=\tiny,text=black]{LLM (115ms)};
+\fill[gray!12] (4.8,1.8) rectangle (6.5,2.5) node[midway,font=\tiny,text=black]{TTS (85ms)};
+\fill[gray!8] (6.5,1.8) rectangle (8,2.5) node[midway,font=\tiny,text=black]{Stream};
+\draw[black,thick,dashed] (6.5,1.6) -- (6.5,2.7) node[above,font=\tiny,text=black]{325ms};
 
 % VoxOps pipeline
-\node[font=\tiny\sffamily\bfseries,left] at (-0.1,1) {VoxOps:};
-\fill[asr!30] (0,0.6) rectangle (1.8,1.3) node[midway,font=\tiny]{ASR};
-\fill[emo!15] (0.6,0.6) rectangle (1.2,0.9);
-\node[font=\tiny,rotate=90] at (0.9,0.75) {Intent};
-\fill[vox!25] (1,0.6) rectangle (3,1.3) node[midway,font=\tiny]{Spec. Prefill};
-\fill[vox!35] (1.8,0.6) rectangle (3.2,1.3);
-\node[font=\tiny] at (2.5,0.95) {Decode};
-\fill[tts!20] (2.8,0.6) rectangle (3.8,1.3) node[midway,font=\tiny]{TTS};
-\draw[cust,thick,dashed] (3.8,0.4) -- (3.8,1.5) node[above,font=\tiny,cust]{first audio: 188ms};
+\node[font=\tiny\sffamily\bfseries,anchor=east] at (-0.1,1) {VoxOps};
+\fill[gray!20] (0,0.6) rectangle (1.8,1.3) node[midway,font=\tiny,text=black]{ASR};
+\fill[gray!25] (1,0.6) rectangle (3,1.3) node[midway,font=\tiny,text=black]{Spec. Prefill};
+\fill[gray!35] (1.8,0.6) rectangle (3.2,1.3);
+\node[font=\tiny,text=black] at (2.5,0.95) {Decode};
+\fill[gray!12] (2.8,0.6) rectangle (3.8,1.3) node[midway,font=\tiny,text=black]{TTS};
+\draw[black,thick,dashed] (3.8,0.4) -- (3.8,1.5) node[above,font=\tiny,text=black]{188ms};
 \end{tikzpicture}
 \caption{Speculative prefill pipeline. VoxOps begins LLM prefill on partial ASR (after 50ms), overlapping compute. First audio output at 188ms vs.\ 325ms traditional.}
-\label{fig:pipeline}
+\label{fig:prefill}
 \end{figure}
 
 \subsection{Latency Budget Breakdown}
@@ -373,7 +391,7 @@ The 200 most common response openings (``I understand your concern\ldots'', ``Le
 \caption{RL Conversation Policy Action Space}
 \label{tab:actions}
 \centering\scriptsize
-\resizebox{\linewidth}{!}{
+\resizebox{\columnwidth}{!}{
 \begin{tabular}{@{}clll@{}}
 \toprule
 \textbf{\#} & \textbf{Action} & \textbf{Effect} & \textbf{When Optimal} \\
@@ -398,8 +416,8 @@ The 200 most common response openings (``I understand your concern\ldots'', ``Le
 \textbf{Reward function} (multi-objective):
 \begin{equation}
 \resizebox{0.88\linewidth}{!}{$
-R(s_t, a_t) = \underbrace{w_1 \text{CSAT}}_{\text{satisfaction}} + \underbrace{w_2 \text{FCR}}_{\text{resolution}} - \underbrace{w_3 \text{AHT}}_{\text{handle time}} - \underbrace{w_4 \text{Esc}}_{\text{escalation}} + \underbrace{w_5 \Delta\text{Emo}}_{\text{emotion}} - \underbrace{w_6 C}_{\text{cost}}
-$}
+R = w_1\text{CSAT} + w_2\text{FCR} - w_3\text{AHT} - w_4\text{Esc} + w_5\Delta\text{Emo} - w_6 C
+$
 \end{equation}
 
 \textbf{Key insight}: $\Delta\text{Emo}$ (emotion improvement turn-over-turn) is unique to VoxOps. An angry customer who is calmed AND resolved produces 4.7$\times$ higher retention than a quickly-resolved but still-frustrated customer. Traditional bots optimize AHT; VoxOps optimizes \emph{emotional trajectory}.
@@ -419,19 +437,19 @@ $}
     width=\linewidth, height=4.5cm,
     xlabel={\footnotesize Conversation turn},
     ylabel={\footnotesize Emotion score (higher=calmer)},
-    xmin=0, xmax=10,
-    ymin=0, ymax=1,
-    legend style={font=\tiny, at={(0.98,0.02)}, anchor=south east},
+    xmin=0, xmax=11, ymin=0, ymax=1.05,
+    legend style={font=\tiny, at={(0.02,0.98)}, anchor=north west, draw=black!30},
     grid=major, grid style={gray!15},
     xticklabel style={font=\tiny}, yticklabel style={font=\tiny},
+    xlabel style={font=\scriptsize}, ylabel style={font=\scriptsize},
 ]
-\addplot[emo,thick,mark=*,mark size=1.5pt] coordinates {(1,0.2)(2,0.25)(3,0.4)(4,0.55)(5,0.65)(6,0.72)(7,0.8)(8,0.85)(9,0.88)(10,0.92)};
-\addplot[blue,thick,dashed,mark=triangle*,mark size=2pt] coordinates {(1,0.2)(2,0.22)(3,0.28)(4,0.35)(5,0.42)(6,0.5)(7,0.55)(8,0.6)(9,0.63)(10,0.65)};
-\addplot[gray,thick,dotted,mark=square*,mark size=1.5pt] coordinates {(1,0.2)(2,0.18)(3,0.22)(4,0.3)(5,0.35)(6,0.4)(7,0.45)(8,0.5)(9,0.52)(10,0.55)};
+\addplot[black, thick, mark=*, mark size=1.5pt] coordinates {(1,0.2)(2,0.25)(3,0.4)(4,0.55)(5,0.65)(6,0.72)(7,0.8)(8,0.85)(9,0.88)(10,0.92)};
+\addplot[black, thick, dashed, mark=triangle*, mark size=2pt] coordinates {(1,0.2)(2,0.22)(3,0.28)(4,0.35)(5,0.42)(6,0.5)(7,0.55)(8,0.6)(9,0.63)(10,0.65)};
+\addplot[black!50, thick, dotted, mark=square*, mark size=1.5pt] coordinates {(1,0.2)(2,0.18)(3,0.22)(4,0.3)(5,0.35)(6,0.4)(7,0.45)(8,0.5)(9,0.52)(10,0.55)};
 \legend{VoxOps RL, Rule-based bot, Human agent (avg)}
 \end{axis}
 \end{tikzpicture}
-\caption{Emotional trajectory across conversation turns. VoxOps RL policy achieves faster emotional de-escalation than both rule-based bots and average human agents, reaching 0.92 calm score by turn 10.}
+\caption{Emotional trajectory across conversation turns. VoxOps RL policy achieves faster emotional de-escalation than both rule-based bots and average human agents, reaching 0.92 calm score by turn~10.}
 \label{fig:emotion}
 \end{figure}
 
@@ -532,7 +550,7 @@ Standard Whisper-large-v3 achieves 5.2\% WER on clean speech but degrades to 12.
 \caption{ASR Performance Across Languages (WER \%)}
 \label{tab:wer}
 \centering\scriptsize
-\resizebox{\linewidth}{!}{
+\resizebox{\columnwidth}{!}{
 \begin{tabular}{@{}lcccc@{}}
 \toprule
 \textbf{Language} & \textbf{Whisper} & \textbf{Google STT} & \textbf{VoxOps} & \textbf{Accented} \\
@@ -662,7 +680,7 @@ The RL conversation policy adapts to cultural communication norms:
 \caption{Cultural Adaptation of Conversation Policy}
 \label{tab:culture}
 \centering\scriptsize
-\resizebox{\linewidth}{!}{
+\resizebox{\columnwidth}{!}{
 \begin{tabular}{@{}llll@{}}
 \toprule
 \textbf{Culture} & \textbf{Empathy Phase} & \textbf{Directness} & \textbf{Formality} \\
@@ -824,7 +842,7 @@ VoxOps executes remediation runbooks through a voice-confirmed pipeline:
 \caption{Top-10 Automated Runbooks by Execution Count}
 \label{tab:runbooks}
 \centering\scriptsize
-\resizebox{\linewidth}{!}{
+\resizebox{\columnwidth}{!}{
 \begin{tabular}{@{}rlccl@{}}
 \toprule
 \textbf{\#} & \textbf{Runbook} & \textbf{Executions} & \textbf{Success} & \textbf{Avg Duration} \\
@@ -1004,7 +1022,7 @@ Maintaining quality across 25 languages requires continuous monitoring:
 \caption{Per-Language Quality Metrics (Top-10 Languages by Volume)}
 \label{tab:perlang}
 \centering\scriptsize
-\resizebox{\linewidth}{!}{
+\resizebox{\columnwidth}{!}{
 \begin{tabular}{@{}lccccc@{}}
 \toprule
 \textbf{Language} & \textbf{Volume} & \textbf{WER} & \textbf{CSAT} & \textbf{FCR} & \textbf{TTS MOS} \\
@@ -1120,7 +1138,7 @@ Knowledge articles created & 12/mo & 89/mo & +7.4$\times$ \\
 \caption{VoxOps vs.\ Industry Voice AI Platforms}
 \label{tab:compete}
 \centering\scriptsize
-\resizebox{\linewidth}{!}{
+\resizebox{\columnwidth}{!}{
 \begin{tabular}{@{}lccccc@{}}
 \toprule
 \textbf{Capability} & \textbf{VoxOps} & \textbf{Connect} & \textbf{CCAI} & \textbf{Five9} & \textbf{Observe} \\

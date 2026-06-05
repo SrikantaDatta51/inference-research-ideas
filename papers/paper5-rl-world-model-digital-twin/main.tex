@@ -85,60 +85,97 @@ Chen et al.~\cite{chen2018neural} introduced Neural ODEs, parameterizing continu
 \begin{figure*}[!t]
 \centering
 \begin{tikzpicture}[
-    node distance=0.6cm and 0.8cm,
-    box/.style={draw, rounded corners=3pt, minimum width=2.2cm, minimum height=0.7cm, font=\scriptsize, thick},
-    arrow/.style={-{Stealth[length=2mm]}, thick},
-    dashed arrow/.style={-{Stealth[length=2mm]}, thick, dashed},
-    label/.style={font=\tiny\itshape, text=gray}
+    node distance=0.4cm and 0.5cm,
+    level/.style={draw, rounded corners=4pt, minimum height=0.65cm, font=\scriptsize\sffamily, thick, text=black},
+    comp/.style={draw, rounded corners=2pt, minimum height=0.45cm, font=\tiny\sffamily, thick, text=black},
+    engine/.style={draw, rounded corners=5pt, minimum height=0.8cm, font=\scriptsize\sffamily\bfseries, thick, text=black},
+    output/.style={draw, rounded corners=3pt, minimum height=0.55cm, font=\tiny\sffamily, thick, text=black},
+    arr/.style={-{Stealth[length=2mm]}, thick, black},
+    darr/.style={-{Stealth[length=2mm]}, thick, black, dashed},
+    brace/.style={decorate, decoration={brace, amplitude=4pt, mirror}, thick, black},
 ]
-% Level 1 - Node Twins
-\node[box, fill=blue!10] (n1) {Node Twin 1};
-\node[box, fill=blue!10, right=0.4cm of n1] (n2) {Node Twin 2};
-\node[box, fill=blue!10, right=0.4cm of n2] (n3) {$\cdots$};
-\node[box, fill=blue!10, right=0.4cm of n3] (n4) {Node Twin $N$};
+% ── LEVEL 1: NODE TWINS (bottom of hierarchy) ──
+\node[level, fill=blue!8, minimum width=2.6cm] (n1) at (0,0) {Node Twin 1};
+\node[level, fill=blue!8, minimum width=2.6cm, right=0.3cm of n1] (n2) {Node Twin 2};
+\node[level, fill=blue!8, minimum width=1.2cm, right=0.3cm of n2] (ndots) {$\cdots$};
+\node[level, fill=blue!8, minimum width=2.6cm, right=0.3cm of ndots] (nn) {Node Twin $N$};
 
-% Level 2 - Rack Twins
-\node[box, fill=green!10, above=0.8cm of n1, xshift=0.8cm] (r1) {Rack Twin 1};
-\node[box, fill=green!10, above=0.8cm of n3, xshift=0.8cm] (r2) {Rack Twin $R$};
+% Node detail boxes (inside Node Twin 1)
+\node[comp, fill=blue!4, below=0.15cm of n1, xshift=-0.7cm, minimum width=1.0cm] (gpu1) {\tiny 8$\times$GPU};
+\node[comp, fill=blue!4, below=0.15cm of n1, xshift=0.7cm, minimum width=1.0cm] (kv1) {\tiny KV-Cache};
 
-% Level 3 - DC Twin
-\node[box, fill=orange!10, above=0.8cm of r1, xshift=2.0cm, minimum width=3cm] (dc) {DC Twin};
+% ── LEVEL 2: RACK TWINS ──
+\node[level, fill=green!10, minimum width=5.2cm, above=1.4cm of n1, xshift=1.5cm] (r1) {Rack Twin 1 (Thermal + ToR + Airflow)};
+\node[level, fill=green!10, minimum width=3.8cm, above=1.4cm of nn, xshift=-0.3cm] (r2) {Rack Twin $R$};
 
-% Level 4 - Fleet Twin
-\node[box, fill=red!10, above=0.8cm of dc, minimum width=3cm] (fleet) {Fleet Twin};
+% ── LEVEL 3: DC TWIN ──
+\node[level, fill=orange!10, minimum width=7cm, above=0.9cm of r1, xshift=2.2cm] (dc) {Datacenter Twin (Cooling Loops + Power Distribution + CRAH)};
 
-% Neural SDE Engine
-\node[box, fill=purple!10, right=1.5cm of r2, minimum width=2.5cm, minimum height=1.2cm] (sde) {\begin{tabular}{c}Neural SDE\\$dz = f_\theta dt + g_\phi dW$\end{tabular}};
+% ── LEVEL 4: FLEET TWIN ──
+\node[level, fill=red!8, minimum width=7cm, above=0.7cm of dc] (fleet) {Fleet Twin (Cross-DC Routing + Workload Migration + Carbon Opt.)};
 
-% Outputs
-\node[box, fill=yellow!10, above=0.5cm of sde] (causal) {Causal Engine};
-\node[box, fill=cyan!10, below=0.5cm of sde] (dreamer) {DreamerV3-Infra};
-\node[box, fill=pink!10, right=0.8cm of sde] (anomaly) {Anomaly Det.};
+% Level labels (left side)
+\node[font=\tiny\sffamily\bfseries, text=blue!70, left=0.2cm of n1] {L1};
+\node[font=\tiny\sffamily\bfseries, text=green!50!black, left=0.2cm of r1] {L2};
+\node[font=\tiny\sffamily\bfseries, text=orange!70!black, left=0.2cm of dc] {L3};
+\node[font=\tiny\sffamily\bfseries, text=red!70!black, left=0.2cm of fleet] {L4};
 
-% Telemetry input
-\node[box, fill=gray!10, below=0.8cm of n2, minimum width=6cm] (telem) {Production Telemetry (DCGM, vLLM, Network)};
+% Timescale labels (right side)
+\node[font=\tiny\itshape, text=black!60, right=0.15cm of nn] {ms--s};
+\node[font=\tiny\itshape, text=black!60, right=0.15cm of r2] {s--min};
+\node[font=\tiny\itshape, text=black!60] at (dc.east -| r2.east) [right=0.15cm] {min--hr};
+\node[font=\tiny\itshape, text=black!60] at (fleet.east -| r2.east) [right=0.15cm] {hr--day};
 
-% Arrows
-\draw[arrow] (n1) -- (r1); \draw[arrow] (n2) -- (r1);
-\draw[arrow] (n3) -- (r2); \draw[arrow] (n4) -- (r2);
-\draw[arrow] (r1) -- (dc); \draw[arrow] (r2) -- (dc);
-\draw[arrow] (dc) -- (fleet);
-\draw[arrow] (telem) -- (n1); \draw[arrow] (telem) -- (n2);
-\draw[arrow] (telem) -- (n3); \draw[arrow] (telem) -- (n4);
-\draw[dashed arrow] (dc) -- (sde);
-\draw[arrow] (sde) -- (causal);
-\draw[arrow] (sde) -- (dreamer);
-\draw[arrow] (sde) -- (anomaly);
+% ── Upward aggregation arrows ──
+\draw[arr] (n1.north) -- (r1.south -| n1.north);
+\draw[arr] (n2.north) -- (r1.south -| n2.north);
+\draw[arr] (nn.north) -- (r2.south);
+\draw[arr] (r1.north) -- (dc.south -| r1.north);
+\draw[arr] (r2.north) -- (dc.south -| r2.north);
+\draw[arr] (dc.north) -- (fleet.south);
 
-% Level labels
-\node[label, left=0.1cm of n1] {L1};
-\node[label, left=0.1cm of r1] {L2};
-\node[label, left=0.1cm of dc] {L3};
-\node[label, left=0.1cm of fleet] {L4};
+% ── TELEMETRY INPUT (below Level 1) ──
+\node[level, fill=gray!8, minimum width=11.8cm, below=1.0cm of ndots] (telem) {Production Telemetry: DCGM (47 metrics/GPU) + vLLM (23 metrics/inst) + Network (12 metrics/port)};
+\draw[arr] (telem.north -| n1.south) -- (n1.south);
+\draw[arr] (telem.north -| n2.south) -- (n2.south);
+\draw[arr] (telem.north -| nn.south) -- (nn.south);
+
+% ── NEURAL SDE ENGINE (right side) ──
+\node[engine, fill=purple!10, minimum width=3.2cm, minimum height=1.6cm] (sde) at (14.5,2.2)
+  {\begin{tabular}{c}\textbf{Neural SDE Engine}\\[2pt]$dz = f_\theta(z,a)\,dt$\\$+ g_\phi(z)\,dW_t$\end{tabular}};
+
+% ── OUTPUT MODULES (around SDE) ──
+\node[output, fill=yellow!12, minimum width=2.8cm, above=0.6cm of sde] (causal) {Causal Counterfactual};
+\node[output, fill=cyan!10, minimum width=2.8cm, below=0.6cm of sde] (dreamer) {DreamerV3-Infra (RL)};
+\node[output, fill=pink!10, minimum width=2.8cm, above=0.6cm of causal] (anomaly) {Anomaly Detection};
+\node[output, fill=lime!10, minimum width=2.8cm, below=0.6cm of dreamer] (foundation) {Foundation Model};
+
+% ── Connect hierarchy to SDE ──
+\draw[darr] (dc.east) -- ++(1.2,0) |- (sde.west);
+\draw[darr] (fleet.east) -- ++(0.8,0) |- (sde.north west);
+
+% ── SDE to outputs ──
+\draw[arr] (sde.north) -- (causal.south);
+\draw[arr] (sde.south) -- (dreamer.north);
+\draw[arr] (causal.north) -- (anomaly.south);
+\draw[arr] (dreamer.south) -- (foundation.north);
+
+% ── Feedback from RL to hierarchy ──
+\draw[arr, densely dotted] (dreamer.west) -| ($(r1.north east) + (0.3,0.3)$) -- (dc.south -| r1.north east);
+
+% ── Annotations ──
+\node[font=\tiny\itshape, text=black!50, below=0.05cm of causal] {do-calculus, $<$50ms};
+\node[font=\tiny\itshape, text=black!50, above=0.05cm of dreamer] {1000$\times$ real-time};
+\node[font=\tiny\itshape, text=black!50, below=0.05cm of anomaly] {12--47 min early warning};
+\node[font=\tiny\itshape, text=black!50, above=0.05cm of foundation] {$<$1\% data transfer};
+
+% ── Brace for hierarchy ──
+\draw[brace] (-1.3, -0.4) -- (-1.3, 4.8) node[midway, left=0.15cm, font=\tiny\sffamily, text=black, rotate=90, anchor=south] {Hierarchical Digital Twin};
 \end{tikzpicture}
-\caption{InferTwin system architecture. Four-level hierarchical digital twin (left) with Neural SDE engine powering causal inference, offline RL training, and anomaly detection (right). Telemetry flows upward through aggregation; predictions and actions flow downward.}
+\caption{InferTwin system architecture. \textbf{Left}: Four-level hierarchical digital twin mirrors datacenter physical structure---each level operates at its natural timescale, with state aggregating upward and constraints propagating downward. \textbf{Right}: Neural SDE engine powers four applications: anomaly detection (12--47 min early warning), causal counterfactual queries ($<$50 ms), DreamerV3-Infra offline RL (1000$\times$ real-time training), and a foundation model for cross-facility transfer.}
 \label{fig:arch}
 \end{figure*}
+
 
 %===================================================================
 \section{Background and Motivation}
@@ -209,7 +246,7 @@ The inference control plane state $\mathbf{s}_t \in \mathbb{R}^{d_s}$ comprises 
 \caption{World Model State Space Components ($d_s = 176$)}
 \label{tab:state}
 \centering\scriptsize
-\resizebox{\linewidth}{!}{
+\resizebox{\columnwidth}{!}{
 \begin{tabular}{@{}llcl@{}}
 \toprule
 \textbf{Component} & \textbf{Variables} & \textbf{Dim} & \textbf{Source} \\
@@ -517,7 +554,7 @@ where $\lambda_{\text{req}}$ is request arrival rate, $\bar{C}_{\text{ctx}}$ is 
 The node twin models the NVLink Gen5 mesh topology with particular attention to bandwidth sharing during tensor-parallel inference. For an 8-GPU NVLink domain, the mesh provides 900\,GB/s bidirectional bandwidth per GPU, but this bandwidth is shared across all active communication channels:
 
 \begin{equation}
-\text{BW}_{\text{avail}}(i,j) = \frac{\text{BW}_{\text{max}}}{1 + \sum_{(k,l) \neq (i,j)} \mathbf{1}[\text{active}(k,l)] \cdot \text{contention}(i,j,k,l)}
+\text{BW}_{\text{avail}}(i,j) = \frac{\text{BW}_{\max}}{1 + \textstyle\sum_{(k,l) \neq (i,j)} c_{ijkl}}
 \end{equation}
 
 The contention factor depends on the NVSwitch routing topology and is learned implicitly by the world model from observed bandwidth measurements. This is critical for predicting the performance impact of multi-model serving on a single NVLink domain.
@@ -530,6 +567,7 @@ KV-cache management is the primary bottleneck in modern LLM inference. The node 
 \caption{KV-Cache State Transitions}
 \label{tab:kvstates}
 \centering\scriptsize
+\resizebox{\columnwidth}{!}{
 \begin{tabular}{@{}llll@{}}
 \toprule
 \textbf{State} & \textbf{Transition} & \textbf{Trigger} & \textbf{Impact} \\
@@ -554,7 +592,7 @@ A rack containing 4--8 DGX nodes exhibits \emph{emergent} thermal behavior not p
 \caption{Rack-Level Thermal Cascade Analysis (DGX B200, 4-node rack)}
 \label{tab:thermal}
 \centering\scriptsize
-\resizebox{\linewidth}{!}{
+\resizebox{\columnwidth}{!}{
 \begin{tabular}{@{}lcccc@{}}
 \toprule
 \textbf{Event} & \textbf{Scope} & \textbf{Rack $\Delta$T} & \textbf{$\Delta$Throughput} & \textbf{Detection Lead} \\
@@ -666,7 +704,7 @@ The counterfactual engine supports three query types:
 
 \textbf{Type 1 -- Interventional prediction}: ``What happens to throughput if we cap GPU power to 500W?''
 \begin{equation}
-P(\text{throughput} \mid do(\text{power\_cap} = 500W)) = \sum_{z} P(\text{throughput} \mid z) P(z \mid do(\text{power\_cap}))
+P(\text{tput} \mid do(\text{pcap}{=}500)) = \textstyle\sum_{z} P(\text{tput} \mid z) P(z \mid do(\text{pcap}))
 \end{equation}
 
 \textbf{Type 2 -- Counterfactual diagnosis}: ``Would the outage have occurred if we had applied the firmware patch?''
@@ -747,7 +785,7 @@ This achieves 1000$\times$ faster-than-real-time training: 1 hour of simulated D
 \caption{DreamerV3-Infra vs.\ Direct RL Baselines}
 \label{tab:dreamer}
 \centering\scriptsize
-\resizebox{\linewidth}{!}{
+\resizebox{\columnwidth}{!}{
 \begin{tabular}{@{}lcccc@{}}
 \toprule
 \textbf{Method} & \textbf{Training Time} & \textbf{Throughput $\Delta$} & \textbf{Energy $\Delta$} & \textbf{Safety} \\
@@ -812,7 +850,7 @@ The digital twin hierarchy enables automatic localization: divergence is compute
 \caption{Anomaly Detection Lead Time vs.\ Conventional Monitoring}
 \label{tab:anomaly}
 \centering\scriptsize
-\resizebox{\linewidth}{!}{
+\resizebox{\columnwidth}{!}{
 \begin{tabular}{@{}lcccc@{}}
 \toprule
 \textbf{Failure Mode} & \textbf{DCGM Alert} & \textbf{InferTwin} & \textbf{Lead Time} & \textbf{F1} \\
@@ -900,7 +938,7 @@ To contextualize InferTwin's contributions, we compare against the full spectrum
 \caption{InferTwin vs.\ Existing DC Management Approaches}
 \label{tab:compare}
 \centering\scriptsize
-\resizebox{\linewidth}{!}{
+\resizebox{\columnwidth}{!}{
 \begin{tabular}{@{}lccccc@{}}
 \toprule
 \textbf{Capability} & \textbf{DCGM} & \textbf{Prometheus} & \textbf{CFD Twin} & \textbf{LSTM} & \textbf{InferTwin} \\
@@ -926,7 +964,7 @@ InferTwin is unique in combining all seven capabilities. The closest competitor-
 \caption{World Model Prediction Error (MAPE \%) vs.\ Horizon}
 \label{tab:prediction}
 \centering\scriptsize
-\resizebox{\linewidth}{!}{
+\resizebox{\columnwidth}{!}{
 \begin{tabular}{@{}lcccccc@{}}
 \toprule
 \textbf{Method} & \textbf{1\,min} & \textbf{10\,min} & \textbf{1\,hr} & \textbf{6\,hr} & \textbf{24\,hr} & \textbf{Params} \\
@@ -1016,7 +1054,7 @@ $-$ Causal structure & 4.9\% & +17\% \\
 \caption{Operational Metrics (90-Day Deployment)}
 \label{tab:e2e}
 \centering\scriptsize
-\resizebox{\linewidth}{!}{
+\resizebox{\columnwidth}{!}{
 \begin{tabular}{@{}lccc@{}}
 \toprule
 \textbf{Metric} & \textbf{Baseline} & \textbf{InferTwin} & \textbf{Improvement} \\
@@ -1131,7 +1169,7 @@ The hierarchical architecture is key to scalability: rather than modeling the fu
 \centering\scriptsize
 \begin{tabular}{@{}lcccc@{}}
 \toprule
-\textbf{Training Days} & \textbf{1-hr MAPE} & \textbf{24-hr MAPE} & \textbf{Anomaly F1} & \textbf{Note} \\
+\textbf{Days} & \textbf{1hr} & \textbf{24hr} & \textbf{F1} & \textbf{Note} \\
 \midrule
 7 & 5.8\% & 12.4\% & 0.72 & Minimum viable \\
 14 & 4.2\% & 8.1\% & 0.81 & Captures weekly patterns \\
@@ -1191,7 +1229,7 @@ Operations staff & \$1.2M & \$960K & \$240K \\
 \caption{InferTwin vs.\ World Model Baselines}
 \label{tab:wmcompare}
 \centering\scriptsize
-\resizebox{\linewidth}{!}{
+\resizebox{\columnwidth}{!}{
 \begin{tabular}{@{}lcccccc@{}}
 \toprule
 \textbf{Model} & \textbf{Domain} & \textbf{Continuous} & \textbf{Stochastic} & \textbf{Hierarchical} & \textbf{Causal} & \textbf{Transfer} \\
@@ -1256,7 +1294,7 @@ Several commercial digital twin platforms exist for datacenter management:
 \caption{InferTwin vs.\ Commercial DC Digital Twin Solutions}
 \label{tab:commercial}
 \centering\scriptsize
-\resizebox{\linewidth}{!}{
+\resizebox{\columnwidth}{!}{
 \begin{tabular}{@{}lccccc@{}}
 \toprule
 \textbf{Feature} & \textbf{InferTwin} & \textbf{Nlyte} & \textbf{Cadence} & \textbf{Schneider} & \textbf{Siemens} \\

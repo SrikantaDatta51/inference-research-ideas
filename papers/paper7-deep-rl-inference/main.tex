@@ -200,7 +200,7 @@ The seven orders of magnitude in decision timescale motivate a natural three-lev
 \caption{Decision Timescale Decomposition}
 \label{tab:timescale}
 \centering\scriptsize
-\resizebox{\linewidth}{!}{
+\resizebox{\columnwidth}{!}{
 \begin{tabular}{@{}lllll@{}}
 \toprule
 \textbf{Level} & \textbf{Timescale} & \textbf{Decisions} & \textbf{Impact} & \textbf{Risk} \\
@@ -275,7 +275,7 @@ Pages with low predicted future access are evicted first. This outperforms LRU b
 The Micro-Agent learns when to prune speculative decoding trees~\cite{patel2024splitwise} to balance throughput and acceptance rate:
 
 \begin{equation}
-\text{prune}(n) = \begin{cases} 1 & \text{if } V_\pi(\text{node } n) < \tau_{\text{prune}} \\ 0 & \text{otherwise} \end{cases}
+\text{prune}(n) {=} \begin{cases} 1 & V_\pi(n) < \tau_{\text{prune}} \\ 0 & \text{otherwise} \end{cases}
 \end{equation}
 
 where $V_\pi$ is the RL-learned value of continuing speculation at node $n$. The policy learns that deeper speculation trees are beneficial for code generation (high token predictability, 78\% acceptance rate at depth 8) but wasteful for creative writing (low predictability, 31\% acceptance at depth 8). Dynamic tree depth adaptation improves throughput by 8.3\% over static depth-4 configuration.
@@ -284,7 +284,7 @@ where $V_\pi$ is the RL-learned value of continuing speculation at node $n$. The
 
 The Micro-Agent assigns a priority score to each incoming request based on:
 \begin{equation}
-\text{priority}(r) = w_1 \cdot \text{SLO\_margin}(r) + w_2 \cdot \text{revenue}(r) + w_3 \cdot \frac{1}{\text{wait\_time}(r)}
+\text{pri}(r) = w_1 \text{SLO}(r) + w_2 \text{rev}(r) + w_3 / \text{wait}(r)
 \end{equation}
 
 Requests near SLO violation ($<$10\% margin) receive priority boost, preventing cascading SLO failures. This learned priority function outperforms static FIFO by 18\% in SLO compliance during load spikes, at the cost of 3\% higher average latency for low-priority requests.
@@ -344,7 +344,7 @@ The Meso-Agent operates at s--min timescale, managing node-level resources.
 
 \textbf{Reward}:
 \begin{equation}
-r^{m}_t = \alpha \cdot \text{utilization\_balance} - \beta \cdot \text{energy\_kWh} - \gamma \cdot \text{thermal\_violations}
+r^{m}_t = \alpha\,\text{util\_bal} - \beta\,\text{energy} - \gamma\,\text{therm\_viol}
 \end{equation}
 
 
@@ -375,7 +375,7 @@ The forecast is embedded into the Meso-Agent's state as an additional 16-dimensi
 The Meso-Agent learns a thermal-aware scheduling policy that considers GPU temperature when assigning workloads:
 
 \begin{equation}
-\text{score}(g, w) = \alpha \cdot \text{compute\_fit}(g, w) - \beta \cdot \text{thermal\_risk}(g) - \gamma \cdot \text{migration\_cost}(g, w)
+\text{score}(g,w) = \alpha\,\text{cfit}(g,w) - \beta\,\text{trisk}(g) - \gamma\,\text{mcost}(g,w)
 \end{equation}
 
 where thermal\_risk is computed from the current junction temperature relative to the throttling threshold. This policy reduces thermal throttle events by 75\% (Table~\ref{tab:meso}) by proactively spreading heat-intensive workloads across GPUs rather than waiting for throttling to occur.
@@ -470,7 +470,7 @@ The Macro-Agent operates at min--hr timescale, managing cross-cloud fleet decisi
 
 \textbf{Reward}:
 \begin{equation}
-r^{M}_t = -\alpha \cdot \text{cost/tok} - \beta \cdot \text{SLO\_violations} - \gamma \cdot \text{carbon} + \delta \cdot \text{availability}
+r^{M}_t = -\alpha\,\text{cost} - \beta\,\text{SLO\_viol} - \gamma\,\text{CO}_2 + \delta\,\text{avail}
 \end{equation}
 
 
@@ -519,7 +519,7 @@ The Macro-Agent discovers that splitting prefill and decode across clouds yields
 \caption{RL-Discovered Cross-Cloud Routing Strategies}
 \label{tab:routes}
 \centering\scriptsize
-\resizebox{\linewidth}{!}{
+\resizebox{\columnwidth}{!}{
 \begin{tabular}{@{}llcccc@{}}
 \toprule
 \textbf{Strategy} & \textbf{Path} & \textbf{TTFT} & \textbf{\$/M tok} & \textbf{Carbon} & \textbf{Type} \\
@@ -540,7 +540,7 @@ RL-Balanced & OCI$\to$CW & 22\,ms & \$0.55 & 0.28\,kg & Disagg \\
 The Macro-Agent treats spot instance procurement as a multi-armed bandit problem with non-stationary reward distributions:
 
 \begin{equation}
-\text{bid}(p, t) = \alpha \cdot \text{spot\_price}(p, t) + (1-\alpha) \cdot \text{on\_demand}(p) \cdot \text{urgency}(t)
+\text{bid}(p,t) = \alpha\,\text{spot}(p,t) + (1{-}\alpha)\,\text{od}(p)\,\text{urg}(t)
 \end{equation}
 
 where $\alpha$ is learned per-provider. The agent discovers that optimal bid strategies vary significantly: aggressive bidding on Crusoe (stable spot market, 5\% preemption rate) but conservative on AWS (volatile pricing, 18\% preemption rate).
@@ -643,7 +643,7 @@ Each agent tier defines \emph{options}~\cite{sutton1999options} $\omega = \langl
 \caption{Hierarchical Options Definition}
 \label{tab:options}
 \centering\scriptsize
-\resizebox{\linewidth}{!}{
+\resizebox{\columnwidth}{!}{
 \begin{tabular}{@{}llll@{}}
 \toprule
 \textbf{Level} & \textbf{Option} & \textbf{Duration} & \textbf{Termination} \\
@@ -863,7 +863,7 @@ A key concern in hierarchical RL is whether the multi-agent system converges to 
 
 \textbf{Definition}: Define the Lyapunov function $\mathcal{V}(\pi^{\mu}, \pi^{m}, \pi^{M})$ as the weighted sum of per-level Bellman errors:
 \begin{equation}
-\mathcal{V} = \alpha_{\mu} \|Q^{\mu}_\pi - T^{\mu} Q^{\mu}_\pi\|^2 + \alpha_{m} \|Q^{m}_\pi - T^{m} Q^{m}_\pi\|^2 + \alpha_{M} \|Q^{M}_\pi - T^{M} Q^{M}_\pi\|^2
+\mathcal{V} = \textstyle\sum_{\ell \in \{\mu,m,M\}} \alpha_\ell \|Q^\ell_\pi - T^\ell Q^\ell_\pi\|^2
 \end{equation}
 
 where $T^{\ell}$ is the Bellman operator at level $\ell$.
@@ -977,7 +977,7 @@ The deployment includes three safety nets:
 \caption{Hierarchical RL vs.\ Baselines (60-Day Production)}
 \label{tab:e2e}
 \centering\scriptsize
-\resizebox{\linewidth}{!}{
+\resizebox{\columnwidth}{!}{
 \begin{tabular}{@{}lccccc@{}}
 \toprule
 \textbf{System} & \textbf{tok/s} & \textbf{P99 ms} & \textbf{\$/M tok} & \textbf{kWh/M} & \textbf{SLO\%} \\
@@ -1030,7 +1030,7 @@ vs.\ best single-RL & +3.8\% & $-$11.1\% & $-$12.7\% & $-$10.1\% & +2.7pp \\
 \caption{Performance by Model (Hierarchical RL vs.\ Heuristic)}
 \label{tab:permodel}
 \centering\scriptsize
-\resizebox{\linewidth}{!}{
+\resizebox{\columnwidth}{!}{
 \begin{tabular}{@{}llcccc@{}}
 \toprule
 \textbf{Model} & \textbf{System} & \textbf{tok/s} & \textbf{P99 ms} & \textbf{\$/M tok} & \textbf{SLO\%} \\
@@ -1122,7 +1122,7 @@ $-$ Options framework (flat hierarchy) & 7,120 tok/\$ & $-$16.3\% \\
 \caption{Macro-Agent Routing Decisions (60-Day Summary)}
 \label{tab:routing}
 \centering\scriptsize
-\resizebox{\linewidth}{!}{
+\resizebox{\columnwidth}{!}{
 \begin{tabular}{@{}lcccccc@{}}
 \toprule
 \textbf{Time Period} & \textbf{AWS} & \textbf{GCP} & \textbf{OCI} & \textbf{CoreWeave} & \textbf{Lambda} & \textbf{Crusoe} \\
@@ -1264,7 +1264,7 @@ After 60 days of production deployment, we document key operational insights:
 \caption{Comparison with Existing Production RL Systems}
 \label{tab:rlcompare}
 \centering\scriptsize
-\resizebox{\linewidth}{!}{
+\resizebox{\columnwidth}{!}{
 \begin{tabular}{@{}lccccc@{}}
 \toprule
 \textbf{System} & \textbf{Domain} & \textbf{Levels} & \textbf{Constraints} & \textbf{Multi-obj} & \textbf{Production} \\
@@ -1327,7 +1327,7 @@ We document the failure modes observed during the 60-day deployment:
 \caption{Observed Failure Modes and Recovery}
 \label{tab:failures}
 \centering\scriptsize
-\resizebox{\linewidth}{!}{
+\resizebox{\columnwidth}{!}{
 \begin{tabular}{@{}llccl@{}}
 \toprule
 \textbf{Failure Mode} \& \textbf{Frequency} \& \textbf{Detection} \& \textbf{Impact} \& \textbf{Recovery} \\
@@ -1406,7 +1406,7 @@ The system is deployed as a set of Kubernetes pods alongside the vLLM serving in
 \caption{Hierarchical RL vs.\ Industry Optimization Approaches}
 \label{tab:industry}
 \centering\scriptsize
-\resizebox{\linewidth}{!}{
+\resizebox{\columnwidth}{!}{
 \begin{tabular}{@{}lcccc@{}}
 \toprule
 \textbf{Approach} & \textbf{Throughput} & \textbf{Cost} & \textbf{SLO} & \textbf{Adaptivity} \\
