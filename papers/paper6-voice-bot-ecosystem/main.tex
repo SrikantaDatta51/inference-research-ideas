@@ -42,77 +42,71 @@ VoxOps addresses all three through a unified architecture with six technical inn
 \begin{figure*}[!htbp]
 \centering
 \begin{tikzpicture}[
-    mod/.style={rectangle,draw,rounded corners=4pt,minimum height=0.7cm,font=\scriptsize\sffamily,line width=0.5pt,minimum width=2.4cm,text=black},
+    mod/.style={rectangle,draw,rounded corners=4pt,minimum height=0.7cm,font=\scriptsize\sffamily,line width=0.6pt,minimum width=2.4cm,text=black},
     lora/.style={rectangle,draw,rounded corners=2pt,minimum height=0.45cm,font=\tiny\sffamily\bfseries,line width=0.4pt,minimum width=1.8cm,text=black},
-    pipe/.style={rectangle,draw,rounded corners=3pt,minimum height=0.55cm,font=\scriptsize\sffamily,line width=0.4pt,minimum width=2cm,text=black},
-    arr/.style={-{Stealth[length=2mm]},line width=0.5pt,black},
-    darr/.style={-{Stealth[length=2mm]},line width=0.4pt,dashed,black},
+    pipe/.style={rectangle,draw,rounded corners=3pt,minimum height=0.55cm,font=\scriptsize\sffamily,line width=0.5pt,minimum width=2cm,text=black},
+    arr/.style={-{Stealth[length=2mm]},line width=0.6pt,black},
+    darr/.style={-{Stealth[length=2mm]},line width=0.5pt,dashed,black},
 ]
-% Voice Input Pipeline (left column, vertically stacked)
-\node[pipe,fill=asr!8] (mic) at (-5.5,3.5) {Microphone};
-\node[pipe,fill=asr!8] (vad) at (-5.5,2.5) {VAD (8\,ms)};
-\node[pipe,fill=asr!8] (asr) at (-5.5,1.5) {Whisper-v3 ASR};
-\node[pipe,fill=emo!6] (emo) at (-5.5,0.3) {Emotion Detector};
+% Voice Input Pipeline (left column — purple tones)
+\node[pipe,fill=asr!15] (mic) at (-5.5,3.5) {Microphone};
+\node[pipe,fill=asr!18] (vad) at (-5.5,2.5) {VAD (8\,ms)};
+\node[pipe,fill=asr!22] (asr) at (-5.5,1.5) {Whisper-v3 ASR};
+\node[pipe,fill=emo!12] (emo) at (-5.5,0.3) {Emotion Detector};
 
-% Central LLM Backbone (light fill, black text)
-\node[mod,fill=vox!6,minimum width=4.2cm,minimum height=1.2cm,font=\normalsize\sffamily\bfseries] (llm) at (0,2) {Llama-3.1-70B};
+% Central LLM Backbone (blue tint)
+\node[mod,fill=vox!12,minimum width=4.2cm,minimum height=1.2cm,font=\normalsize\sffamily\bfseries] (llm) at (0,2) {Llama-3.1-70B};
 \node[font=\tiny\sffamily,text=black!50] at (0,1.15) {Shared Reasoning Backbone};
 
-% LoRA Adapters (above backbone, evenly spaced)
-\node[lora,fill=cust!6] (l1) at (-2.8,3.8) {billing-v3};
-\node[lora,fill=cust!6] (l2) at (-0.6,3.8) {provision-v2};
-\node[lora,fill=ops!6] (l3) at (1.6,3.8) {noc-triage-v4};
-\node[lora,fill=ops!6] (l4) at (3.8,3.8) {incident-v2};
-\node[font=\tiny\sffamily,text=black!50] at (-1.7,4.3) {CX Adapters};
-\node[font=\tiny\sffamily,text=black!50] at (2.7,4.3) {Ops Adapters};
+% LoRA Adapters (green = CX, orange = Ops)
+\node[lora,fill=cust!15] (l1) at (-2.8,3.8) {billing-v3};
+\node[lora,fill=cust!15] (l2) at (-0.6,3.8) {provision-v2};
+\node[lora,fill=ops!15] (l3) at (1.6,3.8) {noc-triage-v4};
+\node[lora,fill=ops!15] (l4) at (3.8,3.8) {incident-v2};
+\node[font=\tiny\sffamily,text=black!60] at (-1.7,4.3) {CX Adapters};
+\node[font=\tiny\sffamily,text=black!60] at (2.7,4.3) {Ops Adapters};
 
-% Knowledge Graphs (below backbone, spaced apart)
-\node[mod,fill=cust!5,minimum width=2.2cm] (ckg) at (-2.2,-0.1) {Customer KB};
-\node[mod,fill=ops!5,minimum width=2.2cm] (okg) at (2.2,-0.1) {Operations KB};
-\node[mod,fill=vox!4,minimum width=5cm] (shared) at (0,-1.1) {Shared Infra Knowledge Graph (73\% overlap)};
+% Knowledge Graphs (teal/green tones)
+\node[mod,fill=cust!12,minimum width=2.2cm] (ckg) at (-2.2,-0.1) {Customer KB};
+\node[mod,fill=ops!12,minimum width=2.2cm] (okg) at (2.2,-0.1) {Operations KB};
+\node[mod,fill=vox!8,minimum width=5cm] (shared) at (0,-1.1) {Shared Infra Knowledge Graph (73\% overlap)};
 
-% Voice Output Pipeline (right column)
-\node[pipe,fill=tts!6] (gen) at (5.5,2.8) {Response Gen};
-\node[pipe,fill=tts!6] (tts) at (5.5,1.8) {XTTS-v2 TTS};
-\node[pipe,fill=tts!6] (spk) at (5.5,0.8) {Speaker};
+% Voice Output Pipeline (right column — teal tones)
+\node[pipe,fill=tts!15] (gen) at (5.5,2.8) {Response Gen};
+\node[pipe,fill=tts!18] (ttsn) at (5.5,1.8) {XTTS-v2 TTS};
+\node[pipe,fill=tts!12] (spk) at (5.5,0.8) {Speaker};
 
-% RL Agent (bottom center)
-\node[mod,fill=rl2!5,minimum width=3cm] (rl) at (0,-2.3) {\textbf{RL Policy ($\pi_\theta$)}};
+% RL Agent (bottom center — warm red)
+\node[mod,fill=rl2!12,minimum width=3cm] (rl) at (0,-2.3) {\textbf{RL Policy ($\pi_\theta$)}};
 
-% ── Input pipeline arrows (vertical, clean) ──
+% ── Input pipeline arrows ──
 \draw[arr] (mic) -- (vad);
 \draw[arr] (vad) -- (asr);
 \draw[arr] (asr) -- (emo);
-
-% ── ASR to LLM (L-shaped, avoids crossing) ──
 \draw[arr] (asr.east) -- (-3.2,1.5) -- (-3.2,2.0) -- (llm.west);
-
-% ── Emotion to RL (down then right) ──
 \draw[arr] (emo.south) |- (rl.west);
 
-% ── LoRA to LLM (short vertical drops, no overlap) ──
+% ── LoRA to LLM ──
 \draw[darr] (l1.south) -- ++(0,-0.65);
 \draw[darr] (l2.south) -- ++(0,-0.65);
 \draw[darr] (l3.south) -- ++(0,-0.65);
 \draw[darr] (l4.south) -- ++(0,-0.65);
 
-% ── LLM to output pipeline ──
+% ── LLM to output ──
 \draw[arr] (llm.east) -- (gen.west);
-\draw[arr] (gen) -- (tts);
-\draw[arr] (tts) -- (spk);
+\draw[arr] (gen) -- (ttsn);
+\draw[arr] (ttsn) -- (spk);
 
-% ── KBs to LLM (vertical, separated) ──
+% ── KBs to LLM ──
 \draw[darr] (ckg.north) -- ++(0,0.7);
 \draw[darr] (okg.north) -- ++(0,0.7);
-
-% ── KBs to shared graph ──
 \draw[arr] (ckg.south) -- (shared.north -| ckg.south);
 \draw[arr] (okg.south) -- (shared.north -| okg.south);
 
-% ── RL to LLM (vertical, centered) ──
+% ── RL to LLM ──
 \draw[arr] (rl.north) -- ++(0,1.3);
 \end{tikzpicture}
-\caption{VoxOps unified architecture. A single LLM backbone serves both customer experience (CX) and network operations (Ops) via hot-swappable LoRA adapters. The shared infrastructure knowledge graph (73\% entity overlap) enables cross-domain context transfer. Emotion detection feeds the RL conversation policy. Voice pipeline achieves 188\,ms P50 end-to-end latency.}
+\caption{VoxOps unified architecture. A single LLM backbone serves both CX and Ops via hot-swappable LoRA adapters. The shared knowledge graph (73\% overlap) enables cross-domain context. Emotion detection feeds the RL policy. Pipeline achieves 188\,ms P50 latency.}
 \label{fig:arch}
 \end{figure*}
 
@@ -198,48 +192,56 @@ We chose voice-first for three reasons: (1)~\textbf{Bandwidth}: 150 WPM spoken v
 \begin{figure*}[!t]
 \centering
 \begin{tikzpicture}[
-    node distance=0.4cm and 0.6cm,
-    box/.style={draw, rounded corners=3pt, minimum width=1.8cm, minimum height=0.6cm, font=\scriptsize, thick},
-    arrow/.style={-{Stealth[length=2mm]}, thick},
-    label/.style={font=\tiny, text=gray}
+    node distance=0.5cm and 0.8cm,
+    box/.style={draw, rounded corners=3pt, minimum width=2.0cm, minimum height=0.6cm, font=\scriptsize, thick, text=black},
+    arr/.style={-{Stealth[length=2mm]}, thick, black},
+    darr/.style={-{Stealth[length=2mm]}, thick, black, dashed},
+    lbl/.style={font=\tiny, text=black!60}
 ]
-% Audio pipeline
-\node[box, fill=blue!10] (mic) {Microphone};
-\node[box, fill=blue!10, right=0.5cm of mic] (vad) {Silero VAD};
-\node[box, fill=blue!10, right=0.5cm of vad] (asr) {Whisper-v3};
+% === ROW 1: Audio Pipeline (top) ===
+\node[box, fill=blue!15] (mic) at (0,0) {Microphone};
+\node[box, fill=blue!18, right=0.8cm of mic] (vad) {Silero VAD};
+\node[box, fill=blue!22, right=0.8cm of vad] (asr) {Whisper-v3};
+\node[box, fill=purple!15, right=0.8cm of asr] (llm) {Llama-70B};
+\node[box, fill=cyan!15, right=0.8cm of llm] (ttsn) {XTTS-v2};
+\node[box, fill=cyan!12, right=0.8cm of ttsn] (spk) {Speaker};
 
-% Intent pipeline
-\node[box, fill=green!10, below=0.6cm of asr] (intent) {Intent Classifier};
-\node[box, fill=green!10, right=0.5cm of intent] (prefill) {Spec. Prefill};
+% === ROW 2: Intent Pipeline (middle) ===
+\node[box, fill=green!15, below=1.0cm of asr] (intent) {Intent Classifier};
+\node[box, fill=green!18, right=0.8cm of intent] (prefill) {Spec. Prefill};
 
-% LLM pipeline
-\node[box, fill=orange!10, right=0.5cm of asr] (llm) {Llama-70B};
-\node[box, fill=orange!10, right=0.5cm of llm] (tts) {XTTS-v2};
-\node[box, fill=orange!10, right=0.5cm of tts] (spk) {Speaker};
+% === ROW 3: Emotion + Context (bottom) ===
+\node[box, fill=red!12, below=1.0cm of intent, xshift=-1.5cm] (emo) {Emotion Det.};
+\node[box, fill=orange!12, below=1.0cm of intent, xshift=1.5cm] (rl) {RL Policy};
+\node[box, fill=yellow!15, below=1.0cm of prefill, xshift=1.5cm] (kg) {Knowledge Graph};
 
-% Emotion + RL
-\node[box, fill=red!10, below=0.6cm of llm] (emo) {Emotion Det.};
-\node[box, fill=purple!10, below=0.6cm of emo] (rl) {RL Policy};
+% === Arrows: Audio pipeline ===
+\draw[arr] (mic) -- (vad);
+\draw[arr] (vad) -- (asr);
+\draw[arr] (asr) -- (llm);
+\draw[arr] (llm) -- (ttsn);
+\draw[arr] (ttsn) -- (spk);
 
-% Knowledge Graph
-\node[box, fill=yellow!10, below=0.6cm of intent] (kg) {Knowledge Graph};
+% === Arrows: Intent branch (down from ASR, right to prefill, up to LLM) ===
+\draw[arr] (asr.south) -- (intent.north);
+\draw[arr] (intent) -- (prefill);
+\draw[darr] (prefill.north) -- ++(0,0.55) -| (llm.south);
 
-% Arrows
-\draw[arrow] (mic) -- (vad); \draw[arrow] (vad) -- (asr);
-\draw[arrow] (asr) -- (llm); \draw[arrow] (llm) -- (tts); \draw[arrow] (tts) -- (spk);
-\draw[arrow] (asr) -- (intent); \draw[arrow] (intent) -- (prefill);
-\draw[arrow, dashed] (prefill) -- (llm);
-\draw[arrow] (mic) |- (emo); \draw[arrow] (emo) -- (rl);
-\draw[arrow, dashed] (rl) -- (llm);
-\draw[arrow, dashed] (kg) -- (llm);
-\draw[arrow] (asr) |- (kg);
+% === Arrows: Emotion branch ===
+\draw[arr] (asr.south west) -- ++(0,-0.4) -| (emo.north);
+\draw[arr] (emo) -- (rl);
+\draw[darr] (rl.north) -- ++(0,0.5) -| (llm.south west);
 
-% Timing annotations
-\node[label, above=0.05cm of vad] {8ms};
-\node[label, above=0.05cm of asr] {80ms};
-\node[label, above=0.05cm of intent] {20ms};
-\node[label, above=0.05cm of llm] {60ms};
-\node[label, above=0.05cm of tts] {30ms};
+% === Arrows: Knowledge Graph ===
+\draw[darr] (kg.north) -- ++(0,0.5) -| (llm.south east);
+\draw[arr] (asr.south east) -- ++(0,-0.4) -| (kg.north west);
+
+% === Timing annotations ===
+\node[lbl, above=0.05cm of vad] {8ms};
+\node[lbl, above=0.05cm of asr] {80ms};
+\node[lbl, above=0.05cm of llm] {60ms};
+\node[lbl, above=0.05cm of ttsn] {30ms};
+\node[lbl, above=0.05cm of intent] {20ms};
 \end{tikzpicture}
 \caption{VoxOps streaming pipeline. Three concurrent pipelines (audio, intent, emotion) execute in parallel. Speculative prefill begins on partial ASR transcript, achieving 188\,ms end-to-end latency. Dashed arrows indicate conditional flows.}
 \label{fig:pipeline}
@@ -415,9 +417,7 @@ The 200 most common response openings (``I understand your concern\ldots'', ``Le
 
 \textbf{Reward function} (multi-objective):
 \begin{equation}
-\resizebox{0.88\linewidth}{!}{$
 R = w_1\text{CSAT} + w_2\text{FCR} - w_3\text{AHT} - w_4\text{Esc} + w_5\Delta\text{Emo} - w_6 C
-$
 \end{equation}
 
 \textbf{Key insight}: $\Delta\text{Emo}$ (emotion improvement turn-over-turn) is unique to VoxOps. An angry customer who is calmed AND resolved produces 4.7$\times$ higher retention than a quickly-resolved but still-frustrated customer. Traditional bots optimize AHT; VoxOps optimizes \emph{emotional trajectory}.
@@ -453,30 +453,6 @@ $
 \label{fig:emotion}
 \end{figure}
 
-
-
-
-\begin{figure}[!t]
-\centering
-\begin{tikzpicture}
-\begin{axis}[
-    width=\linewidth, height=5cm,
-    xlabel={Conversation Turn},
-    ylabel={Emotion Score (0=angry, 1=satisfied)},
-    legend style={font=\tiny, at={(0.98,0.02)}, anchor=south east},
-    grid=major, grid style={gray!20},
-    ymin=0, ymax=1.05,
-    xmin=0, xmax=10,
-]
-\addplot[red, thick, mark=triangle*] coordinates {(1,0.2)(2,0.25)(3,0.3)(4,0.35)(5,0.5)(6,0.55)(7,0.6)(8,0.55)(9,0.5)(10,0.5)};
-\addplot[blue, thick, mark=square*] coordinates {(1,0.2)(2,0.3)(3,0.4)(4,0.5)(5,0.65)(6,0.75)(7,0.85)(8,0.9)(9,0.92)(10,0.95)};
-\addplot[gray, dashed] coordinates {(0,0.7)(10,0.7)};
-\legend{AHT-optimized, VoxOps (emotion RL), Satisfaction threshold}
-\end{axis}
-\end{tikzpicture}
-\caption{Emotional trajectory comparison. VoxOps's emotion-aware RL (blue) achieves monotonically improving emotional state by investing in early empathy turns, while AHT-optimized bots (red) plateau at sub-threshold satisfaction.}
-\label{fig:emotion}
-\end{figure}
 
 
 \begin{algorithm}[!t]
@@ -616,29 +592,6 @@ Each of the 25 supported languages follows a standardized fine-tuning pipeline:
 \end{enumerate}
 
 Total fine-tuning compute: 480 GPU-hours across all 25 languages (19.2 GPU-hours average per language).
-
-
-
-\begin{figure}[!t]
-\centering
-\begin{tikzpicture}
-\begin{axis}[
-    width=\linewidth, height=5cm,
-    xlabel={Conversation Turn},
-    ylabel={Emotion Score},
-    legend style={font=\tiny, at={(0.98,0.02)}, anchor=south east},
-    grid=major, grid style={gray!20},
-    ymin=0, ymax=1.05, xmin=0, xmax=10,
-]
-\addplot[red, thick, mark=triangle*] coordinates {(1,0.2)(2,0.25)(3,0.3)(4,0.35)(5,0.5)(6,0.55)(7,0.6)(8,0.55)(9,0.5)(10,0.5)};
-\addplot[blue, thick, mark=square*] coordinates {(1,0.2)(2,0.3)(3,0.4)(4,0.5)(5,0.65)(6,0.75)(7,0.85)(8,0.9)(9,0.92)(10,0.95)};
-\addplot[gray, dashed] coordinates {(0,0.7)(10,0.7)};
-\legend{AHT-optimized, VoxOps (emotion RL), Satisfaction threshold}
-\end{axis}
-\end{tikzpicture}
-\caption{Emotional trajectory comparison. VoxOps's emotion-aware RL achieves monotonically improving emotional state by investing in early empathy turns, while AHT-optimized bots plateau at sub-threshold satisfaction.}
-\label{fig:emotion}
-\end{figure}
 
 \subsection{Emotion Detection Architecture}
 
@@ -954,25 +907,7 @@ The knowledge graph exhibits compounding returns: retrieval precision improves l
 \end{figure}
 
 
-\begin{figure}[!t]
-\centering
-\begin{tikzpicture}
-\begin{axis}[
-    width=\linewidth, height=4.5cm,
-    xlabel={Days Deployed},
-    ylabel={Count ($\times 10^3$)},
-    legend style={font=\tiny, at={(0.02,0.98)}, anchor=north west},
-    grid=major, grid style={gray!20}, ymin=0,
-]
-\addplot[blue, ultra thick] coordinates {(0,12)(15,28)(30,58)(45,78)(60,102)(75,118)(90,135)};
-\addlegendentry{Entities}
-\addplot[red, thick, dashed] coordinates {(0,28)(15,95)(30,185)(45,250)(60,320)(75,375)(90,420)};
-\addlegendentry{Relations}
-\end{axis}
-\end{tikzpicture}
-\caption{Knowledge graph growth over 90-day deployment. Entity and relation counts grow linearly while retrieval precision improves logarithmically (not shown), indicating compounding returns from accumulated knowledge.}
-\label{fig:kggrowth}
-\end{figure}
+
 
 \subsection{Security and Compliance}
 

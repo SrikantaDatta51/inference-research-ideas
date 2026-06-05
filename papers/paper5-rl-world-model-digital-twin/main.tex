@@ -85,94 +85,106 @@ Chen et al.~\cite{chen2018neural} introduced Neural ODEs, parameterizing continu
 \begin{figure*}[!t]
 \centering
 \begin{tikzpicture}[
-    node distance=0.4cm and 0.5cm,
-    level/.style={draw, rounded corners=4pt, minimum height=0.65cm, font=\scriptsize\sffamily, thick, text=black},
-    comp/.style={draw, rounded corners=2pt, minimum height=0.45cm, font=\tiny\sffamily, thick, text=black},
-    engine/.style={draw, rounded corners=5pt, minimum height=0.8cm, font=\scriptsize\sffamily\bfseries, thick, text=black},
-    output/.style={draw, rounded corners=3pt, minimum height=0.55cm, font=\tiny\sffamily, thick, text=black},
-    arr/.style={-{Stealth[length=2mm]}, thick, black},
-    darr/.style={-{Stealth[length=2mm]}, thick, black, dashed},
-    brace/.style={decorate, decoration={brace, amplitude=4pt, mirror}, thick, black},
+    lev/.style={draw, rounded corners=4pt, minimum height=0.65cm, font=\scriptsize\sffamily\bfseries, line width=0.6pt, text=black},
+    sub/.style={font=\tiny\sffamily, text=black!55},
+    eng/.style={draw, rounded corners=5pt, minimum height=1.2cm, font=\small\sffamily\bfseries, line width=0.8pt, text=black},
+    app/.style={draw, rounded corners=3pt, minimum height=0.6cm, font=\scriptsize\sffamily, line width=0.5pt, text=black},
+    tel/.style={draw, rounded corners=3pt, minimum height=0.55cm, font=\scriptsize\sffamily, line width=0.5pt, text=black},
+    arr/.style={-{Stealth[length=2mm]}, line width=0.6pt, black},
+    darr/.style={-{Stealth[length=2mm]}, line width=0.5pt, black, dashed},
+    feed/.style={-{Stealth[length=1.5mm]}, line width=0.4pt, black, densely dotted},
 ]
-% ── LEVEL 1: NODE TWINS (bottom of hierarchy) ──
-\node[level, fill=blue!8, minimum width=2.6cm] (n1) at (0,0) {Node Twin 1};
-\node[level, fill=blue!8, minimum width=2.6cm, right=0.3cm of n1] (n2) {Node Twin 2};
-\node[level, fill=blue!8, minimum width=1.2cm, right=0.3cm of n2] (ndots) {$\cdots$};
-\node[level, fill=blue!8, minimum width=2.6cm, right=0.3cm of ndots] (nn) {Node Twin $N$};
+% ═══════ HIERARCHY (center, 4 rows) ═══════
 
-% Node detail boxes (inside Node Twin 1)
-\node[comp, fill=blue!4, below=0.15cm of n1, xshift=-0.7cm, minimum width=1.0cm] (gpu1) {\tiny 8$\times$GPU};
-\node[comp, fill=blue!4, below=0.15cm of n1, xshift=0.7cm, minimum width=1.0cm] (kv1) {\tiny KV-Cache};
+% L4 Fleet Twin
+\node[lev, fill=red!15, minimum width=9.5cm] (fleet) at (4,4.4) {Fleet Twin};
+\node[sub, anchor=west] at (fleet.east) [right=0.15cm] {hr--day};
+\node[sub] at (4,4.0) {Cross-DC Routing \textbullet{} Workload Migration \textbullet{} Carbon-Aware Scheduling};
 
-% ── LEVEL 2: RACK TWINS ──
-\node[level, fill=green!10, minimum width=5.2cm, above=1.4cm of n1, xshift=1.5cm] (r1) {Rack Twin 1 (Thermal + ToR + Airflow)};
-\node[level, fill=green!10, minimum width=3.8cm, above=1.4cm of nn, xshift=-0.3cm] (r2) {Rack Twin $R$};
+% L3 Datacenter Twin
+\node[lev, fill=orange!18, minimum width=9.5cm] (dc) at (4,3.1) {Datacenter Twin};
+\node[sub, anchor=west] at (dc.east) [right=0.15cm] {min--hr};
+\node[sub] at (4,2.7) {CRAH Units \textbullet{} Power Distribution \textbullet{} Cooling Loops \textbullet{} Network Fabric};
 
-% ── LEVEL 3: DC TWIN ──
-\node[level, fill=orange!10, minimum width=7cm, above=0.9cm of r1, xshift=2.2cm] (dc) {Datacenter Twin (Cooling Loops + Power Distribution + CRAH)};
+% L2 Rack Twins
+\node[lev, fill=green!20, minimum width=4.4cm] (r1) at (1.8,1.8) {Rack Twin 1};
+\node[lev, fill=green!20, minimum width=4.4cm] (r2) at (6.2,1.8) {Rack Twin $R$};
+\node[sub, anchor=west] at (r2.east) [right=0.15cm] {s--min};
+\node[sub] at (1.8,1.4) {Thermal + ToR + Airflow};
+\node[sub] at (6.2,1.4) {Power + Cooling};
 
-% ── LEVEL 4: FLEET TWIN ──
-\node[level, fill=red!8, minimum width=7cm, above=0.7cm of dc] (fleet) {Fleet Twin (Cross-DC Routing + Workload Migration + Carbon Opt.)};
+% L1 Node Twins
+\node[lev, fill=blue!18, minimum width=2.0cm] (n1) at (0.5,0.5) {Node 1};
+\node[lev, fill=blue!18, minimum width=2.0cm] (n2) at (2.8,0.5) {Node 2};
+\node[lev, fill=blue!15, minimum width=0.6cm] (nd) at (4.2,0.5) {$\cdots$};
+\node[lev, fill=blue!18, minimum width=2.0cm] (nn) at (5.6,0.5) {Node $N_{r1}$};
+\node[lev, fill=blue!15, minimum width=0.6cm] (nd2) at (7.0,0.5) {$\cdots$};
+\node[lev, fill=blue!18, minimum width=1.5cm] (nnr) at (8.0,0.5) {Node $N$};
+\node[sub, anchor=west] at (nnr.east) [right=0.15cm] {ms--s};
 
-% Level labels (left side)
-\node[font=\tiny\sffamily\bfseries, text=blue!70, left=0.2cm of n1] {L1};
-\node[font=\tiny\sffamily\bfseries, text=green!50!black, left=0.2cm of r1] {L2};
-\node[font=\tiny\sffamily\bfseries, text=orange!70!black, left=0.2cm of dc] {L3};
-\node[font=\tiny\sffamily\bfseries, text=red!70!black, left=0.2cm of fleet] {L4};
+% L1 sub-components
+\node[sub] at (0.5,0.05) {8$\times$B200 + KV};
+\node[sub] at (2.8,0.05) {8$\times$B200 + KV};
 
-% Timescale labels (right side)
-\node[font=\tiny\itshape, text=black!60, right=0.15cm of nn] {ms--s};
-\node[font=\tiny\itshape, text=black!60, right=0.15cm of r2] {s--min};
-\node[font=\tiny\itshape, text=black!60] at (dc.east -| r2.east) [right=0.15cm] {min--hr};
-\node[font=\tiny\itshape, text=black!60] at (fleet.east -| r2.east) [right=0.15cm] {hr--day};
+% Level labels
+\node[font=\scriptsize\sffamily\bfseries, text=red!60] at (-1.0,4.4) {L4};
+\node[font=\scriptsize\sffamily\bfseries, text=orange!60] at (-1.0,3.1) {L3};
+\node[font=\scriptsize\sffamily\bfseries, text=green!50!black] at (-1.0,1.8) {L2};
+\node[font=\scriptsize\sffamily\bfseries, text=blue!60] at (-1.0,0.5) {L1};
 
-% ── Upward aggregation arrows ──
-\draw[arr] (n1.north) -- (r1.south -| n1.north);
-\draw[arr] (n2.north) -- (r1.south -| n2.north);
-\draw[arr] (nn.north) -- (r2.south);
-\draw[arr] (r1.north) -- (dc.south -| r1.north);
-\draw[arr] (r2.north) -- (dc.south -| r2.north);
+% Upward arrows
+\draw[arr] (n1.north) -- ++(0,0.45);
+\draw[arr] (n2.north) -- ++(0,0.45);
+\draw[arr] (nn.north) -- ++(0,0.45);
+\draw[arr] (r1.north) -- ++(0,0.45);
+\draw[arr] (r2.north) -- ++(0,0.45);
 \draw[arr] (dc.north) -- (fleet.south);
 
-% ── TELEMETRY INPUT (below Level 1) ──
-\node[level, fill=gray!8, minimum width=11.8cm, below=1.0cm of ndots] (telem) {Production Telemetry: DCGM (47 metrics/GPU) + vLLM (23 metrics/inst) + Network (12 metrics/port)};
-\draw[arr] (telem.north -| n1.south) -- (n1.south);
-\draw[arr] (telem.north -| n2.south) -- (n2.south);
-\draw[arr] (telem.north -| nn.south) -- (nn.south);
+% ═══════ TELEMETRY (bottom) ═══════
+\node[tel, fill=gray!12, minimum width=9.5cm] (telem) at (4,-0.6)
+  {Telemetry: DCGM (47 met/GPU) + vLLM (23 met/inst) + Network (12 met/port)};
+\draw[arr] (telem.north -| n1) -- (n1.south);
+\draw[arr] (telem.north -| n2) -- (n2.south);
+\draw[arr] (telem.north -| nn) -- (nn.south);
+\draw[arr] (telem.north -| nnr) -- (nnr.south);
 
-% ── NEURAL SDE ENGINE (right side) ──
-\node[engine, fill=purple!10, minimum width=3.2cm, minimum height=1.6cm] (sde) at (14.5,2.2)
-  {\begin{tabular}{c}\textbf{Neural SDE Engine}\\[2pt]$dz = f_\theta(z,a)\,dt$\\$+ g_\phi(z)\,dW_t$\end{tabular}};
+% ═══════ NEURAL SDE ENGINE (right side) ═══════
+\node[eng, fill=purple!15, minimum width=4.5cm, minimum height=2.0cm] (sde) at (13.2,2.5)
+  {\begin{tabular}{c}Neural SDE Engine\\[3pt]$dz = f_\theta(z,a)\,dt + g_\phi(z)\,dW_t$\\[2pt]{\scriptsize $d_z{=}128$ latent, $d_s{=}176$ state}\end{tabular}};
 
-% ── OUTPUT MODULES (around SDE) ──
-\node[output, fill=yellow!12, minimum width=2.8cm, above=0.6cm of sde] (causal) {Causal Counterfactual};
-\node[output, fill=cyan!10, minimum width=2.8cm, below=0.6cm of sde] (dreamer) {DreamerV3-Infra (RL)};
-\node[output, fill=pink!10, minimum width=2.8cm, above=0.6cm of causal] (anomaly) {Anomaly Detection};
-\node[output, fill=lime!10, minimum width=2.8cm, below=0.6cm of dreamer] (foundation) {Foundation Model};
+% ═══════ 4 APPLICATION MODULES ═══════
+\node[app, fill=pink!18, minimum width=3.8cm] (anom) at (13.2,4.8) {Anomaly Detection};
+\node[sub, right=0.1cm of anom, anchor=west] {12--47 min early};
 
-% ── Connect hierarchy to SDE ──
-\draw[darr] (dc.east) -- ++(1.2,0) |- (sde.west);
-\draw[darr] (fleet.east) -- ++(0.8,0) |- (sde.north west);
+\node[app, fill=yellow!18, minimum width=3.8cm] (caus) at (13.2,4.1) {Causal Counterfactual};
+\node[sub, right=0.1cm of caus, anchor=west] {do-calculus, $<$50\,ms};
 
-% ── SDE to outputs ──
-\draw[arr] (sde.north) -- (causal.south);
-\draw[arr] (sde.south) -- (dreamer.north);
-\draw[arr] (causal.north) -- (anomaly.south);
-\draw[arr] (dreamer.south) -- (foundation.north);
+\node[app, fill=cyan!15, minimum width=3.8cm] (drmr) at (13.2,0.9) {DreamerV3-Infra (RL)};
+\node[sub, right=0.1cm of drmr, anchor=west] {1000$\times$ real-time};
 
-% ── Feedback from RL to hierarchy ──
-\draw[arr, densely dotted] (dreamer.west) -| ($(r1.north east) + (0.3,0.3)$) -- (dc.south -| r1.north east);
+\node[app, fill=lime!15, minimum width=3.8cm] (fmod) at (13.2,0.2) {Foundation Model};
+\node[sub, right=0.1cm of fmod, anchor=west] {$<$1\% data transfer};
 
-% ── Annotations ──
-\node[font=\tiny\itshape, text=black!50, below=0.05cm of causal] {do-calculus, $<$50ms};
-\node[font=\tiny\itshape, text=black!50, above=0.05cm of dreamer] {1000$\times$ real-time};
-\node[font=\tiny\itshape, text=black!50, below=0.05cm of anomaly] {12--47 min early warning};
-\node[font=\tiny\itshape, text=black!50, above=0.05cm of foundation] {$<$1\% data transfer};
+% SDE to applications
+\draw[arr] (sde.north) -- ++(0,0.3) -- (caus.south);
+\draw[arr] (caus.north) -- (anom.south);
+\draw[arr] (sde.south) -- ++(0,-0.3) -- (drmr.north);
+\draw[arr] (drmr.south) -- (fmod.north);
 
-% ── Brace for hierarchy ──
-\draw[brace] (-1.3, -0.4) -- (-1.3, 4.8) node[midway, left=0.15cm, font=\tiny\sffamily, text=black, rotate=90, anchor=south] {Hierarchical Digital Twin};
+% Hierarchy → SDE
+\draw[darr, line width=0.7pt] (dc.east) -- ++(0.5,0) |- (sde.west);
+\draw[darr, line width=0.7pt] (fleet.east) -- ++(0.3,0) |- ([yshift=0.3cm]sde.west);
+
+% Feedback: RL → hierarchy
+\draw[feed] (drmr.west) -- ++(-1.0,0) |- ([yshift=-0.15cm]dc.east);
+
+% Downward constraint arrow (side annotation)
+\draw[arr, red!50, line width=0.4pt] ([xshift=-0.3cm]fleet.south) -- ++(0,-0.3);
+\draw[arr, red!50, line width=0.4pt] ([xshift=-0.3cm]dc.south) -- ++(0,-0.3);
+\node[font=\tiny\itshape, text=red!40, rotate=90, anchor=south] at (-0.6,3.7) {constraints $\downarrow$};
+\node[font=\tiny\itshape, text=blue!40, rotate=90, anchor=north] at (-0.3,3.7) {state $\uparrow$};
 \end{tikzpicture}
-\caption{InferTwin system architecture. \textbf{Left}: Four-level hierarchical digital twin mirrors datacenter physical structure---each level operates at its natural timescale, with state aggregating upward and constraints propagating downward. \textbf{Right}: Neural SDE engine powers four applications: anomaly detection (12--47 min early warning), causal counterfactual queries ($<$50 ms), DreamerV3-Infra offline RL (1000$\times$ real-time training), and a foundation model for cross-facility transfer.}
+\caption{InferTwin system architecture. \textbf{Left}: Four-level hierarchical digital twin (L1--L4) mirrors the physical datacenter---state aggregates upward while constraints propagate downward at each level's natural timescale. \textbf{Right}: Neural SDE engine ($d_z{=}128$ latent, $d_s{=}176$ state) powers four applications: anomaly detection (12--47\,min early warning), causal counterfactual queries ($<$50\,ms), DreamerV3-Infra offline RL (1000$\times$ real-time training), and cross-facility foundation model transfer.}
 \label{fig:arch}
 \end{figure*}
 
@@ -578,6 +590,7 @@ Critical (85--95\%) & $\to$ Emergency & Occupancy $>$95\% & $-$15\% throughput \
 Emergency ($>$95\%) & $\to$ OOM & Occupancy $>$99\% & Request rejection \\
 \bottomrule
 \end{tabular}
+}
 \end{table}
 
 The world model learns that transitions from Normal to Pressure are gradual (minutes), but Pressure to Emergency can be sudden (seconds) when a batch of long-context requests arrives simultaneously. This asymmetry is why threshold-based monitoring fails---by the time a 95\% threshold fires, OOM is often seconds away.
