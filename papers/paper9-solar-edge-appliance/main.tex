@@ -1,6 +1,6 @@
 \documentclass[conference,10pt,letterpaper]{IEEEtran}
 \usepackage{amsmath,amssymb,graphicx,booktabs,algorithm,algorithmic,tikz,pgfplots,xcolor,hyperref,multirow}
-\usetikzlibrary{arrows.meta,positioning,calc,decorations.pathreplacing,shapes.geometric}
+\usetikzlibrary{arrows.meta,positioning,calc,decorations.pathreplacing,shapes.geometric,fit}
 \pgfplotsset{compat=1.18}
 
 \title{SolarInfer: Energy-Efficient Edge Inference Appliances\\with Photovoltaic Power, Detailed Hardware BOMs,\\and Sub-\$0.001/Token Economics}
@@ -51,7 +51,7 @@ We present \textbf{SolarInfer}, a fully integrated, solar-powered edge inference
 \draw[arr] (grid) -- (inv); \draw[arr] (inv) -- ++(0,0.6) -| (gpu1);
 \draw[arr] (inv) -- ++(0,0.6) -| (gpu2);
 \draw[arr] (gpu1) -- (dpu); \draw[arr] (gpu2) -- (ctrl);
-\draw[arr] (gpu1.east) -- (sw.west |- gpu1); \draw[arr] (gpu2.east) -- (sw);
+\draw[arr] (gpu1) -- (sw); \draw[arr] (gpu2) -- (sw);
 \draw[arr] (dpu) -- (ctrl);
 \end{tikzpicture}
 \caption{SolarInfer Edge SKU physical architecture showing power flow (bottom), compute layer (middle), and control/network layer (top). Solar array feeds through BESS and inverter to dual GPU servers, managed by DPU-based telemetry and the Zetta control plane.}
@@ -102,8 +102,8 @@ We present \textbf{SolarInfer}, a fully integrated, solar-powered edge inference
 
 % Power arrows
 \draw[arr] (pv) -- (inv); \draw[arr] (bess) -- (inv);
-\draw[arr, orange!70!black] (inv) -- ++(0,0.65) -| (srv1.south);
-\draw[arr, orange!70!black] (inv) -- ++(0,0.65) -| (srv2.south);
+\draw[arr, orange!70!black] (inv) -- ++(0,0.35) -| (srv1);
+\draw[arr, orange!70!black] (inv) -- ++(0,0.35) -| (srv2);
 
 % Network arrows
 \draw[arr] (srv1.east) -- (srv2.west);
@@ -288,8 +288,8 @@ Gaudi 3 & \$1.72 & \$1.28 & 26\% \\
 \centering
 \begin{tikzpicture}
 \begin{axis}[
-    width=\linewidth, height=5.5cm,
-    ybar, bar width=8pt,
+    width=\columnwidth, height=5cm,
+    ybar, bar width=7pt,
     xlabel={},
     ylabel={Cost per M Tokens (\$)},
     symbolic x coords={H200 Grid, B200 Grid, MI300X Grid, MI300X Solar, MI355X Grid, MI355X Solar},
@@ -449,9 +449,10 @@ Fire suppression & FM-200 clean agent system & 1 & \$5,500 \\
 
 \begin{figure}[!t]
 \centering
+\resizebox{\columnwidth}{!}{%
 \begin{tikzpicture}
 \begin{axis}[
-    width=\linewidth, height=5cm,
+    width=8cm, height=5cm,
     xlabel={Total CAPEX (\$K)},
     ylabel={Monthly Revenue (\$K)},
     grid=major, grid style={gray!15},
@@ -474,9 +475,9 @@ Fire suppression & FM-200 clean agent system & 1 & \$5,500 \\
 
 % Payback line (6.2 month)
 \addplot[black, dashed, thin, domain=0:750] {x/6.2};
-\node[font=\tiny, text=black!50, rotate=30] at (axis cs:500,70) {6.2-mo payback};
 \end{axis}
-\end{tikzpicture}
+\end{tikzpicture}%
+}
 \caption{SKU portfolio: CAPEX vs.\ monthly revenue. AMD-based SKUs (filled markers) achieve higher revenue-to-CAPEX ratio than NVIDIA equivalents (hollow markers).}
 \label{fig:skumap}
 \end{figure}
@@ -525,6 +526,7 @@ Each SolarInfer appliance implements a four-stage power architecture designed fo
 
 \begin{figure}[!t]
 \centering
+\resizebox{\columnwidth}{!}{%
 \begin{tikzpicture}[
     box/.style={draw, rounded corners=3pt, minimum height=0.5cm, font=\tiny\sffamily\bfseries, text=black, line width=0.5pt},
     arr/.style={-{Stealth[length=1.5mm]}, line width=0.6pt},
@@ -565,7 +567,8 @@ Each SolarInfer appliance implements a four-stage power architecture designed fo
 \node[lbl] at (1.5,2.3) {99.9\%};
 \node[lbl] at (1.5,0.5) {nighttime};
 \node[lbl] at (1.5,-0.3) {0.1\%};
-\end{tikzpicture}
+\end{tikzpicture}%
+}
 \caption{Power distribution in the Edge SKU. Solar provides 99.9\% of energy. GPUs consume 81\% of total power. Grid backup is used $<$9 hours per year.}
 \label{fig:powerflow}
 \end{figure}

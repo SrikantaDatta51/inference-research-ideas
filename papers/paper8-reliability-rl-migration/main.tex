@@ -164,6 +164,7 @@ ReliableInfer defines seven infrastructure layers, each with distinct failure mo
 
 \begin{figure}[!t]
 \centering
+\resizebox{\columnwidth}{!}{%
 \begin{tikzpicture}[
     layer/.style={draw, rounded corners=2pt, minimum height=0.45cm, font=\tiny\sffamily\bfseries, text=black, line width=0.4pt},
     arr/.style={-{Stealth[length=1.2mm]}, line width=0.3pt, black!50},
@@ -192,7 +193,8 @@ ReliableInfer defines seven infrastructure layers, each with distinct failure mo
 % MTTR arrow
 \draw[arr, line width=0.6pt] (5.2,0) -- (5.2,3.5);
 \node[font=\tiny\sffamily\bfseries, text=black!60, rotate=90] at (5.6,1.75) {MTTR increases};
-\end{tikzpicture}
+\end{tikzpicture}%
+}
 \caption{Seven-layer failure taxonomy. Lower layers have smaller blast radius and faster recovery. Failures escalate upward when unresolved.}
 \label{fig:taxonomy}
 \end{figure}
@@ -360,8 +362,8 @@ We use Conservative Q-Learning (CQL)~\cite{kumar2020conservative} because DC-lev
 \draw[arr] (t1a.north) -- (t2.south west);
 \draw[arr] (t1b.north) -- (t2.south east);
 \draw[arr] (t2.north) -- (t3.south);
-\draw[darr] (t3.south west) -- ++(0,-0.5) -| (t1a.north west);
-\draw[darr] (t3.south east) -- ++(0,-0.5) -| (t1b.north east);
+\draw[darr] (t3.south west) -- ++(0,-0.4) -| ([xshift=-3pt]t1a.north);
+\draw[darr] (t3.south east) -- ++(0,-0.4) -| ([xshift=3pt]t1b.north);
 
 % Labels
 \node[font=\tiny, text=black!60] at (-2.5,2.2) {escalate};
@@ -530,6 +532,7 @@ Restore time & 220--500\,ms & 250--550\,ms & 180--420\,ms \\
 
 \begin{figure}[!t]
 \centering
+\resizebox{\columnwidth}{!}{%
 \begin{tikzpicture}[
     phase/.style={draw, rounded corners=3pt, minimum width=1.6cm, minimum height=0.55cm, font=\tiny\sffamily\bfseries, text=black, line width=0.5pt},
     arr/.style={-{Stealth[length=1.5mm]}, line width=0.5pt, black},
@@ -564,7 +567,8 @@ Restore time & 220--500\,ms & 250--550\,ms & 180--420\,ms \\
 \node[font=\tiny\sffamily, text=green!60!black] at (0.9,-1.15) {Serving};
 \node[font=\tiny\sffamily, text=red!60] at (4.2,-1.15) {Downtime: 1.3s};
 \node[font=\tiny\sffamily, text=green!60!black] at (7.2,-1.15) {Serving};
-\end{tikzpicture}
+\end{tikzpicture}%
+}
 \caption{CRIU migration pipeline. Pre-staging overlaps with active serving; user-visible downtime is only 1.3\,s for intra-vendor migration.}
 \label{fig:criu}
 \end{figure}
@@ -1049,7 +1053,8 @@ where $\mu_i(t) = \alpha x_i(t) + (1-\alpha)\mu_i(t-1)$ and $\sigma_i(t)$ is the
 \draw[arr] (lstm.south) |- (ppo.west);
 
 % DPU label
-\node[draw, dashed, rounded corners=5pt, fit=(raw)(norm)(anom)(corr)(lstm), inner sep=4pt, label={[font=\tiny\sffamily\bfseries,text=black!70]below:AMD Pensando DPU}] {};
+\node[font=\tiny\sffamily\bfseries, text=black!60] at (-1.1,-0.5) {AMD Pensando DPU};
+\draw[dashed, rounded corners=5pt, black!40] (-2.8,-0.7) rectangle (0.8,3.2);
 \end{tikzpicture}
 \caption{Signal processing pipeline on DPU. Raw metrics flow through four stages before reaching RL agents. LSTM predictor runs on DPU ARM cores.}
 \label{fig:signal}
@@ -1509,6 +1514,7 @@ ReliableInfer exports comprehensive observability:
 
 \begin{figure}[!t]
 \centering
+\resizebox{\columnwidth}{!}{%
 \begin{tikzpicture}[
     decision/.style={draw, diamond, aspect=2, minimum width=1.2cm, minimum height=0.6cm, font=\tiny\sffamily\bfseries, text=black, line width=0.5pt, inner sep=1pt},
     action/.style={draw, rounded corners=3pt, minimum width=1.5cm, minimum height=0.4cm, font=\tiny\sffamily\bfseries, text=black, line width=0.5pt},
@@ -1532,7 +1538,8 @@ ReliableInfer exports comprehensive observability:
 \node[lbl] at (-2.5,1.0) {$<$100ms};
 \node[lbl] at (0,0.1) {60s timeout};
 \node[lbl] at (2.5,1.0) {Human required};
-\end{tikzpicture}
+\end{tikzpicture}%
+}
 \caption{Governance decision flow. Critical failures trigger immediate auto-migration; non-critical failures follow cost-aware semi-automated or manual paths.}
 \label{fig:governance}
 \end{figure}
