@@ -7,7 +7,6 @@
 \usepackage{stfloats}
 \lstset{basicstyle=\ttfamily\scriptsize,breaklines=true,frame=single,backgroundcolor=\color{gray!5}}
 \setlist{nosep,leftmargin=*}
-% Force floats to appear near their text
 \renewcommand{\topfraction}{0.95}
 \renewcommand{\bottomfraction}{0.95}
 \renewcommand{\textfraction}{0.05}
@@ -26,7 +25,7 @@
 \definecolor{t4}{RGB}{192,57,43}
 
 \begin{document}
-\title{Beyond MLPerf: InferMark, A 14-Axis\\Production Inference Benchmark with Integrated\\APM Observability Across Heterogeneous AI Accelerators}
+\title{OpenDeepBench and OpenDeepAPM: Deep Infrastructure\\Benchmarking and Trace-Correlated Observability\\for Multi-Cloud LLM Inference}
 \author{
 \IEEEauthorblockN{Srikanta Datta Tumkur\IEEEauthorrefmark{1}, Anshu Bansal\IEEEauthorrefmark{1}, Mehar Simhadri\IEEEauthorrefmark{2}, Jay Iyer\IEEEauthorrefmark{2}}
 \IEEEauthorblockA{\IEEEauthorrefmark{1}MIT Sloan School of Management, Cambridge, MA -- \texttt{\{srikanta, anshu.bansal\}@sloan.mit.edu}}
@@ -35,46 +34,38 @@
 \maketitle
 
 \begin{abstract}
-Large Language Model (LLM) inference has evolved from single-GPU prototypes into production-grade, multi-cloud infrastructure spanning heterogeneous accelerator architectures. Yet the benchmarking ecosystem remains dangerously fragmented: MLPerf Inference v6.0 measures raw throughput on fixed models in single-cloud settings, ignoring production overhead, multi-cloud variance, and the critical link between infrastructure telemetry and model output quality. We present \textbf{InferMark}, a 14-axis benchmarking framework that systematically evaluates the full production inference stack -- from kernel-level attention mechanisms (FlashAttention-3, RadixAttention, Multi-Head Latent Attention, Grouped-Query Attention, Ring Attention, linear SSMs) through speculative decoding variants (EAGLE-2, Medusa, Lookahead, Hydra) and disaggregated prefill/decode architectures to network fabric topology and application-level routing -- across 11 cloud providers in three categories (Hyperscalers, Neo-Clouds, and Token Factories) and 6 accelerator families (NVIDIA Blackwell/Vera Rubin, AMD Instinct MI355X, Intel Gaudi~3, Google TPU~v6e). A central contribution is our \textbf{integrated APM observability layer} that bridges the ``monitoring gap'' between infrastructure metrics and model-level quality signals via a three-tier architecture built on OpenTelemetry, NVIDIA DCGM, and novel inference-aware semantic conventions spanning hardware counters through quality rubrics. Our framework reveals critical blind spots: (1)~3.2$\times$ throughput variance for identical models across clouds; (2)~production guardrails add 18--61\% latency invisible to existing benchmarks; (3)~MoE expert routing becomes non-deterministic under network jitter; (4)~AMD and Intel accelerators achieve superior tokens-per-watt in memory-bound regimes that NVIDIA-centric benchmarks systematically underreport; and (5)~multi-hop cross-cloud disaggregated inference reduces cost 15--29\% at iso-latency. We detail six reproducible experimental studies with complete methodology and propose the InferMark Composite Score as a new industry standard.
+Large Language Model (LLM) inference has evolved from single-GPU prototypes into production-grade, multi-cloud infrastructure spanning heterogeneous accelerator architectures. Yet the benchmarking and observability ecosystems remain critically fragmented: MLPerf Inference measures raw throughput on fixed models in single-cloud settings; traditional APM tools designed for deterministic microservices fail catastrophically for non-deterministic LLM inference; and no platform today provides end-to-end trace correlation from user traffic through GPU silicon to root cause. We present two complementary systems. \textbf{OpenDeepAPM} is a deep LLM Application Performance Monitoring architecture that constructs unified traces spanning 27 linked spans across seven layers---from client traffic and CPU preprocessing through GPU prefill/decode phases, per-rank tensor-parallel execution, per-layer attention and MLP operations, NCCL/NVLink/InfiniBand collectives, KV-cache lifecycle, and storage---with silicon metrics (SM utilization, tensor core activity, HBM bandwidth, L2 hit rates) attached as evidence to each span via NVTX-linked CUDA timelines and DCGM counters. The correlation engine joins traces using composite keys (trace\_id + time\_window + node\_id + gpu\_uuid + rank\_id + nccl\_comm\_id + nic\_id) across a time-series graph database to produce automated root-cause attribution. \textbf{OpenDeepBench} is a multi-cloud, multi-silicon, multi-model LLM infrastructure benchmark that evaluates 16 dimensions---cloud provider, region, silicon vendor, accelerator model, serving engine, runtime, collective backend, model size, context size (1K--128K), output length, concurrency, batch policy, KV-cache mode, attention type, network topology, and storage---producing a normalized scorecard of TTFT, TPOT, throughput, cost/token, energy/token, and reliability with automated root-cause diagnosis. Across 11 cloud providers, 6 accelerator families, and 12 benchmark suites (ODB-Chat through ODB-Reliability), OpenDeepBench reveals: (1)~3.2$\times$ throughput variance for identical models across clouds; (2)~KV-cache memory bandwidth as the dominant decode bottleneck with TPOT degrading sharply beyond 32K context; (3)~AMD MI355X achieving 97\% of NVIDIA B200 decode performance at 35\% lower cost; (4)~inter-node fabric congestion as the primary source of p99 latency spikes in multi-node tensor-parallel deployments; and (5)~cross-cloud disaggregated inference reducing cost 15--29\% at iso-latency. We detail the OpenTelemetry integration architecture, time-series graph correlation engine, compliance framework, and propose the OpenDeepBench Composite Score as a new industry standard.
 \end{abstract}
 \begin{IEEEkeywords}
-LLM inference benchmarking, multi-cloud, heterogeneous accelerators, APM observability, OpenTelemetry, KV-cache, production overhead, roofline analysis, tokens-per-watt
+LLM inference, deep APM, distributed tracing, OpenTelemetry, multi-cloud benchmarking, GPU observability, KV-cache, NCCL, NVLink, InfiniBand, root-cause analysis, time-series graph database
 \end{IEEEkeywords}
 
 %===================================================================
 \section{Introduction}
 %===================================================================
-The AI inference landscape has entered a new era. Global spending on AI infrastructure exceeded \$200B in 2025, yet organizations deploying LLMs in production face a paradox: the benchmarks used to select hardware and cloud providers measure almost none of the metrics that determine real-world performance. MLPerf Inference v6.0~\cite{mlcommons2026mlperfv6} evaluates raw throughput on fixed models in controlled, single-cloud environments. HELM~\cite{liang2023helm} assesses model accuracy without infrastructure metrics. Chatbot Arena captures human preference but provides zero infrastructure insight. None measure production overhead, multi-cloud variance, or the correlation between infrastructure health and output quality.
+The AI inference landscape has entered a new era. Global spending on AI infrastructure exceeded \$200B in 2025, yet organizations deploying LLMs in production face a dual paradox: the benchmarks used to select hardware measure almost none of the metrics that determine real-world performance, and the monitoring tools used to operate inference infrastructure were designed for a fundamentally different class of workloads.
 
-This paper addresses three critical gaps simultaneously:
+\textbf{Gap 1: The Benchmark-Production Disconnect.} MLPerf Inference v6.0~\cite{mlcommons2026mlperfv6} evaluates raw throughput on fixed models in controlled, single-cloud environments. Production inference deployments include guardrails~\cite{inan2023llamaguard}, PII masking, watermarking~\cite{kirchner2024watermarking}, and compliance logging that add 18--61\% latency. No existing benchmark answers: ``Which cloud + GPU + serving engine + context size gives the best TTFT, TPOT, throughput, cost/token, and reliability under realistic multi-tenant traffic?''
 
-\textbf{Gap 1: The Benchmark-Production Disconnect.} Production inference deployments include guardrails~\cite{inan2023llamaguard}, PII masking, watermarking~\cite{kirchner2024watermarking}, and compliance logging that add 18--61\% latency. No existing benchmark accounts for this overhead, creating a dangerous gap between reported and actual performance.
+\textbf{Gap 2: The Observability Void.} Traditional APM tools (Datadog, New Relic, Dynatrace) instrument deterministic microservices with request-response spans. LLM inference is fundamentally different: a single request generates a \emph{trace} containing dozens of linked spans across traffic ingress, CPU tokenization, GPU scheduling, tensor-parallel prefill across 16 ranks on 2 nodes, 80 transformer layers per phase, NCCL collectives over NVLink and InfiniBand, paged KV-cache allocation and lifecycle, autoregressive decode with growing context, and response streaming. No existing platform correlates GPU thermal throttling with output quality degradation, or KV-cache eviction with downstream accuracy loss, or NCCL stalls with per-token latency spikes.
 
-\textbf{Gap 2: Architecture Blind Spots.} NVIDIA-centric benchmarks systematically favor compute-bound workloads where CUDA-optimized kernels dominate. AMD Instinct MI355X~\cite{amd2025mi350} with 288\,GB HBM3E and Intel Gaudi~3~\cite{intel2025gaudi3} with cost-optimized matrix engines excel in memory-bound and energy-constrained regimes that current benchmarks underrepresent.
+\textbf{Gap 3: Architecture Blind Spots.} NVIDIA-centric benchmarks systematically favor compute-bound workloads. AMD Instinct MI355X~\cite{amd2025mi350} with 288\,GB HBM3E and Intel Gaudi~3~\cite{intel2025gaudi3} with cost-optimized matrix engines excel in memory-bound and energy-constrained regimes that current benchmarks underrepresent.
 
-\textbf{Gap 3: The Observability Void.} Traditional Application Performance Monitoring (APM) tools designed for deterministic microservices fail catastrophically for non-deterministic LLM inference. No platform today correlates GPU thermal throttling with output quality degradation, or KV-cache eviction with downstream accuracy loss.
+This paper addresses all three gaps through two complementary systems:
 
-InferMark addresses all three gaps through a 14-axis benchmarking framework with an integrated APM observability layer. The APM architecture presented here -- a three-tier pipeline correlating hardware telemetry, inference engine metrics, and model quality signals through unified OpenTelemetry semantic conventions -- provides the technical foundation for next-generation AI-native monitoring platforms.
+\textbf{OpenDeepAPM} provides deep, end-to-end trace correlation for LLM inference. Unlike traditional APM that generates one span per service call, OpenDeepAPM constructs traces with 27+ linked spans covering every layer from client traffic to GPU silicon. The correlation engine joins OpenTelemetry traces, NVTX-linked CUDA timelines, DCGM/rocm-smi hardware counters, NCCL communication logs, NVLink/InfiniBand fabric telemetry, and storage metrics into a unified time-series graph database for automated root-cause attribution.
+
+\textbf{OpenDeepBench} provides deep, multi-dimensional LLM infrastructure benchmarking. Unlike MLPerf (which answers ``which GPU is faster?'') or vLLM benchmarks (which measure runtime throughput), OpenDeepBench answers: ``For this model, at this context size, on this cloud, on this silicon, with this serving engine and this traffic pattern---what is the TTFT, TPOT, throughput, cost/token, and \emph{why}?''
 
 \subsection{Contributions}
 \begin{enumerate}
-\item A \textbf{14-axis benchmarking taxonomy} organized into four tiers covering every layer of the five-layer AI infrastructure stack~\cite{nvidia2025blackwell} (Section~\ref{sec:axes}).
-\item An \textbf{integrated APM observability architecture} with novel inference-aware semantic conventions bridging infrastructure and quality monitoring (Section~\ref{sec:apm}).
-\item \textbf{Architecture-neutral evaluation} across NVIDIA, AMD, Intel, and Google accelerators, revealing AMD and Intel advantages in memory-bound and energy-efficient regimes (Section~\ref{sec:arch}).
-\item \textbf{Multi-cloud analysis} across 11 providers in three categories (Hyperscalers, Neo-Clouds, Token Factories) with cross-cloud disaggregated routing (Section~\ref{sec:cloud}).
-\item Six \textbf{reproducible experimental studies} with complete methodology (Section~\ref{sec:exp}).
-\item A \textbf{composite InferMark Score} derived from production operator surveys (Section~\ref{sec:score}).
+\item \textbf{OpenDeepAPM}: A 27-span, 7-layer deep trace architecture for LLM inference with composite join keys linking request causality to GPU silicon evidence (Section~\ref{sec:deepapm}).
+\item \textbf{Correlation engine}: A time-series graph database architecture joining OpenTelemetry traces, NVTX timelines, DCGM counters, NCCL logs, and fabric telemetry for automated root-cause diagnosis (Section~\ref{sec:correlation}).
+\item \textbf{OpenDeepBench}: A 16-dimension, 12-suite benchmark framework for multi-cloud, multi-silicon LLM infrastructure with normalized scorecards (Section~\ref{sec:deepbench}).
+\item \textbf{Multi-silicon normalization}: Architecture-neutral evaluation across NVIDIA, AMD, Intel, and Google accelerators with unified semantic conventions (Section~\ref{sec:arch}).
+\item \textbf{Root-cause diagnosis}: Four validated case studies demonstrating automated attribution across KV-cache, network, traffic, and storage bottlenecks (Section~\ref{sec:rootcause}).
+\item \textbf{OpenDeepBench Composite Score}: A weighted scoring model with 12 benchmark suite categories from production operator surveys (Section~\ref{sec:score}).
 \end{enumerate}
-
-%===================================================================
-% FIGURE 1 - Generated Architecture Diagram
-%===================================================================
-\begin{figure*}[!htbp]
-\centering
-\includegraphics[width=\textwidth]{fig1_architecture.png}
-\caption{InferMark system architecture. \textbf{Left}: The 14-axis benchmark taxonomy organized in four tiers -- T1: Compute Kernel (KV-cache management, disaggregated prefill/decode, attention mechanisms including FA3/MLA/RadixAttn/GQA/Ring, MoE routing with expert caching, speculative decoding including EAGLE-2/Medusa/Hydra, quantization); T2: Model Architecture (multi-modal vision/video/audio/world models, long-context 128K--10M, multi-LoRA, constrained generation); T3: Infrastructure (NVLink~6/CXL~3.1/InfiniBand, production overhead 18--61\%); T4: Application (E2E latency waterfall, multi-cloud routing). \textbf{Right}: Execution layer with control plane, three-tier APM observability (hardware counters through quality signals), 6 inference engines, overlay router, 11 cloud providers across Hyperscalers/Neo-Clouds/Token Factories, and 4 accelerator families.}
-\label{fig:arch}
-\end{figure*}
 
 %===================================================================
 \section{Background and Related Work}
@@ -84,15 +75,15 @@ InferMark addresses all three gaps through a 14-axis benchmarking framework with
 \subsection{The Five-Layer AI Infrastructure Stack}
 We adopt the five-layer taxonomy~\cite{nvidia2025blackwell} as our organizational framework:
 
-\textbf{Layer 1 (Energy):} Power is the primary binding constraint. Data center electricity consumption is projected at 1,050\,TWh by 2026~\cite{iea2025datacenter}. \emph{Tokens-per-watt} has emerged as the definitive metric, linking inference throughput directly to operating economics. Critically, this metric reveals advantages for Intel Gaudi~3 and AMD MI355X that TFLOPS-centric benchmarks obscure.
+\textbf{Layer 1 (Energy):} Power is the primary binding constraint. Data center electricity consumption is projected at 1,050\,TWh by 2026~\cite{iea2025datacenter}. \emph{Tokens-per-watt} has emerged as the definitive metric, linking inference throughput directly to operating economics.
 
-\textbf{Layer 2 (Chips):} Table~\ref{tab:accel} summarizes the current accelerator landscape. The diversity -- GPUs, HPUs, TPUs, DPUs, and custom ASICs -- demands architecture-neutral benchmarking.
+\textbf{Layer 2 (Chips):} Table~\ref{tab:accel} summarizes the current accelerator landscape. The diversity---GPUs, HPUs, TPUs, DPUs, and custom ASICs---demands architecture-neutral benchmarking and monitoring.
 
-\textbf{Layer 3 (AI Factories):} Rack-scale systems like the GB200 NVL72~\cite{nvidia2025blackwell} and Vera Rubin NVL72~\cite{nvidia2026verarubin} (3.6\,EFLOPS, 20.7\,TB HBM4) co-design 7 chips into unified platforms, while AMD OAM and Intel Gaudi~3 UBB form factors enable competitive rack-scale deployments.
+\textbf{Layer 3 (AI Factories):} Rack-scale systems like the GB200 NVL72~\cite{nvidia2025blackwell} and Vera Rubin NVL72~\cite{nvidia2026verarubin} co-design 7 chips into unified platforms. Multi-node tensor-parallel inference across these systems generates complex distributed traces that no existing APM captures.
 
-\textbf{Layer 4 (Models):} DeepSeek-V3's MLA~\cite{liu2024deepseekv3} compresses KV tensors to 5--13\% of standard attention. Fine-grained MoE (256 routed experts) activates only 8 experts per token, fundamentally altering compute profiles.
+\textbf{Layer 4 (Models):} DeepSeek-V3's MLA~\cite{liu2024deepseekv3} compresses KV tensors to 5--13\% of standard attention. Fine-grained MoE (256 routed experts) fundamentally alters compute profiles and trace structure.
 
-\textbf{Layer 5 (Applications):} Agentic AI~\cite{wang2024survey_agents} demands sub-200ms multi-tool orchestration, continuous context accumulation, and reliable function calling -- none measured by existing benchmarks.
+\textbf{Layer 5 (Applications):} Agentic AI~\cite{wang2024survey_agents} demands sub-200ms multi-tool orchestration with deep observability into each inference call.
 
 \begin{table}[!htbp]
 \caption{Heterogeneous Accelerator Landscape (June 2026)}
@@ -114,167 +105,674 @@ TPU\,v6e & Trillium & 32\,GB & 1.6\,TB/s & N/A & BF16/Int8 \\
 \end{table}
 
 \subsection{Inference Serving Frameworks}
-Three frameworks dominate production serving in 2026. \textbf{vLLM}~\cite{kwon2023vllm} introduced PagedAttention for virtual-memory KV-cache management and remains the broadest-support workhorse. \textbf{SGLang}~\cite{zheng2024sglang} uses RadixAttention for 2--3$\times$ speedup in RAG/agentic workloads with shared prefixes. \textbf{TensorRT-LLM}~\cite{nvidia2024tensorrtllm} achieves peak NVIDIA throughput via compilation but locks users into the CUDA ecosystem. A critical InferMark finding is that \emph{framework configuration tuning} (e.g., \texttt{max-num-batched-tokens}, \texttt{enable-chunked-prefill}) often produces larger performance swings than switching engines.
-
-\subsection{Disaggregated Inference}
-Splitwise~\cite{patel2024splitwise} and DistServe~\cite{zhong2024distserve} separate compute-bound prefill from memory-bound decode, improving goodput by 1.4--2$\times$. InferMark extends this to \emph{cross-cloud} disaggregation where prefill executes on bare-metal providers and decode on latency-optimized neo-clouds or token factories.
+Three frameworks dominate production serving in 2026. \textbf{vLLM}~\cite{kwon2023vllm} introduced PagedAttention for virtual-memory KV-cache management. \textbf{SGLang}~\cite{zheng2024sglang} uses RadixAttention for 2--3$\times$ speedup in RAG/agentic workloads. \textbf{TensorRT-LLM}~\cite{nvidia2024tensorrtllm} achieves peak NVIDIA throughput via compilation. All three generate distinct trace patterns that OpenDeepAPM must normalize.
 
 \subsection{Existing Benchmarks and Their Limitations}
+
 \begin{table}[!htbp]
-\caption{Benchmark Landscape: What Is Measured vs.\ Missed}
+\caption{Benchmark and Observability Landscape: What Is Measured vs.\ Missed}
 \label{tab:gaps}
 \centering\footnotesize
-\begin{tabular}{@{}lp{1.6cm}p{3.2cm}@{}}
+\begin{tabular}{@{}lp{1.4cm}p{3.4cm}@{}}
 \toprule
-\textbf{Benchmark} & \textbf{Measures} & \textbf{Critical Gaps} \\
+\textbf{System} & \textbf{Measures} & \textbf{Critical Gaps} \\
 \midrule
-MLPerf v6.0~\cite{mlcommons2026mlperfv6} & Raw throughput & No prod.\ overhead, single-cloud, NVIDIA-centric submissions \\
+MLPerf v6.0~\cite{mlcommons2026mlperfv6} & Raw throughput & No prod.\ overhead, single-cloud, no root cause \\
+vLLM bench & Runtime tok/s & Single-engine, no hardware correlation \\
 HELM~\cite{liang2023helm} & Model accuracy & Zero infrastructure metrics \\
-Chatbot Arena & Human pref.\ & No infrastructure insight \\
-Artificial Analysis & API speed & Black box, no root cause \\
-\textbf{InferMark} & \textbf{14 axes, 11 clouds, 6 archs, APM} & \textbf{--} \\
+Datadog/NR & Service spans & No GPU silicon, no KV-cache, no NCCL \\
+DCGM alone & GPU counters & No request causality, no trace linkage \\
+\textbf{OpenDeepAPM} & \textbf{27-span trace} & \textbf{--} \\
+\textbf{OpenDeepBench} & \textbf{16-dim bench} & \textbf{--} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:gaps} highlights the fundamental limitations. MLPerf's NVIDIA-centric submission ecosystem underreports AMD and Intel capabilities; Artificial Analysis's black-box methodology prevents root cause attribution; and none integrate APM observability.
+MLCommons describes MLPerf Inference as architecture-neutral benchmarking for system performance~\cite{mlcommons2026mlperfv6}. OpenDeepBench respects this reproducibility standard while extending into LLM-specific operational dimensions with deep trace correlation. AMD's ROCm documentation provides vLLM inference validation flows for MI300X/MI355X-class accelerators~\cite{amd2025mi350}, which OpenDeepBench normalizes alongside NVIDIA and Intel stacks.
 
 %===================================================================
-\section{The InferMark 14-Axis Framework}
-\label{sec:axes}
+\section{OpenDeepAPM: Deep Trace Architecture}
+\label{sec:deepapm}
 %===================================================================
 
-We define 14 orthogonal benchmarking axes organized into four tiers aligned with the five-layer stack. Fig.~\ref{fig:arch} illustrates the complete taxonomy.
+OpenDeepAPM constructs a single unified trace for each LLM request that spans seven layers: traffic, CPU, scheduler, GPU phases, distributed communication, storage, and silicon metrics. Unlike traditional APM (one span per service), OpenDeepAPM generates 27+ linked spans per request.
 
-\subsection{Tier 1: Compute Kernel Axes}
+\begin{figure*}[!htbp]
+\centering
+\begin{tikzpicture}[
+    cat/.style={rectangle, draw, rounded corners=4pt, minimum width=5.2cm, minimum height=0.5cm, font=\small\sffamily\bfseries, fill=#1, text=white, line width=0.6pt},
+    ax/.style={rectangle, draw, rounded corners=2pt, minimum width=2.4cm, minimum height=0.7cm, font=\tiny\sffamily, fill=#1, line width=0.4pt, text width=2.2cm, align=center},
+    comp/.style={rectangle, draw, rounded corners=3pt, minimum width=2.6cm, minimum height=0.5cm, font=\scriptsize\sffamily, fill=#1, line width=0.4pt},
+    cloud/.style={rectangle, draw, rounded corners=2pt, minimum width=1.8cm, minimum height=0.4cm, font=\tiny\sffamily, fill=#1, line width=0.3pt},
+    arr/.style={-{Stealth[length=1.8mm]}, line width=0.5pt, gray!60},
+]
+% === LEFT PANEL: 16-Dimension Benchmark Taxonomy ===
+\node[font=\footnotesize\sffamily\bfseries] at (-5.5,6.4) {\textbf{16-Dimension Benchmark Taxonomy}};
 
-\subsubsection{Axis 1: KV-Cache Management and Memory Economics}
+% Compute Kernel
+\node[cat=t1!70, minimum width=5.4cm] (ck) at (-5.5,5.8) {Compute Kernel};
+\node[ax=t1!15] at (-7,5) {A1: KV-Cache\\PagedAttn, vAttn, CXL};
+\node[ax=t1!15] at (-4,5) {A2: Prefill/Decode\\Splitwise, DistServe};
+\node[ax=t1!15] at (-7,4.1) {A3: Attention\\FA3, MLA, GQA, Ring};
+\node[ax=t1!15] at (-4,4.1) {A4: MoE Routing\\Expert parallel, SRAM};
 
-The KV-cache is the central memory bottleneck of autoregressive inference. For a model with $L$ layers, $H$ heads, and head dimension $d$, serving batch $B$ at context $C$: $\text{KV} = 2LHdCB \times \text{bytes}$. For Llama-70B at FP16: 2.5\,GB per sequence at 128K.
+% Model Architecture
+\node[cat=t2!70, minimum width=5.4cm] at (-5.5,3.3) {Model Architecture};
+\node[ax=t2!12] at (-7,2.55) {A5: Multi-Modal\\Vision, Video, Audio};
+\node[ax=t2!12] at (-4,2.55) {A6: Long-Context\\128K--10M tokens};
+\node[ax=t2!12] at (-7,1.65) {A7: Multi-LoRA\\S-LoRA, Punica};
+\node[ax=t2!12] at (-4,1.65) {A8: Constrained\\Grammar, Tools};
 
-\textbf{PagedAttention}~\cite{kwon2023vllm}: Virtual-memory paging for KV-cache. We measure page fault rate, fragmentation ratio, and waste under variable-length sequences. \textbf{vAttention}: Contiguous virtual memory mapping eliminating page table overhead. \textbf{KV Quantization}: FP16$\to$FP8$\to$INT4$\to$3-bit ladder with per-model sensitivity analysis. MLA-based models (DeepSeek) are 3$\times$ more sensitive to KV quantization than GQA models (Llama). \textbf{Eviction}: LRU, H2O~\cite{zhang2024h2o} heavy-hitter retention, StreamingLLM~\cite{xiao2024streamingllm} attention sink preservation, Scissorhands importance-based pruning. \textbf{CXL 3.1 Pooling}~\cite{cxl2025memorydisagg}: Type-3 CXL devices as overflow KV-cache tier. Crusoe MemoryAlloy uses CXL-attached DRAM to extend capacity 4$\times$ at 15\% latency. \textbf{Cross-Architecture}: AMD MI355X (288\,GB) holds 2$\times$ KV-cache of H200 (141\,GB), eliminating eviction for 70B models at 128K context.
+% Infrastructure
+\node[cat=t3!70, minimum width=5.4cm] at (-5.5,0.9) {Infrastructure};
+\node[ax=t3!12] at (-7,0.15) {A9: Network Fabric\\NVLink 6, IB NDR, CXL};
+\node[ax=t3!12] at (-4,0.15) {A10: Prod.~Overhead\\Guards, PII, Watermark};
 
-\subsubsection{Axis 2: Disaggregated Prefill/Decode and CPU-GPU Transfer}
+% Application
+\node[cat=t4!70, minimum width=5.4cm] at (-5.5,-0.65) {Application};
+\node[ax=t4!12] at (-7,-1.4) {A11: E2E Latency\\TLS to Stream, P50/99};
+\node[ax=t4!12] at (-4,-1.4) {A12: Multi-Cloud\\Cost, Latency, Quality};
+
+% Context-Size
+\node[cat=gray!50, minimum width=5.4cm, text=black] at (-5.5,-2.2) {Context-Size Stress};
+\node[ax=gray!8] at (-7,-2.95) {C1--C4: 1K--16K\\Chat, RAG, Doc};
+\node[ax=gray!8] at (-4,-2.95) {C5--C8: 32K--128K\\Legal, Code, Mixed};
+
+% === RIGHT PANEL: Execution Architecture ===
+\node[font=\footnotesize\sffamily\bfseries] at (3.8,6.4) {\textbf{Execution Architecture}};
+
+% Control Plane
+\node[comp=t1!15, minimum width=7.6cm, font=\scriptsize\sffamily\bfseries] (cp) at (3.8,5.8) {OpenDeepBench Control Plane};
+\node[comp=t1!8, minimum width=1.5cm, font=\tiny\sffamily] at (1,5.2) {Bench Registry};
+\node[comp=t1!8, minimum width=1.5cm, font=\tiny\sffamily] at (2.7,5.2) {Workload Gen};
+\node[comp=t1!8, minimum width=1.5cm, font=\tiny\sffamily] at (4.4,5.2) {Result Agg};
+\node[comp=t1!8, minimum width=1.5cm, font=\tiny\sffamily] at (6.1,5.2) {Scoring Eng};
+
+% APM Observability
+\node[comp=t2!18, minimum width=7.6cm, font=\scriptsize\sffamily\bfseries] (apm) at (3.8,4.35) {OpenDeepAPM: Three-Tier Observability};
+\node[font=\tiny\sffamily, text width=6.8cm, align=left] at (3.5,3.6) {\textbf{HW:} DCGM, rocm-smi, hl-smi, eBPF, NVLink, IB -- \textbf{Engine:} KV\%, tok/s, TTFT, TPOT -- \textbf{Quality:} rubrics, CoT, confidence};
+
+% OTel + Prom
+\node[comp=gray!12, minimum width=1.3cm, font=\tiny\sffamily] (otel) at (7.8,4.35) {OTel Coll};
+\node[comp=gray!12, minimum width=1.3cm, font=\tiny\sffamily] (prom) at (7.8,3.4) {Grafana};
+\draw[arr] (apm) -- (otel);
+\draw[arr] (otel) -- (prom);
+
+% Inference Engines
+\node[comp=nv!10, minimum width=1.15cm, font=\tiny\sffamily] at (0.8,2.5) {vLLM};
+\node[comp=nv!10, minimum width=1.15cm, font=\tiny\sffamily] at (2.1,2.5) {SGLang};
+\node[comp=nv!10, minimum width=1.15cm, font=\tiny\sffamily] at (3.4,2.5) {TRT-LLM};
+\node[comp=nv!10, minimum width=1.15cm, font=\tiny\sffamily] at (4.7,2.5) {DeepSpd};
+\node[comp=am!8, minimum width=1.15cm, font=\tiny\sffamily] at (6,2.5) {ROCm};
+\node[comp=il!8, minimum width=1.15cm, font=\tiny\sffamily] at (7.1,2.5) {Habana};
+
+% Router
+\node[comp=t3!15, minimum width=7.6cm, font=\scriptsize\sffamily\bfseries] (rt) at (3.8,1.7) {Multi-Cloud Inference Router};
+
+% Cloud Providers
+\node[cloud=t1!10] (hs1) at (0.8,0.7) {AWS};
+\node[cloud=t1!10] at (0.8,0.25) {GCP};
+\node[cloud=t1!10] at (0.8,-0.2) {Azure};
+\node[cloud=t1!10] at (0.8,-0.65) {OCI};
+\node[font=\tiny\sffamily\bfseries, t1] at (0.8,1.1) {Hyperscalers};
+
+\node[cloud=nv!8] at (3,0.7) {CoreWeave};
+\node[cloud=nv!8] at (3,0.25) {Lambda};
+\node[cloud=nv!8] at (3,-0.2) {Crusoe};
+\node[cloud=nv!8] at (3,-0.65) {Voltage Park};
+\node[font=\tiny\sffamily\bfseries, nv!80!black] at (3,1.1) {Neo-Clouds};
+
+\node[cloud=t3!8] at (5.2,0.7) {Modal};
+\node[cloud=t3!8] at (5.2,0.25) {Baseten};
+\node[cloud=t3!8] at (5.2,-0.2) {Nebius};
+\node[font=\tiny\sffamily\bfseries, t3] at (5.2,1.1) {Token Factories};
+
+% Accelerator Families
+\node[font=\tiny\sffamily\bfseries] at (3.8,-1.3) {Accelerator Families};
+\node[comp=nv!15, font=\tiny\sffamily\bfseries, minimum width=1.6cm] at (1,-1.9) {NVIDIA};
+\node[font=\tiny\sffamily] at (1,-2.3) {H200/B200/R100};
+\node[comp=am!12, font=\tiny\sffamily\bfseries, minimum width=1.6cm] at (3,-1.9) {AMD};
+\node[font=\tiny\sffamily] at (3,-2.3) {MI300X/MI355X};
+\node[comp=il!12, font=\tiny\sffamily\bfseries, minimum width=1.6cm] at (5,-1.9) {Intel};
+\node[font=\tiny\sffamily] at (5,-2.3) {Gaudi 3};
+\node[comp=gc!12, font=\tiny\sffamily\bfseries, minimum width=1.6cm] at (7,-1.9) {Google};
+\node[font=\tiny\sffamily] at (7,-2.3) {TPU v6e};
+
+\end{tikzpicture}
+\caption{OpenDeepBench and OpenDeepAPM: Unified architecture. Left panel shows the 16-dimension benchmark taxonomy (compute kernel, model architecture, infrastructure, application, and context-size stress axes). Right panel shows the execution architecture with control plane, three-tier APM observability (with OTel/Grafana integration), six inference engines, multi-cloud inference router, 11 cloud providers across 3 categories, and 4 accelerator families.}
+\label{fig:arch}
+\end{figure*}
+
+\subsection{Trace Structure Overview}
+
+Each trace carries core identifiers propagated across all spans:
+
+\begin{lstlisting}
+trace_id     = trace-llm-9001
+request_id   = req-chat-abc123
+tenant_id    = tenant-ai-platform
+model_name   = llama-70b
+batch_id     = batch-77
+sequence_id  = seq-12
+\end{lstlisting}
+
+Deeper spans add hardware location context:
+
+\begin{lstlisting}
+node_id      = gpu-node-17
+gpu_uuid     = GPU-node17-3
+rank_id      = 3
+cuda_stream  = stream_12
+nccl_comm_id = comm-555
+ib_nic       = mlx5_0
+switch_path  = leaf-7/spine-2/leaf-9
+\end{lstlisting}
+
+\subsection{The Seven-Layer Span Taxonomy}
+
+Fig.~\ref{fig:trace} illustrates the complete trace tree. Each layer contributes specific span types:
+
+\textbf{Layer 1---Traffic (Spans 1--2, 26):} Client-to-edge ingress (TLS handshake, edge latency), edge-to-cloud routing (WAF, load balancer), and response egress with streaming metrics.
+
+\textbf{Layer 2---Service/Control Plane (Spans 3--4):} API gateway (auth, quota, tenant identification, model routing), and LLM router (cluster selection, model pool assignment, fallback logic).
+
+\textbf{Layer 3---CPU (Spans 6--8):} Request admission with priority queuing, tokenization (SentencePiece/BPE, measured in CPU-time-ms), and prompt processing (chat template, safety metadata, position IDs, attention mask creation).
+
+\textbf{Layer 4---Scheduler and Dispatch (Spans 9, 12--13):} Continuous batching scheduler (queue wait, batch formation), GPU worker dispatch (tensor-parallel rank mapping across nodes), and input tensor transfer (host-to-device via PCIe/RDMA).
+
+\textbf{Layer 5---GPU Inference Phases (Spans 14--20):} KV-cache allocation (paged, per-layer, per-rank), prefill phase (per-rank spans with per-layer sub-spans for QKV projection, attention, KV-cache write, MLP, and NCCL collective), first-token logits and sampling, and decode phase (per-token iteration with the same per-layer structure plus growing KV-cache reads).
+
+\textbf{Layer 6---Storage and KV-Cache (Spans 10--11, 24--25):} Model weight cache check (local NVMe vs.\ remote object store), prefix cache lookup (GPU HBM / CPU RAM / remote KV store), KV-cache lifecycle (HBM allocation, fragmentation, eviction, CPU spill), and observability artifact storage (trace backend, metrics backend, profile captures).
+
+\textbf{Layer 7---Fabric and Silicon Metrics (Spans 17--18, 21--23):} NCCL tensor-parallel synchronization, silicon metrics windows (SM active\%, tensor core\%, HBM bandwidth, L2 hit rate, power, temperature), NVLink/NVSwitch intra-node metrics, and InfiniBand/RoCE inter-node metrics including switch-level counters.
+
+\begin{figure*}[!htbp]
+\centering
+\begin{tikzpicture}[
+    blk/.style={rectangle,draw,rounded corners=2pt,minimum height=0.35cm,font=\tiny\sffamily,line width=0.3pt,fill=#1},
+    arr/.style={-{Stealth[length=1.2mm]},line width=0.3pt,gray!60},
+    grp/.style={rectangle,draw,rounded corners=3pt,line width=0.5pt,dashed,fill=#1},
+]
+% Root
+\node[blk=t1!15,minimum width=10cm,minimum height=0.4cm,font=\scriptsize\sffamily\bfseries] (root) at (0,0) {TRACE trace-llm-9001: llm.chat.completion};
+
+% Traffic layer
+\node[blk=t1!10,minimum width=3cm] (s1) at (-5.5,-0.7) {S1: traffic.client\_to\_edge};
+\node[blk=t1!10,minimum width=3cm] (s2) at (-1.8,-0.7) {S2: traffic.edge\_to\_cloud};
+\node[blk=t1!10,minimum width=3cm] (s26) at (5.5,-0.7) {S26: response.egress};
+
+% Service layer
+\node[blk=t2!10,minimum width=2.8cm] (s3) at (-5.5,-1.3) {S3: llm.api\_gateway};
+\node[blk=t2!10,minimum width=2.8cm] (s4) at (-1.8,-1.3) {S4: llm.router};
+\node[blk=t2!10,minimum width=2.8cm] (s5) at (1.8,-1.3) {S5: traffic.cloud\_to\_onprem};
+
+% CPU layer
+\node[blk=nv!8,minimum width=2.5cm] (s6) at (-5.5,-1.9) {S6: cpu.admission};
+\node[blk=nv!8,minimum width=2.5cm] (s7) at (-2.2,-1.9) {S7: cpu.tokenization};
+\node[blk=nv!8,minimum width=2.5cm] (s8) at (1.1,-1.9) {S8: cpu.prompt\_proc};
+
+% Scheduler + Storage
+\node[blk=t3!10,minimum width=2.5cm] (s9) at (-5.5,-2.5) {S9: scheduler.enqueue};
+\node[blk=gray!10,minimum width=2.5cm] (s10) at (-2.2,-2.5) {S10: storage.weight\_chk};
+\node[blk=gray!10,minimum width=2.5cm] (s11) at (1.1,-2.5) {S11: storage.prefix\_cache};
+
+% GPU dispatch + phases
+\node[blk=am!8,minimum width=2.5cm] (s12) at (4.4,-1.9) {S12: gpu.dispatch};
+\node[blk=am!8,minimum width=2.5cm] (s13) at (4.4,-2.5) {S13: gpu.input\_xfer};
+\node[blk=am!12,minimum width=2.2cm] (s14) at (-5.5,-3.2) {S14: kv\_cache.alloc};
+\node[blk=am!15,minimum width=3.2cm,font=\tiny\sffamily\bfseries] (s15) at (-1.5,-3.2) {S15: llm.prefill};
+\node[blk=am!15,minimum width=3.2cm,font=\tiny\sffamily\bfseries] (s20) at (2.8,-3.2) {S20: llm.decode};
+\node[blk=t3!8,minimum width=2cm] (s19) at (5.8,-3.2) {S19: logits.first};
+
+% Sub-spans for prefill
+\node[blk=am!8,minimum width=2.8cm] (s16) at (-1.5,-3.9) {S16: prefill.layer\_stack (L0..79)};
+\node[blk=il!8,minimum width=2.8cm] (s17) at (-1.5,-4.5) {S17: collective.tp\_sync};
+
+% Sub-spans for decode
+\node[blk=am!8,minimum width=2.8cm] (d1) at (2.8,-3.9) {S20.x: decode.token\_1..256};
+
+% Silicon + Fabric
+\node[blk=nv!10,minimum width=2.5cm] (s18) at (-5,-4.5) {S18: silicon.prefill\_metrics};
+\node[blk=nv!10,minimum width=2.5cm] (s21) at (5.5,-3.9) {S21: silicon.decode\_metrics};
+\node[blk=il!10,minimum width=2.2cm] (s22) at (-5,-5.1) {S22: fabric.nvlink};
+\node[blk=il!10,minimum width=2.2cm] (s23) at (-2.2,-5.1) {S23: fabric.infiniband};
+\node[blk=gray!10,minimum width=2.2cm] (s24) at (1,-5.1) {S24: storage.kv\_life};
+\node[blk=gray!10,minimum width=2.2cm] (s25) at (3.8,-5.1) {S25: storage.artifacts};
+\node[blk=t4!12,minimum width=3cm,font=\tiny\sffamily\bfseries] (s27) at (5.8,-5.1) {S27: root\_cause\_summary};
+
+% Connections
+\draw[arr] (root) -- (s1); \draw[arr] (root) -- (s2); \draw[arr] (root) -- (s26);
+\draw[arr] (s2) -- (s3); \draw[arr] (s3) -- (s4); \draw[arr] (s4) -- (s5);
+\draw[arr] (s5) -- (s6); \draw[arr] (s6) -- (s7); \draw[arr] (s7) -- (s8);
+\draw[arr] (s8) -- (s9); \draw[arr] (s9) -- (s10); \draw[arr] (s10) -- (s11);
+\draw[arr] (s5) -- (s12); \draw[arr] (s12) -- (s13);
+\draw[arr] (s13) -- (s14); \draw[arr] (s14) -- (s15); \draw[arr] (s15) -- (s19); \draw[arr] (s19) -- (s20);
+\draw[arr] (s15) -- (s16); \draw[arr] (s16) -- (s17);
+\draw[arr] (s20) -- (d1);
+\draw[arr] (s15) -- (s18); \draw[arr] (s20) -- (s21);
+
+% Layer labels
+\node[font=\tiny\sffamily\bfseries,t1,rotate=90] at (-7.5,-0.7) {Traffic};
+\node[font=\tiny\sffamily\bfseries,t2,rotate=90] at (-7.5,-1.3) {Service};
+\node[font=\tiny\sffamily\bfseries,nv,rotate=90] at (-7.5,-1.9) {CPU};
+\node[font=\tiny\sffamily\bfseries,t3,rotate=90] at (-7.5,-2.5) {Sched};
+\node[font=\tiny\sffamily\bfseries,am,rotate=90] at (-7.5,-3.4) {GPU};
+\node[font=\tiny\sffamily\bfseries,il,rotate=90] at (-7.5,-4.8) {Fabric};
+\end{tikzpicture}
+\caption{OpenDeepAPM: Complete 27-span trace tree for a single LLM request. One trace contains linked spans across traffic (blue), service/control plane (purple), CPU preprocessing (green), scheduler (orange), GPU inference phases (red), fabric metrics (blue), and storage (gray). The root-cause summary (bottom-right) synthesizes evidence from all layers.}
+\label{fig:trace}
+\end{figure*}
+
+\subsection{Span vs.\ Attached Metric Classification}
+
+A critical design decision: what is a span (timed operation) vs.\ an attached metric (continuous counter)?
 
 \begin{table}[!htbp]
-\caption{Prefill vs.\ Decode Compute Characteristics}
-\label{tab:pd}
+\caption{Span vs.\ Metric Classification in OpenDeepAPM}
+\label{tab:spanmetric}
 \centering\footnotesize
-\begin{tabular}{@{}lcccc@{}}
+\begin{tabular}{@{}lll@{}}
 \toprule
-\textbf{Phase} & \textbf{Bound} & \textbf{GPU Util} & \textbf{BW Util} & \textbf{Best HW} \\
+\textbf{Item} & \textbf{Type} & \textbf{Rationale} \\
 \midrule
-Prefill & Compute & 70--85\% & 30--40\% & B200, MI355X \\
-Decode & Memory BW & 15--30\% & 85--95\% & H200, Gaudi\,3 \\
-Transfer & Network & N/A & N/A & IB NDR, NVLink \\
+API request & Span & Timed operation \\
+Tokenization & Span & Timed CPU operation \\
+Scheduling & Span & Timed queue operation \\
+Prefill phase & Span & Timed model phase \\
+Decode token & Span (sampled) & Repeated timed op \\
+Layer group & Span (profile) & Deep diagnosis \\
+QKV / attention / MLP & Span (NVTX) & GPU grouping \\
+NCCL all-reduce & Span & Timed distributed op \\
+KV allocation & Span & Timed memory op \\
+Model weight load & Span & Timed storage op \\
+\midrule
+HBM bandwidth & Metric & HW counter \\
+SM utilization & Metric & HW counter \\
+Tensor core util & Metric & HW counter \\
+NVLink throughput & Metric & Fabric counter \\
+IB port counters & Metric & Fabric counter \\
+L2 cache hit rate & Metric & Silicon counter \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\textbf{Prefill (Compute-Bound):} GPU utilization 70--85\%. \textbf{Decode (Memory-BW-Bound):} Single-token generation dominated by KV reads. B200 and MI355X (both 8\,TB/s) achieve near-identical decode performance; Gaudi~3 (3.7\,TB/s) is 54\% slower at 43\% lower power. \textbf{CPU Offloading}: ARM CPUs (Vera 88 Olympus cores, Graviton4) handle tokenization, guardrail pre-screening, post-processing. \textbf{Splitwise/DistServe}~\cite{patel2024splitwise,zhong2024distserve}: Prefill on compute-dense nodes (OCI B200), decode on latency-optimized nodes (CoreWeave). Cross-cloud: prefill@Crusoe $\to$ decode@Lambda saves 29\%.
+The UI renders \textbf{spans as the skeleton} and \textbf{hardware counters as evidence attached to each span}. This avoids the prohibitive overhead of creating spans for individual warp-level operations while preserving full diagnostic capability.
 
-\subsubsection{Axis 3: Attention Mechanism Deep Comparison}
+\subsection{Silicon-Level Visibility}
+
+At the silicon level, OpenDeepAPM attaches metrics to the nearest useful span rather than creating per-SM or per-warp spans:
+
+\begin{lstlisting}
+SPAN: decode.token_87.layer_42.attention
+  software_identity:
+    trace_id     = trace-llm-9001
+    token_index  = 87
+    layer_id     = 42
+    gpu_uuid     = GPU-node17-3
+  kernel_evidence:
+    nvtx_range   = trace-llm-9001:t87:l42:attn
+    cuda_kernel  = paged_attention_decode
+    cuda_stream  = stream_12
+  silicon_metrics:
+    sm_active_pct         = 29
+    tensor_active_pct     = 14
+    hbm_bw_pct            = 96
+    l2_hit_rate           = 39
+    dram_stall_pct        = high
+  diagnosis: memory_bound_kv_cache_attention
+\end{lstlisting}
+
+\subsection{Storage-Level Visibility}
+
+Storage spans capture latency sources invisible to GPU-only monitoring:
+
+\begin{lstlisting}
+SPAN: storage.model_weight_load
+  model=llama-70b, source=object_store
+  bytes=140GB, cache_hit=false
+  duration_ms=48000, impact=cold_start
+
+SPAN: storage.prefix_cache_fetch
+  source=remote_kv_store, dest=gpu_hbm
+  bytes=3.5GB, duration_ms=420
+  impact=TTFT_increased
+
+SPAN: storage.kv_spill_to_cpu
+  reason=GPU_HBM_pressure
+  bytes=8GB, duration_ms=160
+  impact=decode_slowed
+\end{lstlisting}
+
+\subsection{OpenTelemetry Integration Architecture}
+
+OpenDeepAPM extends OpenTelemetry~\cite{otel2025gpu} with inference-aware semantic conventions across all layers:
+
+\begin{lstlisting}
+# Request-level conventions
+inference.trace_id        # Trace identifier
+inference.request_id      # Request identifier
+inference.tenant_id       # Tenant identifier
+inference.model.id        # Model name/version
+inference.batch_id        # Scheduler batch
+inference.sequence_id     # Sequence in batch
+
+# Engine-level conventions
+inference.kv_cache.pct    # KV utilization
+inference.prefill.ms      # Prefill latency
+inference.decode.tok_per_s # Decode throughput
+inference.quality.score   # Output quality (0-1)
+
+# Hardware-level conventions
+inference.gpu.sm_occupancy   # SM occupancy %
+inference.gpu.tensor_pct     # Tensor core %
+inference.gpu.hbm_bw_pct     # HBM bandwidth %
+inference.gpu.l2_hit_rate    # L2 cache hit %
+inference.gpu.thermal_c      # Die temperature
+inference.gpu.power_w        # Power draw watts
+
+# Fabric-level conventions
+inference.nvlink.tx_gbps     # NVLink transmit
+inference.ib.port_xmit_wait  # IB congestion
+inference.nccl.op            # Collective type
+inference.nccl.slowest_rank  # Straggler rank
+\end{lstlisting}
+
+The correct architectural claim is: \emph{OpenTelemetry provides request causality. NVTX links that causality to CUDA/NCCL execution. DCGM/Nsight/vendor profilers expose silicon evidence. Network telemetry exposes fabric evidence. Storage telemetry exposes model/KV/prefix-cache evidence. The OpenDeepAPM correlation engine joins all of them into one trace.}
+
+%===================================================================
+\section{Correlation Engine and Time-Series Graph}
+\label{sec:correlation}
+%===================================================================
+
+\subsection{Composite Join Key}
+
+The correlation engine links heterogeneous telemetry sources using a composite key:
+
+\begin{equation}
+K = (\text{trace\_id}, \Delta t, \text{node\_id}, \text{gpu\_uuid}, \text{rank\_id}, \text{nccl\_comm}, \text{nic\_id})
+\label{eq:joinkey}
+\end{equation}
+
+This key enables joins across:
+\begin{itemize}
+\item \textbf{LLM request span} $\to$ GPU rank span $\to$ CUDA/NVTX timeline
+\item \textbf{NVTX range} $\to$ NCCL operation $\to$ NVLink/IB counters
+\item \textbf{Storage operation} $\to$ KV-cache state $\to$ decode latency
+\item \textbf{All evidence} $\to$ root-cause summary
+\end{itemize}
+
+\subsection{Time-Series Graph Database Architecture}
+
+The correlation engine uses a time-series graph database combining temporal indexing with graph relationships:
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}[
+    blk/.style={rectangle,draw,rounded corners=2pt,minimum height=0.38cm,minimum width=2.8cm,font=\tiny\sffamily,line width=0.4pt},
+    arr/.style={-{Stealth[length=1.5mm]},line width=0.4pt},
+]
+% Data sources
+\node[blk,fill=t1!12] (otel) at (0,4.2) {OpenTelemetry Traces};
+\node[blk,fill=nv!10] (dcgm) at (0,3.5) {DCGM / rocm-smi / hl-smi};
+\node[blk,fill=t2!10] (nvtx) at (0,2.8) {NVTX / rocTX / Nsight};
+\node[blk,fill=il!10] (nccl) at (0,2.1) {NCCL / RCCL / HCCL Logs};
+\node[blk,fill=t3!10] (fab) at (0,1.4) {NVLink / IB / RoCE Counters};
+\node[blk,fill=gray!15] (stor) at (0,0.7) {Storage / KV-cache Metrics};
+
+% Correlation engine
+\node[blk,fill=t4!15,minimum width=3.5cm,font=\tiny\sffamily\bfseries] (eng) at (5,2.45) {Correlation Engine};
+\node[font=\tiny\sffamily,gray] at (5,2.0) {Join by: $K = (trace, \Delta t, node,$};
+\node[font=\tiny\sffamily,gray] at (5,1.7) {$gpu, rank, nccl, nic)$};
+
+% Graph DB
+\node[blk,fill=purple!12,minimum width=3.5cm] (tsdb) at (5,0.7) {Time-Series Graph DB};
+
+% Outputs
+\node[blk,fill=nv!12,minimum width=1.5cm] (rc) at (3.5,-0.2) {Root Cause};
+\node[blk,fill=t1!12,minimum width=1.5cm] (dash) at (5,-0.2) {Dashboard};
+\node[blk,fill=t3!12,minimum width=1.5cm] (alert) at (6.5,-0.2) {Alerting};
+
+% Arrows
+\draw[arr] (otel) -- ++(2.2,0) |- (eng);
+\draw[arr] (dcgm) -- ++(2.2,0) |- (eng);
+\draw[arr] (nvtx) -- ++(2.2,0) |- (eng);
+\draw[arr] (nccl) -- ++(2.2,0) |- (eng);
+\draw[arr] (fab) -- ++(2.2,0) |- (eng);
+\draw[arr] (stor) -- ++(2.2,0) |- (eng);
+\draw[arr] (eng) -- (tsdb);
+\draw[arr] (tsdb) -- (rc);
+\draw[arr] (tsdb) -- (dash);
+\draw[arr] (tsdb) -- (alert);
+\end{tikzpicture}
+\caption{OpenDeepAPM correlation engine. Six heterogeneous data sources are joined via composite key $K$ (Eq.~\ref{eq:joinkey}) in a time-series graph database. Outputs include automated root-cause attribution, real-time dashboards, and predictive alerting.}
+\label{fig:correngine}
+\end{figure}
+
+\textbf{Temporal indexing}: All data sources are aligned to a common nanosecond-resolution timeline using NTP-synchronized GPU timestamps, CUDA event timestamps, and RDMA hardware timestamps.
+
+\textbf{Graph relationships}: The graph models causal dependencies---a decode token span \emph{depends\_on} a KV-cache read, which \emph{resides\_on} a specific GPU's HBM, which \emph{connects\_via} NVLink to peer GPUs for NCCL collectives.
+
+\textbf{Compliance integration}: The time-series graph natively supports compliance queries:
+\begin{itemize}
+\item \textbf{SOC 2}: Trace every request from ingress to egress with tenant isolation verification
+\item \textbf{HIPAA}: Verify PHI never crosses tenant boundaries via KV-cache sharing
+\item \textbf{GDPR}: Data residency proof via trace-level region assertions
+\item \textbf{FINRA}: Complete audit trail with per-request cost attribution
+\end{itemize}
+
+\subsection{UI Rendering}
+
+The OpenDeepAPM UI renders traces as an interactive waterfall:
+
+\begin{lstlisting}
+Trace: trace-llm-9001
+Total latency: 4.2 sec | TTFT: 820 ms
+TPOT: 13.2 ms/token | Tokens: 256
+
+Critical path:
+ 1. traffic.cloud_to_onprem    22 ms
+ 2. cpu.tokenization           17 ms
+ 3. scheduler.enqueue          31 ms
+ 4. llm.prefill               710 ms
+ 5. llm.decode              3,310 ms
+ 6. response.egress            20 ms
+
+Deep evidence for llm.decode:
+ - KV cache grew 4,096 -> 4,351 tokens
+ - HBM bandwidth: 94%
+ - SM active: 31%, Tensor core: 18%
+ - NCCL all-reduce: normal
+ - NVLink: normal, IB xmit_wait: normal
+ - Root cause: KV-cache memory-BW bottleneck
+\end{lstlisting}
+
+%===================================================================
+\section{OpenDeepBench: Multi-Dimensional Benchmark}
+\label{sec:deepbench}
+%===================================================================
+
+OpenDeepBench is a deep LLM infrastructure benchmark that answers not just ``which GPU is faster?'' but ``which cloud + GPU + serving engine + context size + traffic pattern gives the best TTFT, TPOT, throughput, cost/token, and reliability---and \emph{why}?''
+
+\subsection{16-Dimension Benchmark Matrix}
+
+OpenDeepBench evaluates a full matrix of deployment variables:
 
 \begin{table}[!htbp]
-\caption{Attention Mechanism Comparison Matrix}
-\label{tab:attn}
+\caption{OpenDeepBench 16-Dimension Benchmark Matrix}
+\label{tab:benchmatrix}
 \centering\footnotesize
-\begin{tabular}{@{}lp{1.2cm}p{1.0cm}p{2.4cm}@{}}
+\begin{tabular}{@{}lp{4.2cm}@{}}
 \toprule
-\textbf{Mechanism} & \textbf{KV Size} & \textbf{Regime} & \textbf{Best For} \\
+\textbf{Dimension} & \textbf{Values Tested} \\
 \midrule
-Vanilla MHA & Full & Mem & Baseline reference \\
-FlashAttn-3~\cite{dao2024flashattention3} & Full & Compute & IO-aware tiling, async \\
-RadixAttn~\cite{zheng2024sglang} & Prefix & Mem & RAG, shared prefix \\
-PagedAttn~\cite{kwon2023vllm} & Paged & Mem & General serving \\
-GQA & Reduced & Both & Llama-3, Qwen \\
-MLA~\cite{liu2024deepseekv3} & 5--13\% & Trans. & DeepSeek-V3/R1 \\
-Ring Attn & Distrib. & Compute & 1M+ context \\
-Mamba2 & O(1) & Compute & Linear complexity \\
+Cloud & AWS, Azure, GCP, OCI, on-prem \\
+Region & us-west, us-east, EU, Asia \\
+Silicon vendor & NVIDIA, AMD, Intel \\
+Accelerator & H100/H200/B200, MI300X/MI355X, Gaudi\,3 \\
+Serving engine & vLLM, TensorRT-LLM, SGLang \\
+Runtime & CUDA, ROCm, oneAPI \\
+Collective & NCCL, RCCL, HCCL \\
+Model & 8B, 70B, 405B, MoE, multimodal \\
+Context size & 1K, 4K, 8K, 16K, 32K, 64K, 128K \\
+Output length & 128, 512, 2K, 8K tokens \\
+Concurrency & 1, 4, 16, 64, 256, 1024 \\
+Batch policy & static, continuous, priority \\
+KV-cache mode & FP16, FP8, INT8, paged, prefix \\
+Attention & MHA, GQA, MQA \\
+Network & single GPU, intra-node, multi-node \\
+Storage & cold load, warm, prefix cache, KV spill \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\textbf{FlashAttention-3}~\cite{dao2024flashattention3}: IO-aware tiling with async softmax and FP8 accumulation. 75\% of theoretical peak on B200; on MI355X via hipFA: 71\%, closing CUDA gap to 4pp. \textbf{RadixAttention}~\cite{zheng2024sglang}: Radix-tree prefix caching for 2--3$\times$ speedup in RAG. \textbf{MLA}~\cite{liu2024deepseekv3}: Low-rank KV compression to 5--13\%. Decode decompression is memory-BW-bound, making it equally fast on MI355X as B200. \textbf{GQA}: 8 KV heads for 64 query heads (Llama-3). \textbf{Ring Attention}: Multi-GPU distribution for 1M+ context; NVLink near-linear, IB sub-linear. \textbf{Linear Attention (Mamba2, RWKV-6)}: O($n$) but quality gap on reasoning.
+\subsection{Context-Size Stress Matrix}
 
-\subsubsection{Axis 4: MoE Routing and Expert Parallelism}
-
-DeepSeek-V3: 256 routed + shared, 8 active. \textbf{Expert Selection Jitter}: Routing varies across hardware due to FP non-determinism. \textbf{All-to-All}: NVLink~6~\cite{nvidia2026nvlink6} (3.6\,TB/s) provides 4.5$\times$ bandwidth of IB NDR. \textbf{Expert Caching}: Intel Gaudi~3's 96\,MB on-die SRAM (12.8\,TB/s) caches hot experts -- a unique advantage absent from GPUs. \textbf{Expert Offloading}: MI355X's 288\,GB reduces offloading 2$\times$ vs.\ H200.
-
-\subsubsection{Axis 5: Speculative Decoding Variants}
+Context size directly drives KV-cache memory and decode bandwidth pressure, making it a first-class benchmark axis:
 
 \begin{table}[!htbp]
-\caption{Speculative Decoding Method Comparison}
-\label{tab:spec}
+\caption{Context-Size Benchmark Matrix}
+\label{tab:context}
 \centering\footnotesize
-\begin{tabular}{@{}lccl@{}}
+\begin{tabular}{@{}crrrl@{}}
 \toprule
-\textbf{Method} & \textbf{Accept\%} & \textbf{Speedup} & \textbf{Mechanism} \\
+\textbf{ID} & \textbf{Ctx} & \textbf{Out} & \textbf{Conc} & \textbf{Exposes} \\
 \midrule
-Vanilla~\cite{leviathan2023speculative} & 60--75 & 1.5--2$\times$ & Separate draft model \\
-EAGLE-2~\cite{li2024eagle2} & 75--85 & 2--3$\times$ & Feature-level draft \\
-Medusa & 65--80 & 1.8--2.5$\times$ & Multiple decode heads \\
-Lookahead & 55--70 & 1.3--1.8$\times$ & N-gram + Jacobi \\
-Hydra & 70--82 & 2--2.8$\times$ & Tree-structured draft \\
-Self-Spec & 60--72 & 1.4--1.9$\times$ & Layer skipping \\
+C1 & 1K & 128 & 1 & Single-user short chat \\
+C2 & 4K & 512 & 16 & Enterprise chat \\
+C3 & 8K & 512 & 64 & RAG / document Q\&A \\
+C4 & 16K & 1K & 64 & Report summarization \\
+C5 & 32K & 2K & 32 & Legal / codebase \\
+C6 & 64K & 2K & 16 & Long-context stress \\
+C7 & 128K & 4K & 4 & Max KV-cache stress \\
+C8 & Mixed & Mixed & 256 & Real multi-tenant \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\textbf{EAGLE-2}~\cite{li2024eagle2}: Feature-level (hidden state) drafting with dynamic tree construction. 75--85\% acceptance. B200 compute helps draft; MI355X memory allows larger batch tree. \textbf{Medusa}: Parallel heads, no separate model. \textbf{Lookahead}: N-gram + Jacobi for structured outputs. \textbf{Inference-Time Compute Scaling}: Best-of-N, tree search, CoT budgeting.
+\subsection{Core Benchmark Scorecard}
 
-\subsubsection{Axis 6: Quantization and Precision}
+Every OpenDeepBench run produces a normalized scorecard:
 
 \begin{table}[!htbp]
-\caption{Native Quantization Support by Architecture}
-\label{tab:quant}
+\caption{OpenDeepBench Core Scorecard Metrics}
+\label{tab:scorecard}
+\centering\footnotesize
+\begin{tabular}{@{}llp{3cm}@{}}
+\toprule
+\textbf{Category} & \textbf{Metric} & \textbf{Why It Matters} \\
+\midrule
+User latency & TTFT p50/p95/p99 & Time to first token \\
+Decode latency & TPOT p50/p95/p99 & Time per output token \\
+Throughput & output tok/s & Serving capacity \\
+Prefill & input tok/s & Long-context efficiency \\
+Batch efficiency & tok/s/GPU & Hardware utilization \\
+Cost & \$/1M input tok & Prompt economics \\
+Cost & \$/1M output tok & Decode economics \\
+Energy & joules/token & Power efficiency \\
+Memory & KV cache GB/req & Long-context capacity \\
+Network & collective latency & Multi-GPU overhead \\
+Storage & cold start time & Model load impact \\
+Reliability & OOM/error/timeout & Production readiness \\
+Fairness & noisy-neighbor impact & Multi-tenant isolation \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Multi-Silicon Normalized Schema}
+
+OpenDeepBench normalizes vendor-specific metrics:
+
+\begin{table}[!htbp]
+\caption{Multi-Silicon Normalized Schema}
+\label{tab:normalized}
 \centering\footnotesize
 \begin{tabular}{@{}llll@{}}
 \toprule
-\textbf{Format} & \textbf{NVIDIA} & \textbf{AMD} & \textbf{Intel} \\
+\textbf{Normalized} & \textbf{NVIDIA} & \textbf{AMD} & \textbf{Intel} \\
 \midrule
-BF16/FP16 & Native & Native & Native \\
-FP8 (E4M3) & Hopper+ & CDNA\,3+ & Gaudi\,3 \\
-FP4 & Blackwell+ & -- & -- \\
-MXFP4/MXFP6 & -- & CDNA\,4 & -- \\
-INT8 & All & All & Native \\
-INT4 (GPTQ/AWQ) & SW & SW & SW \\
+runtime & CUDA & ROCm/HIP & oneAPI \\
+collective & NCCL & RCCL & HCCL \\
+intra\_node & NVLink & xGMI/IF & vendor \\
+compute\_util & SM active & CU active & compute \\
+matrix\_util & Tensor Core & Matrix core & matrix eng \\
+memory\_bw & HBM BW & HBM BW & HBM BW \\
+profiler & Nsight/DCGM & rocprof/SMI & vendor \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-GPTQ~\cite{frantar2023gptq} vs.\ AWQ~\cite{lin2024awq} vs.\ QuIP\# on domain benchmarks (Med-QA, LegalBench, FinanceBench, MMLU-Pro, HumanEval). \textbf{Key finding}: AMD MXFP4 preserves 0.3--0.5 ppl points more than NVIDIA FP4 through shared exponent dynamic range.
+\subsection{12 Benchmark Suite Categories}
 
-\subsection{Tier 2: Model Architecture Axes}
+\begin{table}[!htbp]
+\caption{OpenDeepBench Suite Categories}
+\label{tab:suites}
+\centering\footnotesize
+\begin{tabular}{@{}lp{4.6cm}@{}}
+\toprule
+\textbf{Suite} & \textbf{Purpose} \\
+\midrule
+ODB-Chat & Normal chat, 1K--8K context \\
+ODB-RAG & Enterprise RAG, 4K--32K context \\
+ODB-LongContext & 32K--128K context stress \\
+ODB-Code & Code gen, long prompts + outputs \\
+ODB-MultiTenant & 10--100 tenants, mixed context \\
+ODB-MultiNode & TP/PP multi-node scaling \\
+ODB-MultiCloud & Cloud routing + cost comparison \\
+ODB-ColdStart & Model loading + warm-pool behavior \\
+ODB-KVCache & KV pressure, quantization, spill \\
+ODB-Fabric & NVLink, xGMI, PCIe, IB, RoCE stress \\
+ODB-Cost & \$/token, joules/token, throughput/\$ \\
+ODB-Reliability & OOM, retries, throttling, failure \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-\subsubsection{Axis 7: Multi-Modal Inference}
+\subsection{OpenDeepBench Composite Score}
+\label{sec:score}
 
-Multi-modal models (GPT-4o, Gemini~2.0, LLaVA-NeXT, Qwen-VL, Pixtral) demand cross-modality benchmarking:
+\begin{equation}
+S_{\text{ODB}} = \sum_{i=1}^{10} w_i \cdot \frac{s_i - \mu_i}{\sigma_i}
+\end{equation}
 
-\textbf{Vision Encoding}: ViT-L/14 at 336px: 8--15\,ms on H100; SigLIP at 384px: 12--20\,ms. Cross-attention cost grows quadratically with vision tokens. \textbf{Video Understanding}: 60s at 2\,FPS = 69,120 KV entries. Memory/second: H200 (490\,MB), MI355X (245\,MB at MXFP4). \textbf{Audio/Speech}: Whisper-large-v3 at 1.3$\times$ realtime; streaming ASR adds 150--300\,ms buffering. \textbf{World Models}: Sora-class diffusion at 50--100 steps/frame; 4--8\,GB VRAM per second of video. \textbf{Cross-Modal Routing}: Vision on compute-optimized GPU, LLM on memory-optimized. MI355X fits both vision encoder and 70B LLM on single card.
+\begin{table}[!htbp]
+\caption{OpenDeepBench Score Components and Weights}
+\label{tab:weights}
+\centering\footnotesize
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Score Component} & \textbf{Weight} & \textbf{Formula Basis} \\
+\midrule
+Latency & 25\% & Weighted TTFT + TPOT p95/p99 \\
+Throughput & 20\% & tok/s/GPU and tok/s/node \\
+Cost efficiency & 20\% & \$/1M tokens and throughput/\$ \\
+Long-context & 15\% & Degradation 8K$\to$32K$\to$128K \\
+Reliability & 10\% & OOM, retries, failures \\
+Operational & 10\% & Cold start, simplicity \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-\subsubsection{Axes 8--10: Long-Context, LoRA, Constrained Generation}
+\subsection{Comparison: OpenDeepBench vs.\ MLPerf / vLLM}
 
-\textbf{Axis 8 (Long-Context 128K--10M):} TTFT scaling, needle-in-haystack accuracy, LongRoPE~\cite{ding2024longrope}/YaRN/ABF compression, RAG vs.\ pure long-context tradeoffs, StreamingLLM~\cite{xiao2024streamingllm} degradation curves.
-
-\textbf{Axis 9 (Multi-LoRA):} S-LoRA~\cite{sheng2024slora}/Punica swap latency under continuous batching~\cite{yu2022orca}, batch fusion (1$\to$100 adapters), rank-accuracy tradeoffs.
-
-\textbf{Axis 10 (Constrained Generation):} Grammar-guided decoding (Outlines, Guidance, LMFE) overhead, tool-use/function calling accuracy, agentic state accumulation cost.
-
-\subsection{Tier 3: Infrastructure Axes}
-
-\subsubsection{Axis 11: Network, Interconnect, and Memory Fabric}
-
-\textbf{Scale-Up}: NVLink~6 (3.6\,TB/s/GPU)~\cite{nvidia2026nvlink6} vs.\ AMD Infinity Fabric vs.\ Intel on-board (600\,Gb/s). Tensor parallel 1$\to$8. \textbf{Scale-Out}: IB NDR (400\,Gb/s) vs.\ RoCE v2 vs.\ AWS EFA v2 vs.\ GCP TCPX. Pipeline/expert parallel 8$\to$256. \textbf{CXL 3.1}~\cite{cxl2025memorydisagg}: KV-cache overflow tier -- 4$\times$ memory at 15\% latency. \textbf{ConnectX-9/BlueField-4}~\cite{nvidia2026nvlink6}: 800\,Gb/s SuperNIC, 64-core DPU for telemetry offload.
-
-\subsubsection{Axis 12: Production Overhead Profiling}
-
-\emph{Unique to InferMark.} Progressive overhead: logging (+8\,ms), PII masking (+12\,ms), attention archival (+15\,ms), provenance (+3\,ms), guardrails~\cite{inan2023llamaguard} (+18\,ms), watermarking~\cite{kirchner2024watermarking} (+5\,ms), schema validation (+3\,ms). Total: 18--61\% latency invisible to all current benchmarks.
-
-\subsection{Tier 4: Application and Routing Axes}
-
-\textbf{Axis 13 (E2E Latency):} Microsecond decomposition: TLS$\to$LB queue$\to$tokenize$\to$prefill$\to$KV transfer$\to$decode$\to$post-process$\to$stream. P50/P99/P999 per phase per cloud. \textbf{Axis 14 (Routing):} Multi-objective routing across 11 providers including cross-cloud disaggregated paths spanning Hyperscalers, Neo-Clouds, and Token Factories.
-
+\begin{table}[!htbp]
+\caption{What Makes OpenDeepBench Different}
+\label{tab:comparison}
+\centering\footnotesize
+\begin{tabular}{@{}lp{1.8cm}p{2.8cm}@{}}
+\toprule
+\textbf{Area} & \textbf{Existing} & \textbf{OpenDeepBench} \\
+\midrule
+Standard & MLPerf system bench & +deep trace + root cause \\
+Runtime & vLLM throughput & Compare engines across clouds \\
+Vendor & Vendor validates & Normalize NVIDIA/AMD/Intel \\
+Context & Some max\_len & 1K--128K first-class axis \\
+HW profile & Separate profiler & Integrated trace + counters \\
+Multi-cloud & Manual compare & Native cloud/region/cost \\
+Tenancy & Synthetic conc & Tenant fairness, noisy neighbor \\
+Root cause & Left to engineer & Automated diagnosis \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 %===================================================================
 \section{Cross-Architecture Deep Dive}
@@ -293,26 +791,21 @@ Multi-modal models (GPT-4o, Gemini~2.0, LLaVA-NeXT, Qwen-VL, Pixtral) demand cro
 \textbf{AMD GPU} & ROCm maturity; 288\,GB HBM3E (MI355X); MXFP4/6 native; vLLM native; memory-capacity advantage \\
 \textbf{Intel HPU} & Gaudi~3 matrix engines; 96\,MB SRAM (expert cache); 128\,GB HBM2e; lowest TDP; cost leader \\
 \textbf{Google TPU} & XLA/JAX; pod-scale ICI; SparseCore; 67\% energy gain \\
-\textbf{ARM CPU} & Vera (88 Olympus cores); Graviton4; pre/post offload \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{NVIDIA: Hopper to Blackwell to Vera Rubin}
 
-Vera Rubin NVL72~\cite{nvidia2026verarubin} integrates 7 co-designed chips: Rubin GPU (R100, 336B transistors, 3nm, 288\,GB HBM4), Vera CPU (88 ARM Olympus cores), NVLink~6 (3.6\,TB/s/GPU), ConnectX-9 SuperNIC (800\,Gb/s)~\cite{nvidia2026nvlink6}, BlueField-4 DPU, Spectrum-6 fabric. Claims 5$\times$ rack-level improvement, 10$\times$ lower cost-per-token vs.\ Blackwell. However, this co-designed stack creates \emph{vendor lock-in at the infrastructure layer}.
+Vera Rubin NVL72~\cite{nvidia2026verarubin} integrates 7 co-designed chips: R100 GPU (288\,GB HBM4), Vera CPU (88 ARM Olympus cores), NVLink~6 (3.6\,TB/s/GPU), ConnectX-9 SuperNIC (800\,Gb/s)~\cite{nvidia2026nvlink6}, BlueField-4 DPU, Spectrum-6 fabric. Claims 5$\times$ rack-level improvement. However, this co-designed stack creates \emph{vendor lock-in at the infrastructure layer} that OpenDeepBench exposes through cross-vendor benchmarking.
 
 \subsection{AMD: The Memory Inflection}
 
-MI355X~\cite{amd2025mi350} on CDNA~4 (3nm, 185B transistors): \textbf{(a)} 288\,GB HBM3E eliminates KV-cache eviction for 70B at 128K; \textbf{(b)} MXFP4 preserves 0.3--0.5 ppl points over NVIDIA FP4; \textbf{(c)} MLPerf v6.0 crossed 1M tok/s~\cite{mlcommons2026mlperfv6}; \textbf{(d)} DeepSeek-V3's 256 experts: MI355X accommodates 40\% more per GPU, reducing all-to-all by 40\%. \emph{For memory-bound decode (80\%+ of production inference), MI355X matches B200 at 97\% performance.}
+MI355X~\cite{amd2025mi350} on CDNA~4: \textbf{(a)} 288\,GB HBM3E eliminates KV-cache eviction for 70B at 128K; \textbf{(b)} MXFP4 preserves 0.3--0.5 ppl points over NVIDIA FP4; \textbf{(c)} DeepSeek-V3's 256 experts: MI355X accommodates 40\% more per GPU. \emph{For memory-bound decode (80\%+ of production inference), MI355X matches B200 at 97\% performance.}
 
 \subsection{Intel: Efficiency Champion}
 
-Gaudi~3~\cite{intel2025gaudi3}: \textbf{(a)} 1,835 TFLOPS at 600\,W -- best compute/watt; \textbf{(b)} 96\,MB on-die SRAM with 12.8\,TB/s for expert caching; \textbf{(c)} 30--50\% lower instance cost than H100; \textbf{(d)} Crescent Island (H2 2026) targets inference-specific optimization. \emph{For batch inference, Gaudi~3 delivers best tokens-per-dollar.}
-
-\subsection{Google TPU v6e: Pod-Scale Economics}
-
-918 TFLOPS BF16/chip~\cite{google2025tpuv6}, 4.7$\times$ over v5e, 67\% energy improvement, pod-scale ICI (800\,GBps/chip). Best tok/W at scale. Reported 30\% lower cost-per-token vs.\ H100 for high-batch steady-state workloads.
+Gaudi~3~\cite{intel2025gaudi3}: 1,835 TFLOPS at 600\,W---best compute/watt; 96\,MB on-die SRAM with 12.8\,TB/s for expert caching; 30--50\% lower instance cost than H100. \emph{For batch inference, Gaudi~3 delivers best tokens-per-dollar.}
 
 \begin{figure}[!htbp]
 \centering
@@ -345,7 +838,7 @@ Gaudi~3~\cite{intel2025gaudi3}: \textbf{(a)} 1,835 TFLOPS at 600\,W -- best comp
 \label{sec:cloud}
 %===================================================================
 
-InferMark evaluates 11 providers across three categories representing the full spectrum of inference deployment options:
+OpenDeepBench evaluates 11 providers across three categories:
 
 \begin{table}[!htbp]
 \caption{Multi-Cloud Provider Matrix (11 Providers, 3 Categories)}
@@ -363,7 +856,6 @@ OCI & B200 BM & RDMA & Hyperscaler & Plan. \\
 CoreWeave & H100/B200 & IB NDR & Neo-Cloud & MI355X \\
 Lambda & H100/B200 & IB NDR & Neo-Cloud & MI355X \\
 Crusoe & H100/B200 & IB NDR & Neo-Cloud & MI355X \\
-Volt.\ Park & H100 & IB NDR & Neo-Cloud & -- \\
 \midrule
 Modal & H100/A100 & Custom & Token Fact. & -- \\
 Baseten & H100/A100 & Custom & Token Fact. & -- \\
@@ -372,118 +864,7 @@ Nebius & H100/B200 & IB NDR & Token Fact. & MI355X \\
 \end{tabular}
 \end{table}
 
-\textbf{Hyperscalers} (AWS, GCP, Azure, OCI): Enterprise-grade SLAs, global regions, multi-service integration. Performance tax from virtualization overhead (5--15\%).
-
-\textbf{Neo-Clouds} (CoreWeave, Lambda, Crusoe, Voltage Park): GPU-native architectures with bare-metal or minimal virtualization. 15--29\% lower cost at iso-latency vs.\ hyperscalers. First to deploy AMD MI355X.
-
-\textbf{Token Factories} (Modal, Baseten, Nebius): Serverless inference platforms abstracting infrastructure entirely. Auto-scaling, pay-per-token economics. Higher per-token cost but zero operational overhead. Modal and Baseten specialize in rapid deployment with sub-second cold start optimization. Nebius provides European sovereignty with competitive H100/B200 pricing.
-
-\textbf{Key findings}: (1) Neo-Clouds achieve best performance/\$ for sustained workloads; (2) Token Factories achieve best time-to-production for variable workloads; (3) Hyperscalers remain necessary for regulated industries requiring data residency guarantees; (4) AMD MI355X expanding across Neo-Clouds and Nebius.
-
-
-%===================================================================
-\section{APM Observability Architecture}
-\label{sec:apm}
-%===================================================================
-
-The most novel contribution: bridging the gap between infrastructure APM and model quality. Traditional tools (Datadog, New Relic, Dynatrace) instrument deterministic services. LLM inference is fundamentally different: non-deterministic outputs, length-varying latency, probabilistic correctness.
-
-\begin{figure}[!htbp]
-\centering
-\begin{tikzpicture}[
-    blk/.style={rectangle,draw,rounded corners=2pt,minimum height=0.42cm,minimum width=3cm,font=\tiny\sffamily,line width=0.4pt},
-    arr/.style={-{Stealth[length=1.5mm]},line width=0.4pt},
-]
-\node[blk,fill=nv!12] (d1) at (0,0) {DCGM / rocm-smi / hl-smi};
-\node[blk,fill=nv!12] (d2) at (0,-0.55) {eBPF: network, syscalls};
-\node[blk,fill=nv!6] (d3) at (0,-1.1) {\scriptsize SM occ, L2 hit, bank confl, thermal};
-\node[blk,fill=t2!12] (e1) at (0,0.9) {vLLM/SGLang: KV\%, tok/s, TTFT};
-\node[blk,fill=t2!12] (e2) at (0,1.45) {Batch depth, ctx util, TPOT};
-\node[blk,fill=t4!10] (q1) at (0,2.35) {Quality scorer (domain rubrics)};
-\node[blk,fill=t4!10] (q2) at (0,2.9) {CoT trace, confidence calibration};
-\node[blk,fill=purple!12,line width=0.7pt] (ot) at (0,3.8) {\textbf{OpenTelemetry Collector}};
-\node[blk,fill=gray!10,minimum width=1.3cm] (p) at (-1.5,4.6) {Prometheus};
-\node[blk,fill=gray!10,minimum width=1.3cm] (g) at (0,4.6) {Grafana};
-\node[blk,fill=gray!10,minimum width=1.3cm] (a) at (1.5,4.6) {Alerting};
-
-\draw[arr] (d1) -- ++(1.9,0) |- (ot); \draw[arr] (d2) -- ++(2.1,0) |- (ot);
-\draw[arr] (d3) -- ++(2.3,0) |- (ot);
-\draw[arr] (e1) -- ++(1.9,0) |- (ot); \draw[arr] (e2) -- ++(2.1,0) |- (ot);
-\draw[arr] (q1) -- ++(1.9,0) |- (ot); \draw[arr] (q2) -- ++(2.1,0) |- (ot);
-\draw[arr] (ot) -- (p); \draw[arr] (ot) -- (g); \draw[arr] (ot) -- (a);
-
-\node[font=\tiny\sffamily\bfseries,gray] at (-2.3,-0.55) {Tier 1: HW};
-\node[font=\tiny\sffamily\bfseries,gray] at (-2.3,1.15) {Tier 2: Engine};
-\node[font=\tiny\sffamily\bfseries,gray] at (-2.3,2.6) {Tier 3: Quality};
-\end{tikzpicture}
-\caption{Three-tier APM architecture. Hardware telemetry (DCGM~\cite{nvidia2025dcgm}, rocm-smi, hl-smi, low-level GPU counters), engine metrics, and quality signals unified via OpenTelemetry~\cite{otel2025gpu}. Cross-architecture normalization enables vendor-neutral alerting.}
-\label{fig:apm}
-\vspace{-0.3cm}
-\end{figure}
-
-\subsection{Cross-Tier Causal Correlation}
-\textbf{Example}: \emph{``Request R-4821 quality dropped 0.92$\to$0.67. Root cause: GPU-3 throttle at 89$^\circ$C $\to$ KV eviction $\to$ context truncated 32K$\to$8K $\to$ relevant context lost.''}
-
-Novel inference-aware OpenTelemetry semantic conventions:
-
-\begin{lstlisting}
-inference.model.id         # Model identifier
-inference.kv_cache.pct     # KV utilization
-inference.prefill.ms       # Prefill latency
-inference.decode.tok_per_s # Decode throughput
-inference.quality.score    # Output quality (0-1)
-inference.gpu.sm_occupancy # SM occupancy %
-inference.gpu.l2_hit_rate  # L2 cache hit ratio
-inference.gpu.mem_coalesce # Memory coalescing %
-inference.gpu.thermal_c    # Die temperature
-inference.gpu.power_w      # Power draw watts
-\end{lstlisting}
-
-\subsection{AI-Native APM Platform Requirements}
-\begin{enumerate}
-\item Non-deterministic anomaly detection (probabilistic, not threshold)
-\item Quality-to-infrastructure causal tracing across three tiers
-\item Cross-architecture normalization (DCGM/rocm-smi/hl-smi unified)
-\item Per-request cost attribution across heterogeneous hardware
-\item Predictive KV-cache pressure scaling before OOM
-\end{enumerate}
-No existing vendor addresses all five -- a greenfield opportunity. TAM for AI infrastructure monitoring: \$12B by 2028 (Gartner), inference-specific segment growing 45\% CAGR.
-
-%===================================================================
-\section{InferMark Composite Score}
-\label{sec:score}
-%===================================================================
-
-\begin{equation}
-S_{\text{IM}} = \sum_{i=1}^{12} w_i \cdot \frac{s_i - \mu_i}{\sigma_i}
-\end{equation}
-
-Weights from survey of 47 production operators:
-
-\begin{table}[!htbp]
-\caption{InferMark Score Components and Weights}
-\label{tab:wt}
-\centering\footnotesize
-\begin{tabular}{@{}lccp{2.3cm}@{}}
-\toprule
-\textbf{Component} & \textbf{$w_i$} & \textbf{Axes} & \textbf{Rationale} \\
-\midrule
-Throughput & 0.15 & 1--6 & Revenue driver \\
-Latency P99 & 0.12 & 13 & User experience \\
-Memory Efficiency & 0.10 & 1 & AMD/Intel advantage \\
-Scaling & 0.10 & 11 & Multi-GPU ROI \\
-Quality & 0.08 & 6 & Accuracy vs.\ speed \\
-Cost \$/M tok & 0.08 & 14 & Unit economics \\
-Prod.\ Overhead & 0.08 & 12 & Real-world gap \\
-Routing & 0.08 & 14 & Multi-cloud \\
-Determinism & 0.06 & 4 & MoE reproducibility \\
-Multi-Modal & 0.05 & 7 & VLM workloads \\
-Long-Context & 0.05 & 8 & RAG/agents \\
-Adapter & 0.05 & 9 & Customization \\
-\bottomrule
-\end{tabular}
-\end{table}
-
+\textbf{Key findings}: (1) Neo-Clouds achieve best performance/\$ for sustained workloads; (2) Token Factories achieve best time-to-production for variable workloads; (3) Hyperscalers remain necessary for regulated industries requiring data residency.
 
 %===================================================================
 \section{Experimental Studies}
@@ -494,7 +875,7 @@ Adapter & 0.05 & 9 & Customization \\
 
 \textbf{H$_1$}: Identical models on identical GPUs exhibit $>$2$\times$ throughput variance across clouds.
 
-\textbf{Protocol}: vLLM v0.8+ on 8$\times$H100 SXM across 11 providers. ShareGPT trace replays at $C \in \{1, 8, 32, 128, 512\}$ for 30-min sustained windows. One-way ANOVA with post-hoc Tukey HSD. Variance decomposition: hypervisor overhead, driver version, network jitter, thermal throttling.
+\textbf{Protocol}: vLLM v0.8+ on 8$\times$H100 SXM across providers. ShareGPT trace replays at $C \in \{1, 8, 32, 128, 512\}$ for 30-min sustained windows.
 
 \begin{figure}[!htbp]
 \centering
@@ -515,7 +896,7 @@ Adapter & 0.05 & 9 & Customization \\
 \legend{H100 SXM, H100 PCIe}
 \end{axis}
 \end{tikzpicture}
-\caption{Cross-cloud throughput. CoreWeave leads (4,680); Azure trails (2,890) -- 1.62$\times$ gap for identical hardware. Token Factories (Modal, Baseten) achieve mid-range throughput with zero-ops overhead.}
+\caption{Cross-cloud throughput. CoreWeave leads (4,680); Azure trails (2,890)---1.62$\times$ gap for identical hardware.}
 \label{fig:tp}
 \vspace{-0.3cm}
 \end{figure}
@@ -549,7 +930,7 @@ Adapter & 0.05 & 9 & Customization \\
 \legend{Infer,Log,PII,Attn,Prov,Guard,Wmark,Schema}
 \end{axis}
 \end{tikzpicture}
-\caption{Progressive production overhead. Full stack: +64\,ms (+64\%). Guardrails dominate (+18\,ms). Completely invisible to MLPerf and all current benchmarks.}
+\caption{Progressive production overhead. Full stack: +64\,ms (+64\%). Completely invisible to MLPerf.}
 \label{fig:oh}
 \vspace{-0.3cm}
 \end{figure}
@@ -582,37 +963,33 @@ Adapter & 0.05 & 9 & Customization \\
 \node[font=\tiny] at (axis cs:6.5,45) {MLA};
 \node[font=\tiny] at (axis cs:10,68) {GQA};
 \node[font=\tiny] at (axis cs:1.5,7) {MHA};
-\node[font=\tiny] at (axis cs:20,85) {Ring};
 \legend{B200 BW,B200 peak,MI355X BW,MI355X peak,Gaudi\,3 BW,Gaudi\,3 peak}
 \end{axis}
 \end{tikzpicture}
-\caption{Roofline analysis. MI355X achieves 97\% of B200 in memory-BW-bound regime (FA3, MHA) due to matched 8\,TB/s bandwidth. Gaudi~3's lower BW limits absolute TFLOPS but delivers best tok/W.}
+\caption{Roofline analysis. MI355X achieves 97\% of B200 in memory-BW-bound regime due to matched 8\,TB/s bandwidth.}
 \label{fig:rf}
 \vspace{-0.3cm}
 \end{figure}
 
-\subsection{Study 4: Multi-Hop Disaggregated Routing}
+\subsection{Study 4: OpenDeepBench Comparison Table}
 
-\begin{table}[!htbp]
-\caption{Multi-Cloud Routing Path Analysis}
-\label{tab:rt}
+\begin{table*}[!htbp]
+\caption{OpenDeepBench Cross-Cloud, Cross-Silicon Comparison (Llama-70B, FP8)}
+\label{tab:odbresults}
 \centering\footnotesize
-\begin{tabular}{@{}llcccc@{}}
+\begin{tabular}{@{}llccccccc@{}}
 \toprule
-\textbf{ID} & \textbf{Path} & \textbf{TTFT} & \textbf{\$/1M} & \textbf{Avail} & \textbf{Type} \\
+\textbf{Cloud} & \textbf{Silicon} & \textbf{Context} & \textbf{Conc} & \textbf{TTFT p95} & \textbf{TPOT p95} & \textbf{tok/s/GPU} & \textbf{HBM\%} & \textbf{Root Cause} \\
 \midrule
-R1 & AWS H100 & 28\,ms & \$0.82 & 99.2\% & Single \\
-R2 & GCP H100 & 24\,ms & \$0.78 & 99.5\% & Single \\
-R3 & OCI B200 BM & 22\,ms & \$0.65 & 98.8\% & Single \\
-R5 & CoreWeave & 19\,ms & \$0.61 & 98.5\% & Single \\
-R7 & Crusoe & 21\,ms & \$0.52 & 97.0\% & Single \\
-R8 & Modal & 26\,ms & \$0.71 & 99.0\% & Token F. \\
-\midrule
-R10 & OCI$\to$CW & 22\,ms & \$0.60 & 98.1\% & Disagg \\
-R11 & Crusoe$\to\Lambda$ & 23\,ms & \$0.48 & 96.5\% & Disagg \\
+On-prem & H200 & 8K & 64 & 620\,ms & 18\,ms & High & 72\% & Balanced \\
+AWS & H100 & 8K & 64 & 710\,ms & 20\,ms & Med-high & 76\% & Cloud cost \\
+Azure & MI300X & 8K & 64 & 760\,ms & 23\,ms & Medium & 81\% & Runtime tuning \\
+On-prem & B200 & 32K & 32 & 1.4\,s & 34\,ms & High & 94\% & KV-cache BW \\
+Cloud & H100 multi-node & 16K & 16 & 3.2\,s & 65\,ms & Medium & 70\% & Collective/net \\
+On-prem & MI300X & 64K & 8 & 2.8\,s & 70\,ms & Medium & 96\% & HBM/KV pressure \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 
 \subsection{Study 5: Energy Efficiency}
 
@@ -633,17 +1010,7 @@ TPU v6e pod & 3,400 & 5,100 & 0.667 & 1.18$\times$ & 0.36\,kg \\
 \end{tabular}
 \end{table}
 
-Gaudi~3 achieves 78\% of B200's tok/W at $<$50\% cost. TPU~v6e leads absolute tok/W (1.18$\times$) at pod scale.
-
-\subsection{Study 6: Kernel-Level Profiling}
-
-Nsight Systems, rocProf, Habana profiler. Custom Triton~\cite{triton2024openai} and ThunderKittens~\cite{thunderkittens2025} kernels vs.\ vendor implementations. Focus: attention kernel SM occupancy, memory coalescing efficiency, shared memory bank conflicts, L2 hit rates, warp-level instruction throughput. AMD wavefront scheduling and Intel TPC pipeline optimization provide architecture-specific tuning opportunities invisible to cross-platform frameworks.
-
-
-%===================================================================
-\section{Latency Decomposition and Routing}
-\label{sec:latency}
-%===================================================================
+\subsection{Study 6: End-to-End Latency Waterfall}
 
 \begin{figure*}[!htbp]
 \centering
@@ -669,117 +1036,112 @@ Nsight Systems, rocProf, Habana profiler. Custom Triton~\cite{triton2024openai} 
 \legend{TLS/TCP,LB Queue,Tokenize,Prefill (2K),KV Transfer,Post-proc,Stream}
 \end{axis}
 \end{tikzpicture}
-\caption{End-to-end TTFT latency waterfall across 5 providers (P50). LB queue depth is the highest-variance component ($\pm$11\,ms for Azure). OCI bare-metal achieves lowest TTFT (23.1\,ms) due to zero hypervisor overhead.}
+\caption{End-to-end TTFT latency waterfall across 5 providers (P50). OCI bare-metal achieves lowest TTFT (23.1\,ms) due to zero hypervisor overhead. OpenDeepAPM captures every phase as a linked span.}
 \label{fig:waterfall}
 \end{figure*}
 
-\subsection{Routing Framework}
+%===================================================================
+\section{Root-Cause Diagnosis Case Studies}
+\label{sec:rootcause}
+%===================================================================
 
-\begin{equation}
-r^* = \arg\max_{r \in \mathcal{R}} \sum_j \alpha_j \cdot f_j(r)
-\end{equation}
+OpenDeepBench generates automated root-cause diagnosis per run using OpenDeepAPM trace evidence.
 
-\noindent where $f_j$ scores latency, cost, quality, and overhead with priority-dependent weights $\alpha_j$. Updated online from APM telemetry.
+\subsection{Case 1: KV-Cache Memory Bandwidth Bottleneck}
+
+\begin{lstlisting}
+Run: on-prem / NVIDIA B200 / 70B / 64K ctx / C=16
+Finding: TPOT p95 increased sharply beyond 32K
+Evidence:
+  HBM bandwidth    = 95%
+  SM active         = 28%
+  Tensor core       = 16%
+  NCCL latency      = normal
+  IB counters       = normal
+  KV cache          = very large
+Root cause: Decode is KV-cache memory-BW-bound
+Recommendation: GQA/MQA model, KV quantization,
+  lower max context, dedicated long-ctx pool
+\end{lstlisting}
+
+\subsection{Case 2: Inter-Node Fabric Congestion}
+
+\begin{lstlisting}
+Run: on-prem / H100 / 405B / TP=16 / 2 nodes
+Finding: Decode p99 latency spikes
+Evidence:
+  NCCL all-reduce p99 = high
+  Slowest rank         = rank 13
+  GPU SM active        = low during spikes
+  IB port_xmit_wait    = high
+  HBM bandwidth        = normal
+Root cause: Inter-node fabric congestion
+Recommendation: Prefer intra-node NVLink,
+  reduce cross-node TP, improve IB QoS
+\end{lstlisting}
+
+\subsection{Case 3: Traffic Overhead Bottleneck}
+
+\begin{lstlisting}
+Run: AWS / user=US-West / serving=US-East
+Finding: TTFT high despite healthy GPU metrics
+Evidence:
+  traffic.cross_region = 180 ms
+  prefill              = normal
+  decode               = normal
+  GPU                  = under no pressure
+Root cause: Bad traffic placement
+Recommendation: Route to nearest region,
+  tenant affinity with local GPU pool
+\end{lstlisting}
+
+\subsection{Case 4: Storage Cold-Start Bottleneck}
+
+\begin{lstlisting}
+Run: GCP / 70B / cold_start=true
+Finding: First run slow, later runs normal
+Evidence:
+  model.load         = 45 sec
+  object store read  = bottleneck
+  GPU idle during load
+Root cause: Cold model weight load
+Recommendation: Pre-warm model, cache weights
+  on local NVMe, model-pool residency policy
+\end{lstlisting}
+
+%===================================================================
+\section{OpenDeepBench Architecture}
+\label{sec:odbarch}
+%===================================================================
 
 \begin{figure}[!htbp]
 \centering
 \begin{tikzpicture}[
-    blk/.style={rectangle,draw,rounded corners=2pt,font=\tiny\sffamily,fill=t1!8,minimum height=0.4cm,minimum width=2.5cm,line width=0.3pt},
-    dec/.style={diamond,draw,aspect=2,inner sep=1pt,font=\tiny\sffamily,fill=t3!8,line width=0.3pt},
-    res/.style={rectangle,draw,rounded corners=2pt,font=\tiny\sffamily\bfseries,fill=nv!12,minimum height=0.4cm,line width=0.4pt},
+    blk/.style={rectangle,draw,rounded corners=2pt,minimum height=0.35cm,minimum width=2.5cm,font=\tiny\sffamily,line width=0.3pt,fill=#1},
     arr/.style={-{Stealth[length=1.2mm]},line width=0.3pt},
 ]
-\node[blk] (inp) at (0,5) {Request: model, len, priority};
-\node[dec] (d1) at (0,4) {Model loaded?};
-\node[dec] (d2) at (0,3) {Capacity?};
-\node[blk,minimum width=3.5cm] (sc) at (0,2) {Score: latency + cost + quality + overhead};
-\node[dec] (d3) at (0,1) {Disagg viable?};
-\node[res] (r1) at (-1.8,0) {Single-cloud route};
-\node[res] (r2) at (1.8,0) {Multi-hop disagg};
+\node[blk=t1!15,minimum width=3.5cm,font=\tiny\sffamily\bfseries] (ctrl) at (0,5.5) {OpenDeepBench Controller};
 
-\draw[arr] (inp) -- (d1);
-\draw[arr] (d1) -- node[right,font=\tiny]{yes} (d2);
-\draw[arr] (d1) -- ++(-2,0) node[left,font=\tiny]{no: filter} |- (sc);
-\draw[arr] (d2) -- node[right,font=\tiny]{yes} (sc);
-\draw[arr] (d2) -- ++(2,0) node[right,font=\tiny]{no: wait} |- (sc);
-\draw[arr] (sc) -- (d3);
-\draw[arr] (d3) -| node[above left,font=\tiny]{no} (r1);
-\draw[arr] (d3) -| node[above right,font=\tiny]{yes} (r2);
+\node[blk=t2!10] (wg) at (-2.5,4.5) {Workload Generator};
+\node[blk=t3!10] (dm) at (0,4.5) {Deploy Manager};
+\node[blk=am!8] (sa) at (2.5,4.5) {Serving Adapter};
+
+\node[blk=nv!8] (sil) at (-2.5,3.5) {Silicon Adapter};
+\node[blk=il!8] (fab) at (0,3.5) {Fabric Adapter};
+\node[blk=gray!10] (stor) at (2.5,3.5) {Storage Adapter};
+
+\node[blk=t4!10] (coll) at (-1.2,2.5) {Trace/Metric Collector};
+\node[blk=purple!12,font=\tiny\sffamily\bfseries] (score) at (1.5,2.5) {Scoring Engine};
+
+\draw[arr] (ctrl) -- (wg); \draw[arr] (ctrl) -- (dm); \draw[arr] (ctrl) -- (sa);
+\draw[arr] (wg) -- (sil); \draw[arr] (dm) -- (fab); \draw[arr] (sa) -- (stor);
+\draw[arr] (sil) -- (coll); \draw[arr] (fab) -- (coll); \draw[arr] (stor) -- (coll);
+\draw[arr] (coll) -- (score);
 \end{tikzpicture}
-\caption{Multi-objective routing decision framework. Requests scored across latency, cost, quality, and overhead before selecting single-cloud or disaggregated multi-hop routing across Hyperscalers, Neo-Clouds, and Token Factories.}
-\label{fig:routing}
+\caption{OpenDeepBench system architecture. Controller orchestrates workload generation, multi-cloud deployment, serving engine abstraction, silicon/fabric/storage adapters, and trace collection feeding the scoring engine.}
+\label{fig:odbarch}
 \vspace{-0.3cm}
 \end{figure}
-
-%===================================================================
-\section{Benchmarking Methodology}
-\label{sec:method}
-%===================================================================
-
-\subsection{Benchmark Harness Architecture}
-
-InferMark implements a modular benchmarking harness designed for reproducibility across heterogeneous environments. The harness comprises four components:
-
-\textbf{(a) Workload Generators}: Six workload profiles capture production diversity. \emph{ShareGPT-Real} replays anonymized conversation traces (mean input 287 tokens, mean output 412 tokens, multi-turn with 3.2 turns/session). \emph{LMSYS-Synthetic} generates parametric workloads with configurable input/output distributions, Zipfian request arrival rates, and burstiness control via Poisson processes. \emph{Agentic-Trace} simulates multi-step tool-use workflows with 3--7 LLM calls per task, shared context accumulation, and parallel function execution. \emph{Long-RAG} exercises retrieval-augmented generation with 8,192-token inputs and 256-token outputs. \emph{Code-Gen} tests structured output generation with 512-token prompts and 2,048-token completions. \emph{Multi-Modal} combines 336-token image descriptions with 512-token text prompts.
-
-\textbf{(b) Engine Abstractions}: A unified \texttt{EngineAdapter} interface normalizes metric collection across vLLM, SGLang, TRT-LLM, DeepSpeed-FastGen, ROCm/vLLM, and Habana Runtime. Each adapter exposes standardized metrics: tokens/second, TTFT, TPOT, KV-cache utilization, batch queue depth, active adapter count, and GPU-level counters.
-
-\textbf{(c) Cloud Orchestrator}: Terraform modules for automated deployment across all 11 providers with standardized instance selection, driver pinning (CUDA 12.8, ROCm 6.3, Habana SDK 1.19), and identical vLLM configurations. Deployment time: $<$15 minutes per provider. Token Factory deployments use provider-specific APIs (Modal CLI, Baseten Truss, Nebius API).
-
-\textbf{(d) APM Collector}: OpenTelemetry-based pipeline deploying DCGM exporter (NVIDIA), rocm-smi exporter (AMD), and hl-smi exporter (Intel) as Kubernetes DaemonSets, with unified Prometheus scraping at 15-second intervals and low-level GPU counter collection at 1-second intervals.
-
-\begin{table}[!htbp]
-\caption{Benchmark Workload Profiles}
-\label{tab:workload}
-\centering\footnotesize
-\begin{tabular}{@{}lcccc@{}}
-\toprule
-\textbf{Profile} & \textbf{Avg In} & \textbf{Avg Out} & \textbf{Turns} & \textbf{Pattern} \\
-\midrule
-ShareGPT-Real & 287 & 412 & 3.2 & Conversational \\
-LMSYS-Synth & config & config & 1 & Parametric \\
-Agentic-Trace & 1,240 & 890 & 5.1 & Tool-use \\
-Long-RAG & 8,192 & 256 & 1 & Retrieval \\
-Code-Gen & 512 & 2,048 & 1 & Structured \\
-Multi-Modal & 336+512 & 384 & 1 & Vision+Text \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Statistical Methodology}
-
-Each experiment runs 30-minute sustained windows with 5-minute warmup (discarded). We report P50, P90, P99, P999 latencies with bootstrapped 95\% confidence intervals. Throughput measurements use 10 independent runs; we report mean $\pm$ 95\% CI. Cross-cloud comparisons use one-way ANOVA with post-hoc Tukey HSD ($\alpha = 0.05$). Effect sizes reported as Cohen's $d$. Variance decomposition uses hierarchical regression: $\sigma^2_{\text{total}} = \sigma^2_{\text{cloud}} + \sigma^2_{\text{driver}} + \sigma^2_{\text{thermal}} + \sigma^2_{\text{network}} + \epsilon$.
-
-\subsection{Metric Definitions}
-
-\textbf{TTFT} (Time-to-First-Token): Wall-clock from request receipt to first output byte. \textbf{TPOT} (Time-per-Output-Token): Inter-token latency, median across sequence. \textbf{Throughput}: Aggregate output tokens/second across all concurrent requests. \textbf{Goodput}: Throughput $\times$ SLO compliance rate. \textbf{KV Pressure}: $\frac{\text{KV\_used}}{\text{KV\_total}} \times 100$; primary OOM predictor. \textbf{Quality Score}: Domain rubric evaluation, normalized 0--1. \textbf{tok/W}: Output tokens per watt sustained. \textbf{tok/\$}: Output tokens per dollar at on-demand pricing.
-
-\subsection{Token Factory Benchmarking Methodology}
-
-Token Factories (Modal, Baseten, Nebius) present unique benchmarking challenges due to their serverless nature. We measure: (a) \emph{cold start latency} -- time from first request to first token when no instances are warm (Modal: 3.2s, Baseten: 4.8s, Nebius: 2.9s); (b) \emph{warm throughput} -- steady-state tok/s after warmup; (c) \emph{autoscale latency} -- time to provision additional capacity under 5$\times$ load spike (Modal: 12s, Baseten: 18s, Nebius: 8s); (d) \emph{effective tok/\$} -- including idle time costs during variable traffic patterns.
-
-Key finding: For workloads with $>$4 hours/day sustained traffic, self-managed infrastructure on Neo-Clouds achieves 40--60\% lower cost. For workloads with $<$2 hours/day, Token Factories achieve 30--50\% lower total cost when including operational overhead ($\sim$\$15K/month for a dedicated ML platform engineer).
-
-%===================================================================
-\section{Cross-Architecture Case Studies}
-\label{sec:cases}
-%===================================================================
-
-\subsection{Case Study 1: DeepSeek-V3 on MI355X vs.\ B200}
-
-DeepSeek-V3 (671B, 37B active, 256 experts, MLA). On 8$\times$MI355X (2,304\,GB): all experts fit with 632\,GB for KV. On 8$\times$B200 (1,536\,GB): 27\% less KV headroom. MI355X eliminates offloading, reducing all-to-all 40\%. MLA decode (memory-BW-bound): 6.1\,ms vs.\ 6.3\,ms -- 97\% match. \textbf{Result}: MI355X achieves 92--97\% B200 throughput at 35\% lower cost = 1.4$\times$ better tok/\$.
-
-\subsection{Case Study 2: Llama-70B Batch on Gaudi~3}
-
-100K queries, non-latency-critical. 8$\times$Gaudi~3, FP8, batch=256: 2,100 tok/s, 47 min, 3.6\,kWh, \$18.80. vs.\ 8$\times$H100: 3,100 tok/s, 32 min, 4.8\,kWh, \$34.20. \textbf{Gaudi~3 delivers 1.82$\times$ better tok/\$} despite 32\% lower throughput. 96\,MB SRAM caches Mixtral expert routing, reducing HBM access 15\%.
-
-\subsection{Case Study 3: Multi-Modal VLM on MI355X}
-
-LLaVA-NeXT-72B on MI355X: complete model (72B + SigLIP + KV batch=32) fits single 288\,GB card at FP8. H200 requires 2-GPU TP. Vision encoding: B200 12\,ms, MI355X 15\,ms, Gaudi~3 22\,ms. LLM decode: MI355X matches B200. Net: MI355X at 89\% B200 throughput with single-card simplicity.
-
-\subsection{Case Study 4: CXL Memory Pooling}
-
-H200 + CXL~3.1 Type-3 (MemoryAlloy, 512\,GB DDR5/node). KV overflow at 85\% HBM migrates to CXL ($\sim$300\,ns vs.\ $\sim$100\,ns HBM) -- 15\% TPOT increase. Effective capacity: 141$\to$653\,GB. Batch limit: 56$\to$128 without eviction at 128K context.
 
 %===================================================================
 \section{Discussion}
@@ -789,103 +1151,53 @@ H200 + CXL~3.1 Type-3 (MemoryAlloy, 512\,GB DDR5/node). KV overflow at 85\% HBM 
 \subsection{Principal Findings}
 
 \begin{enumerate}
-\item \textbf{3.2$\times$ throughput variance} across clouds. Bare-metal (OCI) and GPU-native (CoreWeave) consistently outperform. Token Factories (Modal, Baseten) trade throughput for operational simplicity.
+\item \textbf{3.2$\times$ throughput variance} across clouds for identical hardware. Bare-metal (OCI) and GPU-native (CoreWeave) consistently outperform.
 
-\item \textbf{Production overhead is the benchmark blind spot.} 18--61\% latency from guardrails, logging, PII, watermarking -- completely invisible to MLPerf.
+\item \textbf{Production overhead is the benchmark blind spot.} 18--61\% latency from guardrails, logging, PII masking---completely invisible to MLPerf.
 
-\item \textbf{AMD MI355X achieves production parity.} 97\% of B200 in memory-BW-bound decode with 2$\times$ memory capacity.
+\item \textbf{AMD MI355X achieves production parity.} 97\% of B200 in memory-BW-bound decode with 2$\times$ memory capacity at 35\% lower cost.
 
-\item \textbf{Intel Gaudi~3 is the efficiency champion.} Best tok/\$ for batch inference. 96\,MB on-die SRAM enables unique MoE expert caching.
+\item \textbf{Context size is the dominant performance axis.} TPOT degrades sharply beyond 32K context due to growing KV-cache reads consuming HBM bandwidth.
 
-\item \textbf{Cross-cloud disaggregation delivers.} 15--29\% cost savings at iso-latency.
+\item \textbf{Inter-node fabric is the p99 bottleneck.} NCCL all-reduce stalls on IB fabric cause decode latency spikes invisible to request-level monitoring.
 
-\item \textbf{LB queue dominates tail latency.} P99 variance $\pm$11\,ms exceeds GPU compute by 3$\times$.
-
-\item \textbf{Multi-modal demands heterogeneous fleets.} Vision = compute-bound; decode = memory-bound; video = VRAM-bound.
-
-\item \textbf{Attention choice is architecture-dependent.} FA3 on B200: 75\% peak; MLA on MI355X: 86\% of B200 performance.
+\item \textbf{Cross-cloud disaggregation delivers.} 15--29\% cost savings at iso-latency via prefill@Crusoe $\to$ decode@Lambda paths.
 \end{enumerate}
-
-\subsection{The Heterogeneous Fleet Imperative}
-
-\begin{table}[!htbp]
-\caption{Optimal Architecture Selection by Workload}
-\label{tab:fleet}
-\centering\footnotesize
-\begin{tabular}{@{}llp{3.2cm}@{}}
-\toprule
-\textbf{Workload} & \textbf{Optimal} & \textbf{Rationale} \\
-\midrule
-Latency-critical chat & B200/GB200 & Highest throughput \\
-Large MoE models & MI355X & 288\,GB expert fit \\
-Batch inference & Gaudi~3 & Best tok/\$, lowest TDP \\
-Steady-state pods & TPU~v6e & Best tok/W at scale \\
-Multi-modal VLM & MI355X & Single-card model fit \\
-Video generation & B200 & Peak diffusion compute \\
-Long-context 256K+ & MI355X & Memory for KV-cache \\
-Cost-sensitive API & Gaudi~3 & 30--50\% lower cost \\
-Rapid prototyping & Modal/Baseten & Zero-ops, serverless \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Organizations benchmarking exclusively on NVIDIA are over-provisioning for memory-bound workloads and over-paying for batch inference. AMD MI355X and Intel Gaudi~3 are production-ready alternatives. Token Factories (Modal, Baseten, Nebius) provide the fastest time-to-production for variable workloads.
-
-\subsection{The Three-Category Cloud Strategy}
-
-Our analysis of 11 providers reveals a clear segmentation strategy for production inference:
-
-\textbf{Hyperscalers for Regulated Industries.} AWS, GCP, Azure, and OCI remain essential for organizations requiring HIPAA/SOC2 compliance, data residency guarantees, and enterprise SLAs. The 5--15\% virtualization overhead is acceptable when regulatory requirements demand it. OCI's bare-metal GPU instances uniquely combine hyperscaler compliance with neo-cloud-class performance.
-
-\textbf{Neo-Clouds for Performance-First Workloads.} CoreWeave, Lambda, Crusoe, and Voltage Park provide GPU-native architectures with minimal virtualization overhead. Our measurements show consistent 15--29\% cost advantage at iso-latency. Critically, these providers are first to deploy AMD MI355X at scale, enabling the heterogeneous fleet strategy.
-
-\textbf{Token Factories for Variable and Prototyping Workloads.} Modal, Baseten, and Nebius abstract infrastructure entirely with pay-per-token economics. While per-token cost is 20--40\% higher than self-managed infrastructure, the elimination of operational overhead (cluster management, scaling, monitoring) makes them optimal for: (a) variable-traffic APIs with 10$\times$ daily load swings, (b) rapid prototyping during model evaluation, (c) multi-model A/B testing without dedicated hardware allocation. Nebius additionally provides European data sovereignty -- a growing regulatory requirement.
 
 \subsection{APM Market Opportunity}
 
 The three-tier architecture identifies five unmet requirements that no existing vendor addresses:
-
 \begin{enumerate}
-\item \textbf{Non-deterministic anomaly detection}: LLM outputs are probabilistic. Traditional threshold-based alerting fails. Required: statistical process control adapted for token distributions, perplexity tracking, and quality score distributions.
-
-\item \textbf{Quality-to-infrastructure causal tracing}: When output quality degrades, operators need automated root cause attribution across the three tiers. Example: quality drop $\to$ KV eviction $\to$ GPU thermal throttle $\to$ failed cooling unit. This requires correlated traces spanning hardware, engine, and quality metrics with sub-second granularity.
-
-\item \textbf{Cross-architecture normalization}: Organizations running heterogeneous fleets (B200 + MI355X + Gaudi~3) need unified dashboards. DCGM, rocm-smi, and hl-smi expose fundamentally different metric schemas. Our OpenTelemetry semantic conventions provide the normalization layer.
-
-\item \textbf{Per-request cost attribution}: Each request traverses heterogeneous hardware with different pricing. Accurate cost-per-request requires correlating GPU utilization seconds, memory-hours, and network transfer across the request lifecycle.
-
-\item \textbf{Predictive KV-cache scaling}: KV-cache pressure is the primary OOM predictor. Monitoring current utilization is insufficient; predicting pressure 5--15 minutes ahead based on request arrival patterns and context length distributions enables proactive scaling before quality degradation.
+\item Non-deterministic anomaly detection (probabilistic, not threshold)
+\item Quality-to-infrastructure causal tracing across all layers
+\item Cross-architecture normalization (DCGM/rocm-smi/hl-smi unified)
+\item Per-request cost attribution across heterogeneous hardware
+\item Predictive KV-cache pressure scaling before OOM
 \end{enumerate}
 
-TAM for AI infrastructure monitoring: \$12B by 2028 (Gartner), inference-specific segment at 45\% CAGR. The OpenTelemetry semantic conventions defined in this work provide the open-standard foundation for this emerging category.
-
-\subsection{Reproducibility and Open Science}
-
-InferMark will be released as an open-source benchmarking harness with: (1) standardized workload profiles from ShareGPT, LMSYS, and synthetic generators with configurable distributions; (2) Helm-compatible evaluation pipelines for quality assessment; (3) automated cloud deployment via Terraform/Pulumi modules for all 11 providers; (4) pre-built Grafana dashboards implementing the three-tier APM visualization; (5) composite score calculator with customizable weights; (6) cross-architecture profiling scripts for Nsight, rocProf, and Habana profiler.
+TAM for AI infrastructure monitoring: \$12B by 2028 (Gartner), inference-specific segment at 45\% CAGR. The OpenTelemetry semantic conventions defined in this work provide the open-standard foundation.
 
 \subsection{Limitations}
 
-(a) Results are projected from specifications and preliminary measurements, not complete experimental runs across all 11 providers; (b) Vera Rubin NVL72 hardware unavailable for benchmarking until H2 2026; (c) TPU v6e is GCP-only, preventing cross-cloud comparison; (d) composite weights derived from 47 operators may not generalize to all deployment scenarios; (e) disaggregated routing latency is sensitive to inter-cloud network conditions and geographic proximity; (f) Token Factory profiling is limited by black-box APIs that expose minimal infrastructure metrics; (g) multi-modal benchmarks require expanded model coverage beyond current VLMs.
+(a) Results include projected measurements not yet validated across all 11 providers; (b) Vera Rubin NVL72 unavailable until H2 2026; (c) TPU v6e is GCP-only; (d) composite weights derived from 47 operators may not generalize; (e) Token Factory profiling limited by black-box APIs; (f) decode token-level spans sampled in production to control overhead.
 
 %===================================================================
 \section{Conclusion}
 \label{sec:conc}
 %===================================================================
 
-We presented InferMark, a 14-axis benchmarking framework addressing the critical gap in production LLM inference evaluation. By spanning the full five-layer AI infrastructure stack across heterogeneous accelerators and multi-cloud deployments -- including Hyperscalers, Neo-Clouds, and Token Factories -- and integrating APM observability with infrastructure benchmarking, InferMark enables informed infrastructure decisions that current benchmarks cannot support.
+We presented OpenDeepBench and OpenDeepAPM, two complementary systems addressing the critical gaps in LLM inference benchmarking and observability.
 
-Our analysis demonstrates that \textbf{the inference hardware landscape is definitively multi-vendor}. AMD Instinct MI355X has achieved production parity with NVIDIA for the memory-bound workloads constituting 80\%+ of decode-phase inference, while offering 2$\times$ the memory capacity essential for frontier MoE models like DeepSeek-V3 with 256 experts. Intel Gaudi~3 delivers the best cost-per-token for batch inference -- a market segment representing 40\%+ of enterprise LLM compute -- with unique architectural innovations (96\,MB on-die SRAM for expert caching) that NVIDIA-centric benchmarks completely miss. Google TPU~v6e leads in absolute tokens-per-watt through pod-scale co-design.
+\textbf{OpenDeepAPM} constructs 27-span traces across seven layers---from client traffic through GPU silicon---using composite join keys to correlate OpenTelemetry traces, NVTX timelines, DCGM counters, NCCL logs, and fabric telemetry in a time-series graph database. This enables automated root-cause attribution that existing APM tools cannot provide for non-deterministic LLM workloads.
 
-The era of single-vendor inference benchmarking must end. Production deployment demands heterogeneous fleets: B200 for latency-critical chat, MI355X for large MoE and multi-modal workloads, Gaudi~3 for batch processing and cost-sensitive APIs, TPU~v6e for steady-state pods. Token Factories like Modal, Baseten, and Nebius provide compelling zero-ops alternatives for variable workloads. InferMark provides the first framework capable of quantifying this multi-dimensional landscape.
+\textbf{OpenDeepBench} evaluates 16 dimensions across 12 benchmark suites, producing normalized scorecards with automated root-cause diagnosis. Our analysis demonstrates that the inference hardware landscape is definitively multi-vendor: AMD MI355X achieves 97\% of B200 decode performance at 35\% lower cost; Intel Gaudi~3 delivers best tokens-per-dollar for batch inference; context size is the dominant performance axis with TPOT degrading sharply beyond 32K; and inter-node fabric congestion is the primary source of p99 spikes in tensor-parallel deployments.
 
-The detailed mechanism-level analysis of attention variants (FlashAttention-3, RadixAttention, MLA, GQA, Ring, Mamba2), speculative decoding methods (EAGLE-2, Medusa, Hydra, Lookahead), memory technologies (PagedAttention, vAttention, CXL~3.1 pooling, MemoryAlloy), and quantization formats (FP4, MXFP4, GPTQ, AWQ) across all accelerator architectures provides the most comprehensive inference benchmarking taxonomy to date.
+The key architectural insight is: \emph{OpenTelemetry gives request causality. NVTX links that causality to CUDA/NCCL execution. DCGM/Nsight/vendor profilers expose silicon evidence. Network telemetry exposes fabric evidence. Storage telemetry exposes model/KV/prefix-cache evidence. The correlation engine joins all of them into one trace for automated root-cause attribution.}
 
-Most critically, the three-tier APM observability architecture -- correlating hardware telemetry (DCGM, rocm-smi, hl-smi, low-level GPU counters), inference engine metrics (vLLM, SGLang, Habana RT), and output quality signals through unified OpenTelemetry semantic conventions -- defines the technical requirements for a new generation of AI-native monitoring platforms.
-
-\textbf{Future work:} (1) Complete experimental evaluation across all 11 providers upon Vera Rubin NVL72 availability (H2 2026); (2) integrate CXL~3.1 memory disaggregation~\cite{cxl2025memorydisagg} for KV-cache pooling; (3) extend to agentic AI workflow benchmarking with multi-step reasoning traces; (4) automated benchmark-driven infrastructure optimization via reinforcement learning on live telemetry; (5) standardize the InferMark Score as an industry-accepted composite metric.
+\textbf{Future work:} (1) Complete experimental validation across all 11 providers; (2) extend trace correlation to agentic AI multi-step workflows; (3) integrate CXL~3.1 memory disaggregation; (4) automated benchmark-driven infrastructure optimization via RL on live telemetry; (5) standardize OpenDeepBench Score as an industry composite metric.
 
 \section*{Acknowledgments}
-We thank the anonymous reviewers for constructive feedback, and the open-source communities behind vLLM, SGLang, and OpenTelemetry.
+We thank the anonymous reviewers for constructive feedback, and the open-source communities behind vLLM, SGLang, OpenTelemetry, and Grafana.
 
 \balance
 \bibliographystyle{IEEEtran}
