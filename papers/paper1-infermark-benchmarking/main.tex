@@ -27,7 +27,7 @@
 \begin{document}
 \title{OpenDeepBench and OpenDeepAPM: Deep Infrastructure\\Benchmarking and Trace-Correlated Observability\\for Multi-Cloud LLM Inference}
 \author{
-\IEEEauthorblockN{Srikanta Datta Tumkur\IEEEauthorrefmark{1}, Anshu Bansal\IEEEauthorrefmark{1}, Mehar Simhadri\IEEEauthorrefmark{2}, Jay Iyer\IEEEauthorrefmark{2}}
+\IEEEauthorblockN{Srikanta Datta Tumkur\IEEEauthorrefmark{1}, Anshu Bansal\IEEEauthorrefmark{1}, Jay Iyer\IEEEauthorrefmark{2}, Mehar Simhadri\IEEEauthorrefmark{2}}
 \IEEEauthorblockA{\IEEEauthorrefmark{1}MIT Sloan School of Management, Cambridge, MA -- \texttt{\{srikanta, anshu.bansal\}@sloan.mit.edu}}
 \IEEEauthorblockA{\IEEEauthorrefmark{2}IEEE Senior Members -- \texttt{\{meher.simhadri, jay.iyer\}@ieee.org}}
 }
@@ -140,106 +140,122 @@ OpenDeepAPM constructs a single unified trace for each LLM request that spans se
 \begin{figure*}[!htbp]
 \centering
 \begin{tikzpicture}[
-    cat/.style={rectangle, draw, rounded corners=4pt, minimum width=5.2cm, minimum height=0.5cm, font=\small\sffamily\bfseries, fill=#1, text=white, line width=0.6pt},
-    ax/.style={rectangle, draw, rounded corners=2pt, minimum width=2.4cm, minimum height=0.7cm, font=\tiny\sffamily, fill=#1, line width=0.4pt, text width=2.2cm, align=center},
-    comp/.style={rectangle, draw, rounded corners=3pt, minimum width=2.6cm, minimum height=0.5cm, font=\scriptsize\sffamily, fill=#1, line width=0.4pt},
-    cloud/.style={rectangle, draw, rounded corners=2pt, minimum width=1.8cm, minimum height=0.4cm, font=\tiny\sffamily, fill=#1, line width=0.3pt},
+    cat/.style={rectangle, draw, rounded corners=4pt, minimum width=5.6cm, minimum height=0.45cm, font=\small\sffamily\bfseries, fill=#1, text=white, line width=0.6pt},
+    ax/.style={rectangle, draw, rounded corners=2pt, minimum width=2.6cm, minimum height=0.65cm, font=\tiny\sffamily, fill=#1, line width=0.4pt, text width=2.4cm, align=center},
+    comp/.style={rectangle, draw, rounded corners=3pt, minimum width=2.6cm, minimum height=0.45cm, font=\scriptsize\sffamily, fill=#1, line width=0.4pt},
+    cloud/.style={rectangle, draw, rounded corners=2pt, minimum width=1.7cm, minimum height=0.35cm, font=\tiny\sffamily, fill=#1, line width=0.3pt},
     arr/.style={-{Stealth[length=1.8mm]}, line width=0.5pt, gray!60},
 ]
-% === LEFT PANEL: 16-Dimension Benchmark Taxonomy ===
-\node[font=\footnotesize\sffamily\bfseries] at (-5.5,6.4) {\textbf{16-Dimension Benchmark Taxonomy}};
+% === LEFT PANEL: 16+ Dimension Benchmark Taxonomy ===
+\node[font=\footnotesize\sffamily\bfseries] at (-5.5,8.2) {\textbf{OpenDeepBench: Benchmark Taxonomy}};
 
-% Compute Kernel
-\node[cat=t1!70, minimum width=5.4cm] (ck) at (-5.5,5.8) {Compute Kernel};
-\node[ax=t1!15] at (-7,5) {A1: KV-Cache\\PagedAttn, vAttn, CXL};
-\node[ax=t1!15] at (-4,5) {A2: Prefill/Decode\\Splitwise, DistServe};
-\node[ax=t1!15] at (-7,4.1) {A3: Attention\\FA3, MLA, GQA, Ring};
-\node[ax=t1!15] at (-4,4.1) {A4: MoE Routing\\Expert parallel, SRAM};
+% Compute Kernel (4 axes)
+\node[cat=t1!70, minimum width=5.6cm] at (-5.5,7.6) {Compute Kernel};
+\node[ax=t1!15] at (-7,6.8) {A1: KV-Cache Mgmt\\PagedAttn, vAttn, CXL};
+\node[ax=t1!15] at (-4,6.8) {A2: Prefill/Decode\\Splitwise, DistServe};
+\node[ax=t1!15] at (-7,5.95) {A3: Attention\\FA3, MLA, GQA, Ring};
+\node[ax=t1!15] at (-4,5.95) {A4: MoE Routing\\Expert parallel, SRAM};
 
-% Model Architecture
-\node[cat=t2!70, minimum width=5.4cm] at (-5.5,3.3) {Model Architecture};
-\node[ax=t2!12] at (-7,2.55) {A5: Multi-Modal\\Vision, Video, Audio};
-\node[ax=t2!12] at (-4,2.55) {A6: Long-Context\\128K--10M tokens};
-\node[ax=t2!12] at (-7,1.65) {A7: Multi-LoRA\\S-LoRA, Punica};
-\node[ax=t2!12] at (-4,1.65) {A8: Constrained\\Grammar, Tools};
+% Model Architecture (4 axes)
+\node[cat=t2!70, minimum width=5.6cm] at (-5.5,5.15) {Model Architecture};
+\node[ax=t2!12] at (-7,4.35) {A5: Multi-Modal\\Vision, Video, Audio};
+\node[ax=t2!12] at (-4,4.35) {A6: Long-Context\\128K--10M tokens};
+\node[ax=t2!12] at (-7,3.5) {A7: Multi-LoRA\\S-LoRA, Punica};
+\node[ax=t2!12] at (-4,3.5) {A8: Constrained Gen\\Grammar, Tools};
 
-% Infrastructure
-\node[cat=t3!70, minimum width=5.4cm] at (-5.5,0.9) {Infrastructure};
-\node[ax=t3!12] at (-7,0.15) {A9: Network Fabric\\NVLink 6, IB NDR, CXL};
-\node[ax=t3!12] at (-4,0.15) {A10: Prod.~Overhead\\Guards, PII, Watermark};
+% Infrastructure (4 axes -- expanded)
+\node[cat=t3!70, minimum width=5.6cm] at (-5.5,2.7) {Infrastructure};
+\node[ax=t3!12] at (-7,1.9) {A9: Network Fabric\\NVLink 6, IB NDR, CXL};
+\node[ax=t3!12] at (-4,1.9) {A10: Compute\\GPU, CPU, DPU, NIC};
+\node[ax=t3!12] at (-7,1.05) {A11: Storage\\NVMe, S3, KV-spill, RDMA};
+\node[ax=t3!12] at (-4,1.05) {A12: Prod Overhead\\Guards, PII, Watermark};
 
-% Application
-\node[cat=t4!70, minimum width=5.4cm] at (-5.5,-0.65) {Application};
-\node[ax=t4!12] at (-7,-1.4) {A11: E2E Latency\\TLS to Stream, P50/99};
-\node[ax=t4!12] at (-4,-1.4) {A12: Multi-Cloud\\Cost, Latency, Quality};
+% Cloud Providers (new category)
+\node[cat=gc!70, minimum width=5.6cm] at (-5.5,0.25) {Cloud Providers};
+\node[ax=gc!10] at (-7,-0.55) {A13: Hyperscalers\\AWS, GCP, Azure, OCI};
+\node[ax=gc!10] at (-4,-0.55) {A14: Neo-Clouds\\CoreWeave, Lambda, Crusoe};
 
-% Context-Size
-\node[cat=gray!50, minimum width=5.4cm, text=black] at (-5.5,-2.2) {Context-Size Stress};
-\node[ax=gray!8] at (-7,-2.95) {C1--C4: 1K--16K\\Chat, RAG, Doc};
-\node[ax=gray!8] at (-4,-2.95) {C5--C8: 32K--128K\\Legal, Code, Mixed};
+% Application + Compliance (expanded)
+\node[cat=t4!70, minimum width=5.6cm] at (-5.5,-1.35) {Application \& Compliance};
+\node[ax=t4!12] at (-7,-2.15) {A15: E2E Latency\\TLS to Stream, P50/99};
+\node[ax=t4!12] at (-4,-2.15) {A16: Multi-Cloud\\Cost, Latency, Quality};
+\node[ax=t4!12] at (-7,-3.0) {A17: Security\\Encryption, mTLS, PII mask};
+\node[ax=t4!12] at (-4,-3.0) {A18: Compliance\\SOC2, HIPAA, GDPR, FINRA};
+
+% Context-Size Stress
+\node[cat=gray!50, minimum width=5.6cm, text=black] at (-5.5,-3.8) {Context-Size Stress};
+\node[ax=gray!8] at (-7,-4.55) {C1--C4: 1K--16K\\Chat, RAG, Doc QA};
+\node[ax=gray!8] at (-4,-4.55) {C5--C8: 32K--128K\\Legal, Code, Mixed};
 
 % === RIGHT PANEL: Execution Architecture ===
-\node[font=\footnotesize\sffamily\bfseries] at (3.8,6.4) {\textbf{Execution Architecture}};
+\node[font=\footnotesize\sffamily\bfseries] at (3.8,8.2) {\textbf{Execution Architecture}};
 
 % Control Plane
-\node[comp=t1!15, minimum width=7.6cm, font=\scriptsize\sffamily\bfseries] (cp) at (3.8,5.8) {OpenDeepBench Control Plane};
-\node[comp=t1!8, minimum width=1.5cm, font=\tiny\sffamily] at (1,5.2) {Bench Registry};
-\node[comp=t1!8, minimum width=1.5cm, font=\tiny\sffamily] at (2.7,5.2) {Workload Gen};
-\node[comp=t1!8, minimum width=1.5cm, font=\tiny\sffamily] at (4.4,5.2) {Result Agg};
-\node[comp=t1!8, minimum width=1.5cm, font=\tiny\sffamily] at (6.1,5.2) {Scoring Eng};
+\node[comp=t1!15, minimum width=7.6cm, font=\scriptsize\sffamily\bfseries] (cp) at (3.8,7.6) {OpenDeepBench Control Plane};
+\node[comp=t1!8, minimum width=1.5cm, font=\tiny\sffamily] at (1,7.0) {Bench Registry};
+\node[comp=t1!8, minimum width=1.5cm, font=\tiny\sffamily] at (2.7,7.0) {Workload Gen};
+\node[comp=t1!8, minimum width=1.5cm, font=\tiny\sffamily] at (4.4,7.0) {Result Agg};
+\node[comp=t1!8, minimum width=1.5cm, font=\tiny\sffamily] at (6.1,7.0) {Scoring Eng};
 
 % APM Observability
-\node[comp=t2!18, minimum width=7.6cm, font=\scriptsize\sffamily\bfseries] (apm) at (3.8,4.35) {OpenDeepAPM: Three-Tier Observability};
-\node[font=\tiny\sffamily, text width=6.8cm, align=left] at (3.5,3.6) {\textbf{HW:} DCGM, rocm-smi, hl-smi, eBPF, NVLink, IB -- \textbf{Engine:} KV\%, tok/s, TTFT, TPOT -- \textbf{Quality:} rubrics, CoT, confidence};
+\node[comp=t2!18, minimum width=7.6cm, font=\scriptsize\sffamily\bfseries] (apm) at (3.8,6.15) {OpenDeepAPM: Deep Observability (27 Spans, 7 Layers)};
+\node[font=\tiny\sffamily, text width=6.8cm, align=left] at (3.5,5.35) {\textbf{HW:} DCGM, rocm-smi, hl-smi, eBPF, NVLink, IB -- \textbf{Engine:} KV\%, tok/s, TTFT, TPOT -- \textbf{Quality:} rubrics, CoT, confidence -- \textbf{Low-level:} SM occ, L2 hit, mem coalesce, bank conflicts, thermal, power};
 
-% OTel + Prom
-\node[comp=gray!12, minimum width=1.3cm, font=\tiny\sffamily] (otel) at (7.8,4.35) {OTel Coll};
-\node[comp=gray!12, minimum width=1.3cm, font=\tiny\sffamily] (prom) at (7.8,3.4) {Grafana};
-\draw[arr] (apm) -- (otel);
-\draw[arr] (otel) -- (prom);
+% OTel + Grafana
+\node[comp=gray!12, minimum width=1.3cm, font=\tiny\sffamily] (otelr) at (7.8,6.15) {OTel Coll};
+\node[comp=gray!12, minimum width=1.3cm, font=\tiny\sffamily] (promr) at (7.8,5.2) {Grafana};
+\draw[arr] (apm) -- (otelr);
+\draw[arr] (otelr) -- (promr);
 
 % Inference Engines
-\node[comp=nv!10, minimum width=1.15cm, font=\tiny\sffamily] at (0.8,2.5) {vLLM};
-\node[comp=nv!10, minimum width=1.15cm, font=\tiny\sffamily] at (2.1,2.5) {SGLang};
-\node[comp=nv!10, minimum width=1.15cm, font=\tiny\sffamily] at (3.4,2.5) {TRT-LLM};
-\node[comp=nv!10, minimum width=1.15cm, font=\tiny\sffamily] at (4.7,2.5) {DeepSpd};
-\node[comp=am!8, minimum width=1.15cm, font=\tiny\sffamily] at (6,2.5) {ROCm};
-\node[comp=il!8, minimum width=1.15cm, font=\tiny\sffamily] at (7.1,2.5) {Habana};
+\node[font=\tiny\sffamily\bfseries] at (3.8,4.55) {Inference Engines};
+\node[comp=nv!10, minimum width=1.15cm, font=\tiny\sffamily] at (0.8,4.15) {vLLM};
+\node[comp=nv!10, minimum width=1.15cm, font=\tiny\sffamily] at (2.1,4.15) {SGLang};
+\node[comp=nv!10, minimum width=1.15cm, font=\tiny\sffamily] at (3.4,4.15) {TRT-LLM};
+\node[comp=nv!10, minimum width=1.15cm, font=\tiny\sffamily] at (4.7,4.15) {DeepSpd};
+\node[comp=am!8, minimum width=1.15cm, font=\tiny\sffamily] at (6,4.15) {ROCm};
+\node[comp=il!8, minimum width=1.15cm, font=\tiny\sffamily] at (7.1,4.15) {Habana};
 
 % Router
-\node[comp=t3!15, minimum width=7.6cm, font=\scriptsize\sffamily\bfseries] (rt) at (3.8,1.7) {Multi-Cloud Inference Router};
+\node[comp=t3!15, minimum width=7.6cm, font=\scriptsize\sffamily\bfseries] (rt) at (3.8,3.35) {Multi-Cloud Inference Overlay Router};
 
-% Cloud Providers
-\node[cloud=t1!10] (hs1) at (0.8,0.7) {AWS};
-\node[cloud=t1!10] at (0.8,0.25) {GCP};
-\node[cloud=t1!10] at (0.8,-0.2) {Azure};
-\node[cloud=t1!10] at (0.8,-0.65) {OCI};
-\node[font=\tiny\sffamily\bfseries, t1] at (0.8,1.1) {Hyperscalers};
+% Cloud Providers (right panel)
+\node[font=\tiny\sffamily\bfseries, t1] at (0.8,2.75) {Hyperscalers};
+\node[cloud=t1!10] at (0.8,2.35) {AWS};
+\node[cloud=t1!10] at (0.8,1.95) {GCP};
+\node[cloud=t1!10] at (0.8,1.55) {Azure};
+\node[cloud=t1!10] at (0.8,1.15) {OCI};
 
-\node[cloud=nv!8] at (3,0.7) {CoreWeave};
-\node[cloud=nv!8] at (3,0.25) {Lambda};
-\node[cloud=nv!8] at (3,-0.2) {Crusoe};
-\node[cloud=nv!8] at (3,-0.65) {Voltage Park};
-\node[font=\tiny\sffamily\bfseries, nv!80!black] at (3,1.1) {Neo-Clouds};
+\node[font=\tiny\sffamily\bfseries, nv!80!black] at (3,2.75) {Neo-Clouds};
+\node[cloud=nv!8] at (3,2.35) {CoreWeave};
+\node[cloud=nv!8] at (3,1.95) {Lambda};
+\node[cloud=nv!8] at (3,1.55) {Crusoe};
+\node[cloud=nv!8] at (3,1.15) {Voltage Park};
 
-\node[cloud=t3!8] at (5.2,0.7) {Modal};
-\node[cloud=t3!8] at (5.2,0.25) {Baseten};
-\node[cloud=t3!8] at (5.2,-0.2) {Nebius};
-\node[font=\tiny\sffamily\bfseries, t3] at (5.2,1.1) {Token Factories};
+\node[font=\tiny\sffamily\bfseries, t3] at (5.2,2.75) {Token Factories};
+\node[cloud=t3!8] at (5.2,2.35) {Modal};
+\node[cloud=t3!8] at (5.2,1.95) {Baseten};
+\node[cloud=t3!8] at (5.2,1.55) {Nebius};
+
+% Ingress / Compliance layer
+\node[comp=t4!12, minimum width=7.6cm, font=\tiny\sffamily] at (3.8,0.55) {Ingress Costs $\vert$ Data Transfer $\vert$ mTLS/Encryption $\vert$ PII Masking $\vert$ SOC2/HIPAA/GDPR Audit};
 
 % Accelerator Families
-\node[font=\tiny\sffamily\bfseries] at (3.8,-1.3) {Accelerator Families};
-\node[comp=nv!15, font=\tiny\sffamily\bfseries, minimum width=1.6cm] at (1,-1.9) {NVIDIA};
-\node[font=\tiny\sffamily] at (1,-2.3) {H200/B200/R100};
-\node[comp=am!12, font=\tiny\sffamily\bfseries, minimum width=1.6cm] at (3,-1.9) {AMD};
-\node[font=\tiny\sffamily] at (3,-2.3) {MI300X/MI355X};
-\node[comp=il!12, font=\tiny\sffamily\bfseries, minimum width=1.6cm] at (5,-1.9) {Intel};
-\node[font=\tiny\sffamily] at (5,-2.3) {Gaudi 3};
-\node[comp=gc!12, font=\tiny\sffamily\bfseries, minimum width=1.6cm] at (7,-1.9) {Google};
-\node[font=\tiny\sffamily] at (7,-2.3) {TPU v6e};
+\node[font=\tiny\sffamily\bfseries] at (3.8,-0.15) {Accelerator Families};
+\node[comp=nv!15, font=\tiny\sffamily\bfseries, minimum width=1.6cm] at (1,-0.75) {NVIDIA};
+\node[font=\tiny\sffamily] at (1,-1.15) {H200/B200/R100};
+\node[comp=am!12, font=\tiny\sffamily\bfseries, minimum width=1.6cm] at (3,-0.75) {AMD};
+\node[font=\tiny\sffamily] at (3,-1.15) {MI300X/MI355X};
+\node[comp=il!12, font=\tiny\sffamily\bfseries, minimum width=1.6cm] at (5,-0.75) {Intel};
+\node[font=\tiny\sffamily] at (5,-1.15) {Gaudi 3};
+\node[comp=gc!12, font=\tiny\sffamily\bfseries, minimum width=1.6cm] at (7,-0.75) {Google};
+\node[font=\tiny\sffamily] at (7,-1.15) {TPU v6e};
+
+% Infrastructure detail row
+\node[comp=gray!8, minimum width=7.6cm, font=\tiny\sffamily] at (3.8,-1.85) {NVMe/S3 Storage $\vert$ NVLink/IB Fabric $\vert$ DPU Offload $\vert$ RDMA $\vert$ CXL Memory};
 
 \end{tikzpicture}
-\caption{OpenDeepBench and OpenDeepAPM: Unified architecture. Left panel shows the 16-dimension benchmark taxonomy (compute kernel, model architecture, infrastructure, application, and context-size stress axes). Right panel shows the execution architecture with control plane, three-tier APM observability (with OTel/Grafana integration), six inference engines, multi-cloud inference router, 11 cloud providers across 3 categories, and 4 accelerator families.}
+\caption{OpenDeepBench and OpenDeepAPM: Unified architecture. Left panel: expanded benchmark taxonomy with six categories---Compute Kernel (A1--A4), Model Architecture (A5--A8), Infrastructure (A9--A12 covering network, compute, storage, production overhead), Cloud Providers (A13--A14), Application and Compliance (A15--A18 covering latency, multi-cloud routing, security/encryption, and regulatory compliance), and Context-Size Stress (C1--C8). Right panel: execution architecture with control plane, deep observability layer (27 spans, 7 layers), six inference engines, multi-cloud router, 11 providers across 3 categories, ingress/compliance layer, 4 accelerator families, and infrastructure detail.}
 \label{fig:arch}
 \end{figure*}
 
@@ -289,77 +305,94 @@ Fig.~\ref{fig:trace} illustrates the complete trace tree. Each layer contributes
 \begin{figure*}[!htbp]
 \centering
 \begin{tikzpicture}[
-    blk/.style={rectangle,draw,rounded corners=2pt,minimum height=0.35cm,font=\tiny\sffamily,line width=0.3pt,fill=#1},
+    blk/.style={rectangle,draw,rounded corners=2pt,minimum height=0.38cm,font=\tiny\sffamily,line width=0.3pt,fill=#1},
     arr/.style={-{Stealth[length=1.2mm]},line width=0.3pt,gray!60},
-    grp/.style={rectangle,draw,rounded corners=3pt,line width=0.5pt,dashed,fill=#1},
+    layer/.style={font=\tiny\sffamily\bfseries,rotate=90},
+    lline/.style={line width=0.6pt,dashed},
 ]
-% Root
-\node[blk=t1!15,minimum width=10cm,minimum height=0.4cm,font=\scriptsize\sffamily\bfseries] (root) at (0,0) {TRACE trace-llm-9001: llm.chat.completion};
+% Root trace
+\node[blk=t1!15,minimum width=14cm,minimum height=0.45cm,font=\scriptsize\sffamily\bfseries] (root) at (0,0) {TRACE trace-llm-9001: llm.chat.completion \hspace{1cm} total=4.2s \hspace{0.5cm} model=Llama-3.1-70B \hspace{0.5cm} tenant=acme-corp};
 
-% Traffic layer
-\node[blk=t1!10,minimum width=3cm] (s1) at (-5.5,-0.7) {S1: traffic.client\_to\_edge};
-\node[blk=t1!10,minimum width=3cm] (s2) at (-1.8,-0.7) {S2: traffic.edge\_to\_cloud};
-\node[blk=t1!10,minimum width=3cm] (s26) at (5.5,-0.7) {S26: response.egress};
+% === TRAFFIC LAYER ===
+\node[layer,t1] at (-8.2,-0.9) {Traffic};
+\draw[lline,t1!30] (-7.8,-0.5) -- (-7.8,-1.3);
+\node[blk=t1!10,minimum width=3.2cm] (s1) at (-5.5,-0.9) {S1: traffic.client\_to\_edge (12ms)};
+\node[blk=t1!10,minimum width=3.2cm] (s2) at (-1.3,-0.9) {S2: traffic.edge\_to\_cloud (8ms)};
+\node[blk=t1!10,minimum width=3.8cm] (s26) at (5,-0.9) {S26: response.egress.stream (1240ms)};
 
-% Service layer
-\node[blk=t2!10,minimum width=2.8cm] (s3) at (-5.5,-1.3) {S3: llm.api\_gateway};
-\node[blk=t2!10,minimum width=2.8cm] (s4) at (-1.8,-1.3) {S4: llm.router};
-\node[blk=t2!10,minimum width=2.8cm] (s5) at (1.8,-1.3) {S5: traffic.cloud\_to\_onprem};
+% === SERVICE LAYER ===
+\node[layer,t2] at (-8.2,-1.7) {Service};
+\draw[lline,t2!30] (-7.8,-1.35) -- (-7.8,-2.1);
+\node[blk=t2!10,minimum width=3cm] (s3) at (-5.5,-1.7) {S3: llm.api\_gateway (auth+quota)};
+\node[blk=t2!10,minimum width=3cm] (s4) at (-1.5,-1.7) {S4: llm.router (model pool)};
+\node[blk=t2!10,minimum width=3cm] (s5) at (2.5,-1.7) {S5: cloud\_to\_gpu\_cluster};
 
-% CPU layer
-\node[blk=nv!8,minimum width=2.5cm] (s6) at (-5.5,-1.9) {S6: cpu.admission};
-\node[blk=nv!8,minimum width=2.5cm] (s7) at (-2.2,-1.9) {S7: cpu.tokenization};
-\node[blk=nv!8,minimum width=2.5cm] (s8) at (1.1,-1.9) {S8: cpu.prompt\_proc};
+% === CPU LAYER ===
+\node[layer,nv!80!black] at (-8.2,-2.55) {CPU};
+\draw[lline,nv!30] (-7.8,-2.15) -- (-7.8,-2.95);
+\node[blk=nv!8,minimum width=2.5cm] (s6) at (-5.5,-2.55) {S6: cpu.admission (3ms)};
+\node[blk=nv!8,minimum width=2.5cm] (s7) at (-2.5,-2.55) {S7: cpu.tokenize (5ms)};
+\node[blk=nv!8,minimum width=2.5cm] (s8) at (0.5,-2.55) {S8: cpu.prompt\_proc (4ms)};
 
-% Scheduler + Storage
-\node[blk=t3!10,minimum width=2.5cm] (s9) at (-5.5,-2.5) {S9: scheduler.enqueue};
-\node[blk=gray!10,minimum width=2.5cm] (s10) at (-2.2,-2.5) {S10: storage.weight\_chk};
-\node[blk=gray!10,minimum width=2.5cm] (s11) at (1.1,-2.5) {S11: storage.prefix\_cache};
+% === SCHEDULER LAYER ===
+\node[layer,t3] at (-8.2,-3.5) {Scheduler};
+\draw[lline,t3!30] (-7.8,-3.0) -- (-7.8,-4.0);
+\node[blk=t3!10,minimum width=2.5cm] (s9) at (-5.5,-3.5) {S9: sched.batch\_form (8ms)};
+\node[blk=t3!10,minimum width=2.8cm] (s12) at (-2.3,-3.5) {S12: gpu.worker\_dispatch};
+\node[blk=t3!10,minimum width=2.5cm] (s13) at (1,-3.5) {S13: gpu.input\_xfer (RDMA)};
 
-% GPU dispatch + phases
-\node[blk=am!8,minimum width=2.5cm] (s12) at (4.4,-1.9) {S12: gpu.dispatch};
-\node[blk=am!8,minimum width=2.5cm] (s13) at (4.4,-2.5) {S13: gpu.input\_xfer};
-\node[blk=am!12,minimum width=2.2cm] (s14) at (-5.5,-3.2) {S14: kv\_cache.alloc};
-\node[blk=am!15,minimum width=3.2cm,font=\tiny\sffamily\bfseries] (s15) at (-1.5,-3.2) {S15: llm.prefill};
-\node[blk=am!15,minimum width=3.2cm,font=\tiny\sffamily\bfseries] (s20) at (2.8,-3.2) {S20: llm.decode};
-\node[blk=t3!8,minimum width=2cm] (s19) at (5.8,-3.2) {S19: logits.first};
+% === STORAGE LAYER ===
+\node[layer,gray!70] at (-8.2,-4.4) {Storage};
+\draw[lline,gray!30] (-7.8,-3.95) -- (-7.8,-4.85);
+\node[blk=gray!10,minimum width=2.5cm] (s10) at (-5.5,-4.4) {S10: storage.weight\_check};
+\node[blk=gray!10,minimum width=2.5cm] (s11) at (-2.5,-4.4) {S11: storage.prefix\_cache};
+\node[blk=gray!10,minimum width=2.5cm] (s24) at (0.5,-4.4) {S24: storage.kv\_lifecycle};
+\node[blk=gray!10,minimum width=2.5cm] (s25) at (3.5,-4.4) {S25: storage.artifacts};
 
-% Sub-spans for prefill
-\node[blk=am!8,minimum width=2.8cm] (s16) at (-1.5,-3.9) {S16: prefill.layer\_stack (L0..79)};
-\node[blk=il!8,minimum width=2.8cm] (s17) at (-1.5,-4.5) {S17: collective.tp\_sync};
+% === GPU INFERENCE LAYER ===
+\node[layer,am!80!black] at (-8.2,-5.6) {GPU};
+\draw[lline,am!30] (-7.8,-4.9) -- (-7.8,-6.8);
+\node[blk=am!12,minimum width=2.3cm] (s14) at (-5.5,-5.3) {S14: kv\_cache.alloc};
+\node[blk=am!18,minimum width=3.8cm,font=\tiny\sffamily\bfseries] (s15) at (-1.8,-5.3) {S15: llm.prefill (820ms, ranks 0..7)};
+\node[blk=t3!10,minimum width=2cm] (s19) at (2.3,-5.3) {S19: logits.first\_tok};
+\node[blk=am!18,minimum width=3.8cm,font=\tiny\sffamily\bfseries] (s20) at (5.5,-5.3) {S20: llm.decode (3.4s, 256 tokens)};
 
-% Sub-spans for decode
-\node[blk=am!8,minimum width=2.8cm] (d1) at (2.8,-3.9) {S20.x: decode.token\_1..256};
+% Prefill sub-spans
+\node[blk=am!8,minimum width=3.2cm] (s16a) at (-3.5,-6.1) {S16: prefill.layer\_0 (QKV+Attn+MLP)};
+\node[blk=am!8,minimum width=3.2cm] (s16b) at (-3.5,-6.65) {S16: prefill.layer\_1..79};
 
-% Silicon + Fabric
-\node[blk=nv!10,minimum width=2.5cm] (s18) at (-5,-4.5) {S18: silicon.prefill\_metrics};
-\node[blk=nv!10,minimum width=2.5cm] (s21) at (5.5,-3.9) {S21: silicon.decode\_metrics};
-\node[blk=il!10,minimum width=2.2cm] (s22) at (-5,-5.1) {S22: fabric.nvlink};
-\node[blk=il!10,minimum width=2.2cm] (s23) at (-2.2,-5.1) {S23: fabric.infiniband};
-\node[blk=gray!10,minimum width=2.2cm] (s24) at (1,-5.1) {S24: storage.kv\_life};
-\node[blk=gray!10,minimum width=2.2cm] (s25) at (3.8,-5.1) {S25: storage.artifacts};
-\node[blk=t4!12,minimum width=3cm,font=\tiny\sffamily\bfseries] (s27) at (5.8,-5.1) {S27: root\_cause\_summary};
+% Decode sub-spans
+\node[blk=am!8,minimum width=3.2cm] (d1) at (5.5,-6.1) {S20.1: decode.token\_1 (13.2ms)};
+\node[blk=am!8,minimum width=3.2cm] (d2) at (5.5,-6.65) {S20.x: decode.token\_2..256};
 
-% Connections
+% === FABRIC / SILICON LAYER ===
+\node[layer,il!80!black] at (-8.2,-7.65) {Fabric};
+\draw[lline,il!30] (-7.8,-6.85) -- (-7.8,-8.4);
+\node[blk=il!8,minimum width=2.5cm] (s17) at (-5.5,-7.35) {S17: nccl.all\_reduce (rank sync)};
+\node[blk=nv!10,minimum width=2.5cm] (s18) at (-2.5,-7.35) {S18: silicon.prefill\_metrics};
+\node[blk=il!10,minimum width=2.2cm] (s22) at (0.3,-7.35) {S22: fabric.nvlink};
+\node[blk=il!10,minimum width=2.2cm] (s23) at (2.8,-7.35) {S23: fabric.infiniband};
+\node[blk=nv!10,minimum width=2.5cm] (s21) at (5.5,-7.35) {S21: silicon.decode\_metrics};
+
+% Root cause summary
+\node[blk=t4!15,minimum width=4.5cm,font=\tiny\sffamily\bfseries,minimum height=0.45cm] (s27) at (5.5,-8.1) {S27: root\_cause\_summary (automated diagnosis)};
+
+% === Connections ===
 \draw[arr] (root) -- (s1); \draw[arr] (root) -- (s2); \draw[arr] (root) -- (s26);
 \draw[arr] (s2) -- (s3); \draw[arr] (s3) -- (s4); \draw[arr] (s4) -- (s5);
 \draw[arr] (s5) -- (s6); \draw[arr] (s6) -- (s7); \draw[arr] (s7) -- (s8);
-\draw[arr] (s8) -- (s9); \draw[arr] (s9) -- (s10); \draw[arr] (s10) -- (s11);
-\draw[arr] (s5) -- (s12); \draw[arr] (s12) -- (s13);
+\draw[arr] (s8) -- (s9); \draw[arr] (s9) -- (s12); \draw[arr] (s12) -- (s13);
+\draw[arr] (s9) -- (s10); \draw[arr] (s10) -- (s11); \draw[arr] (s11) -- (s24); \draw[arr] (s24) -- (s25);
 \draw[arr] (s13) -- (s14); \draw[arr] (s14) -- (s15); \draw[arr] (s15) -- (s19); \draw[arr] (s19) -- (s20);
-\draw[arr] (s15) -- (s16); \draw[arr] (s16) -- (s17);
-\draw[arr] (s20) -- (d1);
-\draw[arr] (s15) -- (s18); \draw[arr] (s20) -- (s21);
+\draw[arr] (s15) -- (s16a); \draw[arr] (s16a) -- (s16b);
+\draw[arr] (s20) -- (d1); \draw[arr] (d1) -- (d2);
+\draw[arr] (s16b) -- (s17); \draw[arr] (s15) -- (s18);
+\draw[arr] (s17) -- (s22); \draw[arr] (s22) -- (s23);
+\draw[arr] (s20) -- (s21);
+\draw[arr] (s21) -- (s27);
 
-% Layer labels
-\node[font=\tiny\sffamily\bfseries,t1,rotate=90] at (-7.5,-0.7) {Traffic};
-\node[font=\tiny\sffamily\bfseries,t2,rotate=90] at (-7.5,-1.3) {Service};
-\node[font=\tiny\sffamily\bfseries,nv,rotate=90] at (-7.5,-1.9) {CPU};
-\node[font=\tiny\sffamily\bfseries,t3,rotate=90] at (-7.5,-2.5) {Sched};
-\node[font=\tiny\sffamily\bfseries,am,rotate=90] at (-7.5,-3.4) {GPU};
-\node[font=\tiny\sffamily\bfseries,il,rotate=90] at (-7.5,-4.8) {Fabric};
 \end{tikzpicture}
-\caption{OpenDeepAPM: Complete 27-span trace tree for a single LLM request. One trace contains linked spans across traffic (blue), service/control plane (purple), CPU preprocessing (green), scheduler (orange), GPU inference phases (red), fabric metrics (blue), and storage (gray). The root-cause summary (bottom-right) synthesizes evidence from all layers.}
+\caption{OpenDeepAPM: Complete 27-span trace tree for a single LLM inference request. Vertical layer labels (left) show the seven instrumentation layers: Traffic (client ingress/egress), Service (API gateway, router), CPU (admission, tokenization, prompt processing), Scheduler (batch formation, GPU dispatch, input transfer), Storage (model weights, prefix cache, KV-cache lifecycle, artifacts), GPU (KV-cache allocation, prefill with per-layer sub-spans, first-token logits, decode with per-token iteration), and Fabric/Silicon (NCCL collectives, silicon metrics, NVLink, InfiniBand). The root-cause summary (bottom-right) synthesizes evidence from all layers into automated diagnosis.}
 \label{fig:trace}
 \end{figure*}
 
@@ -598,17 +631,18 @@ OpenDeepBench is a deep LLM infrastructure benchmark that answers not just ``whi
 OpenDeepBench evaluates a full matrix of deployment variables:
 
 \begin{table}[!htbp]
-\caption{OpenDeepBench 16-Dimension Benchmark Matrix}
+\caption{OpenDeepBench 18-Dimension Benchmark Matrix}
 \label{tab:benchmatrix}
 \centering\footnotesize
 \begin{tabular}{@{}lp{4.2cm}@{}}
 \toprule
 \textbf{Dimension} & \textbf{Values Tested} \\
 \midrule
-Cloud & AWS, Azure, GCP, OCI, on-prem \\
+Cloud provider & AWS, Azure, GCP, OCI, on-prem \\
+Neo-cloud & CoreWeave, Lambda, Crusoe, Voltage Park \\
 Region & us-west, us-east, EU, Asia \\
-Silicon vendor & NVIDIA, AMD, Intel \\
-Accelerator & H100/H200/B200, MI300X/MI355X, Gaudi\,3 \\
+Silicon vendor & NVIDIA, AMD, Intel, Google \\
+Accelerator & H100/H200/B200, MI300X/MI355X, Gaudi\,3, TPU v6e \\
 Serving engine & vLLM, TensorRT-LLM, SGLang \\
 Runtime & CUDA, ROCm, oneAPI \\
 Collective & NCCL, RCCL, HCCL \\
@@ -621,9 +655,14 @@ KV-cache mode & FP16, FP8, INT8, paged, prefix \\
 Attention & MHA, GQA, MQA \\
 Network & single GPU, intra-node, multi-node \\
 Storage & cold load, warm, prefix cache, KV spill \\
+Compliance & PII masking, encryption (mTLS), guardrails, watermark, SOC2/HIPAA audit overhead \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\textbf{Cloud-specific dimensions.} OpenDeepBench uniquely measures cloud-specific costs invisible to lab benchmarks: ingress/egress data transfer fees (\$0.01--0.12/GB), cross-region latency penalties (8--45\,ms per hop), GPU virtualization overhead (KVM vs.\ bare-metal: 3--12\% throughput loss), and NUMA topology effects. These dimensions are critical for total cost of ownership (TCO) but absent from MLPerf.
+
+\textbf{Infrastructure decomposition.} The infrastructure category covers four sub-axes: (1)~\emph{Compute}---GPU, CPU, DPU offload, SmartNIC acceleration; (2)~\emph{Network}---NVLink 6, InfiniBand NDR 400G, RoCE, CXL 3.1; (3)~\emph{Storage}---NVMe model weight loading, S3/GCS cold fetch, RDMA-based KV-cache spill to CPU memory; (4)~\emph{Production overhead}---guardrail latency (Llama Guard: 18--35\,ms), PII masking pipeline, watermarking injection (5--12\,ms), and compliance logging to SOC\,2/HIPAA audit trail.
 
 \subsection{Context-Size Stress Matrix}
 
@@ -726,6 +765,83 @@ ODB-Reliability & OOM, retries, throttling, failure \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\begin{figure*}[!htbp]
+\centering
+\begin{tikzpicture}[
+    box/.style={rectangle, draw, rounded corners=3pt, minimum height=0.4cm, font=\tiny\sffamily, line width=0.4pt, fill=#1, text=black},
+    hdr/.style={rectangle, draw, rounded corners=4pt, minimum height=0.5cm, font=\scriptsize\sffamily\bfseries, fill=#1, text=white, line width=0.6pt},
+    arr/.style={-{Stealth[length=1.5mm]}, line width=0.4pt, gray!50},
+]
+% === Input Dimensions (top) ===
+\node[hdr=t1!70, minimum width=14cm] (dims) at (0,5.2) {Input Dimensions (16+)};
+\node[box=t1!10, minimum width=1.5cm] (d1) at (-6,4.5) {Cloud};
+\node[box=t1!10, minimum width=1.5cm] (d2) at (-4.3,4.5) {Silicon};
+\node[box=t1!10, minimum width=1.5cm] (d3) at (-2.6,4.5) {Engine};
+\node[box=t1!10, minimum width=1.5cm] (d4) at (-0.9,4.5) {Model};
+\node[box=t1!10, minimum width=1.5cm] (d5) at (0.8,4.5) {Context};
+\node[box=t1!10, minimum width=1.5cm] (d6) at (2.5,4.5) {Conc};
+\node[box=t1!10, minimum width=1.5cm] (d7) at (4.2,4.5) {KV-Mode};
+\node[box=t1!10, minimum width=1.5cm] (d8) at (5.9,4.5) {Network};
+
+% === Benchmark Suites (middle) ===
+\node[hdr=t2!70, minimum width=14cm] (suites) at (0,3.5) {12 Benchmark Suites};
+
+% Suite boxes in 3 columns
+\node[box=t2!10, minimum width=2.8cm] (b1) at (-5,2.7) {ODB-Chat};
+\node[box=t2!10, minimum width=2.8cm] (b2) at (-5,2.2) {ODB-RAG};
+\node[box=t2!10, minimum width=2.8cm] (b3) at (-5,1.7) {ODB-LongContext};
+\node[box=t2!10, minimum width=2.8cm] (b4) at (-5,1.2) {ODB-Code};
+
+\node[box=t3!10, minimum width=2.8cm] (b5) at (0,2.7) {ODB-MultiTenant};
+\node[box=t3!10, minimum width=2.8cm] (b6) at (0,2.2) {ODB-MultiNode};
+\node[box=t3!10, minimum width=2.8cm] (b7) at (0,1.7) {ODB-MultiCloud};
+\node[box=t3!10, minimum width=2.8cm] (b8) at (0,1.2) {ODB-ColdStart};
+
+\node[box=t4!10, minimum width=2.8cm] (b9) at (5,2.7) {ODB-KVCache};
+\node[box=t4!10, minimum width=2.8cm] (b10) at (5,2.2) {ODB-Fabric};
+\node[box=t4!10, minimum width=2.8cm] (b11) at (5,1.7) {ODB-Cost};
+\node[box=t4!10, minimum width=2.8cm] (b12) at (5,1.2) {ODB-Reliability};
+
+% === Measurement Layer ===
+\node[hdr=nv!60, minimum width=14cm] (meas) at (0,0.4) {Measurement (per-suite, per-dimension)};
+\node[box=nv!8, minimum width=1.7cm] (m1) at (-5.5,-0.35) {TTFT p50/99};
+\node[box=nv!8, minimum width=1.7cm] (m2) at (-3.4,-0.35) {TPOT p50/99};
+\node[box=nv!8, minimum width=1.7cm] (m3) at (-1.3,-0.35) {tok/s/GPU};
+\node[box=nv!8, minimum width=1.7cm] (m4) at (0.8,-0.35) {\$/M tokens};
+\node[box=nv!8, minimum width=1.7cm] (m5) at (2.9,-0.35) {joules/tok};
+\node[box=nv!8, minimum width=1.7cm] (m6) at (5,-0.35) {OOM/errors};
+
+% === APM Evidence ===
+\node[hdr=am!60, minimum width=14cm] (apm) at (0,-1.2) {OpenDeepAPM: Deep Trace Evidence (27 spans per request)};
+\node[box=am!8, minimum width=2cm] at (-5.2,-1.95) {SM util \%};
+\node[box=am!8, minimum width=2cm] at (-2.8,-1.95) {HBM BW \%};
+\node[box=am!8, minimum width=2cm] at (-0.4,-1.95) {NCCL stalls};
+\node[box=am!8, minimum width=2cm] at (2,-1.95) {KV-cache \%};
+\node[box=am!8, minimum width=2cm] at (4.4,-1.95) {IB xmit\_wait};
+
+% === Output ===
+\node[hdr=t4!70, minimum width=14cm] (out) at (0,-2.85) {Outputs};
+\node[box=t4!10, minimum width=2.8cm] at (-4.5,-3.55) {ODB Composite Score};
+\node[box=t4!10, minimum width=2.8cm] at (-1.2,-3.55) {Normalized Scorecard};
+\node[box=t4!10, minimum width=2.8cm] at (2.1,-3.55) {Root-Cause Report};
+\node[box=t4!10, minimum width=2.8cm] at (5.4,-3.55) {Procurement Rec};
+
+% Arrows: dims -> suites
+\draw[arr] (dims) -- (suites);
+% Arrows: suites -> measurement
+\draw[arr] (b4.south) -- ++(0,-0.25) -| (meas.north);
+\draw[arr] (b8.south) -- ++(0,-0.25) -| (meas.north);
+\draw[arr] (b12.south) -- ++(0,-0.25) -| (meas.north);
+% Arrows: measurement -> APM
+\draw[arr] (meas) -- (apm);
+% Arrows: APM -> output
+\draw[arr] (apm) -- (out);
+
+\end{tikzpicture}
+\caption{OpenDeepBench: Relationship diagram. Input dimensions (16+) feed into 12 benchmark suites organized by workload type (Chat/RAG/LongContext/Code), scale pattern (MultiTenant/MultiNode/MultiCloud/ColdStart), and stress target (KVCache/Fabric/Cost/Reliability). Each suite produces measurements (TTFT, TPOT, throughput, cost, energy, reliability) enriched with OpenDeepAPM deep trace evidence (GPU silicon, HBM, NCCL, KV-cache, fabric). Outputs include the ODB Composite Score, normalized scorecard, automated root-cause reports, and procurement recommendations.}
+\label{fig:odbrelation}
+\end{figure*}
 
 \subsection{OpenDeepBench Composite Score}
 \label{sec:score}
